@@ -1,0 +1,154 @@
+[
+    {
+        "id": "1",
+        "service": "General Account",
+        "username": "Asvuadi339",
+        "password": "1900636123",
+        "category": "personal",
+        "note": "Account"
+    },
+    {
+        "id": "2",
+        "service": "iCloud",
+        "username": "giang_t1@icloud.com",
+        "password": "Long4804",
+        "category": "icloud",
+        "note": ""
+    },
+    {
+        "id": "3",
+        "service": "iCloud",
+        "username": "Luongthimo1973z@icloud.com",
+        "password": "Long4804",
+        "category": "icloud",
+        "note": "PIN: 7652"
+    },
+    {
+        "id": "4",
+        "service": "iCloud",
+        "username": "Tranvandao093@icloud.com",
+        "password": "Vandao093",
+        "category": "icloud",
+        "note": ""
+    },
+    {
+        "id": "5",
+        "service": "Google",
+        "username": "tranphilongib04@gmail.com",
+        "password": "",
+        "category": "personal",
+        "note": ""
+    },
+    {
+        "id": "6",
+        "service": "iCloud",
+        "username": "Khoakhoi496@icloud.com",
+        "password": "Long12347",
+        "category": "icloud",
+        "note": "PIN: 3752"
+    },
+    {
+        "id": "7",
+        "service": "Bank",
+        "username": "7201205008218",
+        "password": "197012Giang",
+        "category": "bank",
+        "note": "Phone: 0918161862"
+    },
+    {
+        "id": "8",
+        "service": "Spotify Premium",
+        "username": "crusted-sorbets5k@icloud.com",
+        "password": "",
+        "category": "entertainment",
+        "note": "MS365"
+    },
+    {
+        "id": "9",
+        "service": "Studocu (MS 365)",
+        "username": "fable.caducei9@icloud.com",
+        "password": "",
+        "category": "edu",
+        "note": ""
+    },
+    {
+        "id": "10",
+        "service": "ChatGPT",
+        "username": "91.pattern_adverbs@icloud.com",
+        "password": "",
+        "category": "tools",
+        "note": ""
+    },
+    {
+        "id": "11",
+        "service": "ChatGPT",
+        "username": "thrifty.trades2s@icloud.com",
+        "password": "",
+        "category": "tools",
+        "note": ""
+    },
+    {
+        "id": "12",
+        "service": "ChatGPT / Outlook",
+        "username": "SamerqAnmickq@outlook.com",
+        "password": "Matkhau123!@#",
+        "category": "tools",
+        "note": "Alt: PattySonia65 | bets_96wistful@icloud.com | Long123456789"
+    },
+    {
+        "id": "13",
+        "service": "AskAI",
+        "username": "lcn7h1gqzy@ozkadem.edu.pl",
+        "password": "mk santafe",
+        "category": "tools",
+        "note": "Alt Pass: Long12347"
+    },
+    {
+        "id": "14",
+        "service": "Grok",
+        "username": "robert.johnson2@go.sfcollege.edu",
+        "password": "FredericFonny",
+        "category": "tools",
+        "note": ""
+    },
+    {
+        "id": "15",
+        "service": "Edu Mail",
+        "username": "27014845@sfcollege.edu",
+        "password": "",
+        "category": "edu",
+        "note": ""
+    },
+    {
+        "id": "16",
+        "service": "Edu Mail",
+        "username": "cletus.vallejo@go.sfcollege.edu",
+        "password": "",
+        "category": "edu",
+        "note": ""
+    },
+    {
+        "id": "17",
+        "service": "Edu Mail",
+        "username": "lcn7h1gqzy@ozkadem.edu.pl",
+        "password": "",
+        "category": "edu",
+        "note": ""
+    },
+    {
+        "id": "18",
+        "service": "Proxy / Extension FroxyHelper",
+        "username": "206.189.80.19",
+        "password": "",
+        "category": "tools",
+        "note": "Port: 8191 | User: mgaf2u7k | Pass: mGaF2u7K | Uban VPN Desktop"
+    },
+    {
+        "id": "19",
+        "service": "VCBS-TB",
+        "username": "009C358050",
+        "password": "62824680",
+        "category": "bank",
+        "note": "Mat khau dat lenh: 42491332"
+    }
+]

@@ -1,0 +1,29 @@
+
+> tpb-manage@1.0.0 build
+> next build --webpack
+
+⚠ Warning: Next.js inferred your workspace root, but it may not be correct.
+ We detected multiple lockfiles and selected the directory of /Users/tranphilong/package-lock.json as the root directory.
+ To silence this warning, set `outputFileTracingRoot` in your Next.js config, or consider removing one of the lockfiles if it's not needed.
+   See https://nextjs.org/docs/app/api-reference/config/next-config-js/output#caveats for more information.
+ Detected additional lockfiles: 
+   * /Users/tranphilong/Desktop/dark-observatory/package-lock.json
+
+▲ Next.js 16.1.4 (webpack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 3.0s
+  Running TypeScript ...
+Failed to compile.
+
+./scripts/import_adhoc_batch_2.ts:191:78
+Type error: 'e' is of type 'unknown'.
+
+[0m [90m 189 |[39m
+ [90m 190 |[39m         } [36mcatch[39m (e) {
+[31m[1m>[22m[39m[90m 191 |[39m             console[33m.[39merror([32m`Error processing row starting with ${parts[0]}: ${e.message}`[39m)[33m;[39m
+ [90m     |[39m                                                                              [31m[1m^[22m[39m
+ [90m 192 |[39m         }
+ [90m 193 |[39m     }
+ [90m 194 |[39m[0m
+Next.js build worker exited with code: 1 and signal: null

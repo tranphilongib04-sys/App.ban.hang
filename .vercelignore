@@ -1,0 +1,9 @@
+node_modules
+.next
+drizzle
+data/tpb-manage.db
+.git
+dist
+build
+.next
+node_modules

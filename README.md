@@ -1,36 +1,110 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TPB Manage - Desktop Application
 
-## Getting Started
+Ứng dụng desktop quản lý subscription và khách hàng cho macOS.
 
-First, run the development server:
+## 🚀 Cách sử dụng nhanh
+
+### Tạo shortcut trên Desktop (Lần đầu)
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+cd /Users/tranphilong/Desktop/dark-observatory
+./create-shortcut.sh
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Sau đó double-click vào **TPB Manage.app** trên Desktop để mở app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Build Production App (Khuyến nghị)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Để tạo desktop application thực sự (không phải web local):
 
-## Learn More
+```bash
+cd /Users/tranphilong/Desktop/dark-observatory
+./build-and-create-shortcut.sh
+```
 
-To learn more about Next.js, take a look at the following resources:
+Hoặc:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+./create-desktop-app.sh
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Script sẽ:
+1. Build Next.js app
+2. Build Electron app thành .app file
+3. Copy app lên Desktop
 
-## Deploy on Vercel
+Sau khi build xong, bạn sẽ có **TPB Manage.app** trên Desktop - đây là desktop application thực sự!
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📋 Tính năng
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- ✅ Quản lý khách hàng & subscription
+- ✅ Nhắc nhở gia hạn tự động (0-3 ngày)
+- ✅ Gia hạn nhanh 1-click
+- ✅ Quản lý inventory (TK/MK/Keys)
+- ✅ Giao hàng FIFO + Copy tin nhắn
+- ✅ Bảo hành: cấp tài khoản mới
+- ✅ Báo cáo doanh thu & lợi nhuận
+
+## 🗄️ Database
+
+- **Loại**: SQLite (Local)
+- **Development**: `./data/tpb-manage.db`
+- **Production (Electron)**: `~/Library/Application Support/TPB Manage/data/tpb-manage.db`
+- Database tự động được tạo khi chạy app lần đầu
+
+## 🛠️ Công nghệ
+
+- **Frontend**: Next.js 16 + React 19
+- **Desktop**: Electron
+- **Database**: SQLite (better-sqlite3)
+- **ORM**: Drizzle ORM
+- **UI**: Tailwind CSS + Radix UI
+
+## 📝 Scripts có sẵn
+
+### Development
+- `npm run dev` - Chạy Next.js development server
+- `npm run electron:dev` - Chạy cả Next.js dev server và Electron (hot reload)
+
+### Production
+- `npm run build` - Build Next.js production
+- `npm run electron:pack` - Build Electron app vào thư mục dist/
+- `npm run electron:build` - Build và tạo installer
+
+### Utilities
+- `./create-shortcut.sh` - Tạo shortcut development mode trên Desktop
+- `./build-and-create-shortcut.sh` - Build production app và tạo shortcut
+- `./create-desktop-app.sh` - Build production app và copy lên Desktop
+
+## 📌 Lưu ý quan trọng
+
+- ✅ App là **desktop application** thực sự, không phải web app
+- ✅ Chạy độc lập, không cần trình duyệt
+- ✅ Database được lưu local
+- ✅ Chỉ dành cho macOS
+
+## 🐛 Troubleshooting
+
+### Shortcut không hoạt động
+
+1. Kiểm tra xem đã chạy script tạo shortcut chưa:
+   ```bash
+   ./create-shortcut.sh
+   ```
+
+2. Nếu muốn production app, chạy:
+   ```bash
+   ./build-and-create-shortcut.sh
+   ```
+
+### App không chạy được
+
+1. Đảm bảo đã cài đặt Node.js (v18+)
+2. Chạy `npm install` để cài dependencies
+3. Build lại app: `./build-and-create-shortcut.sh`
+
+### Database không tìm thấy
+
+- Database được tạo tự động khi chạy app lần đầu
+- Development: `./data/tpb-manage.db`
+- Production: `~/Library/Application Support/TPB Manage/data/tpb-manage.db`
