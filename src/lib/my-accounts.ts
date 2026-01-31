@@ -3,6 +3,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL_ENV;
+
 const DATA_DIR = path.join(process.cwd(), 'data');
 const ACCOUNTS_FILE = path.join(DATA_DIR, 'my-accounts.json');
 
@@ -19,12 +21,26 @@ export interface AccountItem {
     updatedAt?: string;
 }
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+// Ensure data directory exists (skip on Vercel - read-only filesystem)
+function ensureDataDir() {
+    if (isVercel) return;
+    try {
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+    } catch (error) {
+        console.error('Cannot create data directory:', error);
+    }
 }
 
 export async function getAccounts(): Promise<AccountItem[]> {
+    // On Vercel, return empty - accounts feature only works locally
+    if (isVercel) {
+        return [];
+    }
+
+    ensureDataDir();
+
     if (!fs.existsSync(ACCOUNTS_FILE)) {
         return [];
     }
@@ -39,6 +55,12 @@ export async function getAccounts(): Promise<AccountItem[]> {
 }
 
 export async function saveAccounts(accounts: AccountItem[]): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng Tài khoản chỉ hoạt động trên App local');
+    }
+
+    ensureDataDir();
+
     try {
         fs.writeFileSync(ACCOUNTS_FILE, JSON.stringify(accounts, null, 2), 'utf-8');
     } catch (error) {
@@ -48,6 +70,10 @@ export async function saveAccounts(accounts: AccountItem[]): Promise<void> {
 }
 
 export async function addAccount(account: Omit<AccountItem, 'id' | 'updatedAt'>): Promise<AccountItem> {
+    if (isVercel) {
+        throw new Error('Tính năng Tài khoản chỉ hoạt động trên App local');
+    }
+
     const accounts = await getAccounts();
     const newAccount = {
         ...account,
@@ -60,6 +86,10 @@ export async function addAccount(account: Omit<AccountItem, 'id' | 'updatedAt'>)
 }
 
 export async function updateAccount(id: string, updates: Partial<AccountItem>): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng Tài khoản chỉ hoạt động trên App local');
+    }
+
     const accounts = await getAccounts();
     const index = accounts.findIndex(t => t.id === id);
     if (index !== -1) {
@@ -73,7 +103,12 @@ export async function updateAccount(id: string, updates: Partial<AccountItem>): 
 }
 
 export async function deleteAccount(id: string): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng Tài khoản chỉ hoạt động trên App local');
+    }
+
     const accounts = await getAccounts();
     const filtered = accounts.filter(t => t.id !== id);
     await saveAccounts(filtered);
 }
+

@@ -33,5 +33,12 @@
     "title": "Báo giá Netflix",
     "category": "sale",
     "content": "Netflix mình có 2 loại:\nHàng extra **75k/tháng**: Log in là dùng\nHàng Slot riêng: **70k/tháng**: Cần mình gửi mã"
+  },
+  {
+    "title": "Báo giá Quizlet",
+    "content": "Quizlet plus 160k/năm\nQuizlet unlimited 200k/năm\nTất cả đều nâng chính chủ, bảo hành trong thời hạn, thanh toán khi log in thành công\n",
+    "service": "Quizlet",
+    "category": "sale",
+    "id": "d9arvvb"
   }
 ]

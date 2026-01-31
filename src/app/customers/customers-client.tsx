@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
     Dialog,
     DialogContent,
@@ -30,9 +31,9 @@ import {
 } from '@/components/ui/tabs';
 import { CustomerWithStats, CustomerSegment } from '@/types';
 import { Customer } from '@/lib/db/schema';
-import { Plus, Search, User, Phone, Tag, MessageSquare, Edit, Trash2, Key, Trophy, Star, Medal, Circle, Users, UserPlus, DollarSign } from 'lucide-react';
+import { Plus, Search, User, Phone, Tag, MessageSquare, Edit, Trash2, Key, Trophy, Star, Medal, Circle, Users, UserPlus, DollarSign, GitMerge } from 'lucide-react';
 import { toast } from 'sonner';
-import { createCustomerAction, deleteCustomerAction, updateCustomerAction, importCustomersExcelAction, downloadTemplateAction } from '@/app/actions';
+import { createCustomerAction, deleteCustomerAction, updateCustomerAction, importCustomersExcelAction, downloadTemplateAction, mergeCustomersAction } from '@/app/actions';
 import { Upload, FileSpreadsheet, Download, Loader2 } from 'lucide-react';
 import { formatCurrency } from '@/lib/business';
 
@@ -125,6 +126,48 @@ export function CustomersClient({ customers }: CustomersClientProps) {
     const [isImporting, setIsImporting] = useState(false);
     const [importResult, setImportResult] = useState<{ success: boolean; customersAdded?: number; subscriptionsAdded?: number; errors?: string[] } | null>(null);
     const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+
+    // Merge functionality
+    const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+    const [isMergeOpen, setIsMergeOpen] = useState(false);
+    const [primaryId, setPrimaryId] = useState<number | null>(null);
+    const [isMerging, setIsMerging] = useState(false);
+
+    const toggleSelection = (id: number) => {
+        const newSet = new Set(selectedIds);
+        if (newSet.has(id)) {
+            newSet.delete(id);
+        } else {
+            newSet.add(id);
+        }
+        setSelectedIds(newSet);
+    };
+
+    const handleMerge = async () => {
+        if (!primaryId || selectedIds.size < 2) return;
+
+        setIsMerging(true);
+        const secondaryIds = Array.from(selectedIds).filter(id => id !== primaryId);
+
+        try {
+            const result = await mergeCustomersAction(primaryId, secondaryIds);
+            if (result.success) {
+                toast.success(`Đã gộp ${result.mergedCount} khách hàng thành công!`);
+                setSelectedIds(new Set());
+                setPrimaryId(null);
+                setIsMergeOpen(false);
+                router.refresh();
+            } else {
+                toast.error(result.error || 'Có lỗi xảy ra');
+            }
+        } catch (error) {
+            toast.error('Có lỗi xảy ra khi gộp khách hàng');
+        } finally {
+            setIsMerging(false);
+        }
+    };
+
+    const selectedCustomers = customers.filter(c => selectedIds.has(c.id));
 
     const filteredCustomers = customers.filter(
         (c) => {
@@ -391,6 +434,64 @@ export function CustomersClient({ customers }: CustomersClientProps) {
                         </div>
                     </DialogContent>
                 </Dialog>
+
+                {/* Merge Customers Button + Dialog */}
+                {selectedIds.size >= 2 && (
+                    <Dialog open={isMergeOpen} onOpenChange={(open) => { setIsMergeOpen(open); if (!open) setPrimaryId(null); }}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="bg-green-50 text-green-700 border-green-200 hover:bg-green-100">
+                                <GitMerge className="h-4 w-4 mr-2" />
+                                Gộp khách hàng ({selectedIds.size})
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Gộp khách hàng</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4">
+                                <p className="text-sm text-gray-600">
+                                    Chọn khách hàng <b>chính</b> (giữ lại). Tất cả đơn hàng từ các khách còn lại sẽ được gộp vào khách hàng chính.
+                                </p>
+                                <div className="space-y-2 max-h-60 overflow-y-auto">
+                                    {selectedCustomers.map(c => (
+                                        <label
+                                            key={c.id}
+                                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${primaryId === c.id ? 'bg-green-50 border-green-300' : 'bg-gray-50 border-gray-200 hover:bg-gray-100'}`}
+                                        >
+                                            <input
+                                                type="radio"
+                                                name="primaryCustomer"
+                                                checked={primaryId === c.id}
+                                                onChange={() => setPrimaryId(c.id)}
+                                                className="h-4 w-4 text-green-600"
+                                            />
+                                            <div className="flex-1">
+                                                <div className="font-medium text-gray-900">{c.name}</div>
+                                                <div className="text-xs text-gray-500">{c.totalOrders} đơn • {formatCurrency(c.totalRevenue)}</div>
+                                            </div>
+                                            {primaryId === c.id && (
+                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded font-medium">Chính</span>
+                                            )}
+                                        </label>
+                                    ))}
+                                </div>
+                                <div className="flex gap-2 pt-2">
+                                    <Button variant="outline" onClick={() => setIsMergeOpen(false)} className="flex-1">
+                                        Hủy
+                                    </Button>
+                                    <Button
+                                        onClick={handleMerge}
+                                        disabled={!primaryId || isMerging}
+                                        className="flex-1 bg-green-600 hover:bg-green-700"
+                                    >
+                                        {isMerging ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <GitMerge className="h-4 w-4 mr-2" />}
+                                        Gộp
+                                    </Button>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                )}
             </div>
 
             {/* Segment Filter Tabs */}
@@ -419,6 +520,7 @@ export function CustomersClient({ customers }: CustomersClientProps) {
                 <Table>
                     <TableHeader>
                         <TableRow className="bg-gray-50 hover:bg-gray-50">
+                            <TableHead className="w-[40px]"></TableHead>
                             <TableHead className="w-[50px] font-bold text-center">#</TableHead>
                             <TableHead className="w-[250px]">Khách hàng</TableHead>
                             <TableHead>Phân hạng</TableHead>
@@ -432,7 +534,7 @@ export function CustomersClient({ customers }: CustomersClientProps) {
                     <TableBody>
                         {filteredCustomers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={8} className="text-center py-12 text-gray-500">
+                                <TableCell colSpan={9} className="text-center py-12 text-gray-500">
                                     <div className="flex flex-col items-center justify-center p-4">
                                         <User className="h-10 w-10 text-gray-300 mb-2" />
                                         <p>Không tìm thấy khách hàng</p>
@@ -441,7 +543,13 @@ export function CustomersClient({ customers }: CustomersClientProps) {
                             </TableRow>
                         ) : (
                             filteredCustomers.map((customer) => (
-                                <TableRow key={customer.id} className="hover:bg-gray-50 transition-colors">
+                                <TableRow key={customer.id} className={`hover:bg-gray-50 transition-colors ${selectedIds.has(customer.id) ? 'bg-green-50' : ''}`}>
+                                    <TableCell className="text-center">
+                                        <Checkbox
+                                            checked={selectedIds.has(customer.id)}
+                                            onCheckedChange={() => toggleSelection(customer.id)}
+                                        />
+                                    </TableCell>
                                     <TableCell className="text-center font-medium text-gray-500">
                                         {filteredCustomers.indexOf(customer) + 1}
                                     </TableCell>
@@ -607,6 +715,6 @@ export function CustomersClient({ customers }: CustomersClientProps) {
                     )}
                 </DialogContent>
             </Dialog>
-        </div>
+        </div >
     );
 }

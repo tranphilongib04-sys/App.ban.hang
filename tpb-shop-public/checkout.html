@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - Tiệm Bản Quyền</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-inner">
+            <a href="index.html" class="logo">Tiệm Bản Quyền</a>
+            <div class="nav-actions">
+                <a href="https://zalo.me/0918161862" class="nav-link" target="_blank">Hỗ trợ</a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Checkout -->
+    <section class="checkout">
+        <div class="checkout-container">
+            <div class="checkout-header">
+                <div class="checkout-steps">
+                    <div class="checkout-step done">✓</div>
+                    <div class="checkout-step done">✓</div>
+                    <div class="checkout-step active">3</div>
+                </div>
+                <h1 class="headline-card">Thanh toán</h1>
+                <p class="subhead" style="margin-top: 8px;">Chuyển khoản theo thông tin bên dưới</p>
+            </div>
+
+            <div class="checkout-card">
+                <!-- Order Summary -->
+                <div class="order-summary">
+                    <h3 class="order-title">Đơn hàng của bạn</h3>
+                    <div id="orderSummary">
+                        <!-- Items rendered by JS -->
+                    </div>
+                    <div class="order-total">
+                        <span>Tổng cộng</span>
+                        <span class="order-total-amount" id="orderTotal">0đ</span>
+                    </div>
+                </div>
+
+                <!-- Payment QR -->
+                <div class="payment-qr">
+                    <img src="https://img.vietqr.io/image/MB-0918161862-compact.png" alt="QR Code" class="qr-code"
+                        style="width: 200px; height: 200px; background: none;">
+                    <div class="payment-info">
+                        <p class="payment-bank">MB Bank</p>
+                        <p class="payment-account">0918161862</p>
+                        <p class="payment-name">TRAN PHI LONG</p>
+                    </div>
+                </div>
+
+                <!-- Transfer Content -->
+                <div class="transfer-content">
+                    <p class="transfer-label">Nội dung chuyển khoản</p>
+                    <p class="transfer-value" id="transferContent">TBQ CHATGPT</p>
+                </div>
+
+                <!-- Important note -->
+                <div
+                    style="background: rgba(0, 113, 227, 0.05); border-radius: 12px; padding: 16px; margin-bottom: 16px; text-align: left;">
+                    <p style="font-size: 14px; color: var(--color-text-secondary); margin: 0;">
+                        💡 Sau khi chuyển khoản thành công, bấm nút bên dưới để nhận tài khoản <strong>ngay trên
+                            web</strong>.
+                    </p>
+                </div>
+
+                <!-- Buttons -->
+                <button class="btn btn-outline" style="width: 100%; margin-bottom: 12px;" id="copyBtn">
+                    📋 Copy số tài khoản
+                </button>
+
+                <button class="btn btn-primary" style="width: 100%;" id="confirmBtn">
+                    ✓ Đã chuyển khoản - Nhận tài khoản
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="js/main.js"></script>
+</body>
+
+</html>

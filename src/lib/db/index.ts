@@ -1,79 +1,121 @@
 import * as schema from './schema';
 import path from 'path';
-import { existsSync, mkdirSync, renameSync } from 'fs';
+import { existsSync, mkdirSync } from 'fs';
 import { drizzle } from 'drizzle-orm/libsql';
-import { createClient } from '@libsql/client';
-import Database from 'better-sqlite3';
-import { drizzle as drizzleSqlite } from 'drizzle-orm/better-sqlite3';
+import { createClient, Client } from '@libsql/client';
 
-// Check if running in Cloud mode (Vercel/Turso)
-const isCloudMode = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
-
-let db: any;
-let sqlite: any;
-
-if (isCloudMode) {
-  // Cloud Mode: Connect to Turso
-  const client = createClient({
-    url: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  });
-  db = drizzle(client, { schema });
-} else {
-  // Local Mode: Connect to local file
-  function getDbPath() {
-    // Check if running in Electron
-    if (process.env.ELECTRON_USER_DATA) {
-      const userDataPath = process.env.ELECTRON_USER_DATA;
-      const dataDir = path.join(userDataPath, 'data');
-      if (!existsSync(dataDir)) {
-        mkdirSync(dataDir, { recursive: true });
-      }
-      const newPath = path.join(dataDir, 'tpb-manage.db');
-      return newPath;
-    }
-
-    // Development mode
-    const dataDir = path.join(process.cwd(), 'data');
+// Get local database path
+function getLocalDbPath() {
+  // Check if running in Electron
+  if (process.env.ELECTRON_USER_DATA) {
+    const userDataPath = process.env.ELECTRON_USER_DATA;
+    const dataDir = path.join(userDataPath, 'data');
     if (!existsSync(dataDir)) {
       mkdirSync(dataDir, { recursive: true });
     }
     return path.join(dataDir, 'tpb-manage.db');
   }
 
-  const dbPath = getDbPath();
-  sqlite = new Database(dbPath);
-  sqlite.pragma('foreign_keys = ON');
-  db = drizzleSqlite(sqlite, { schema });
-
-  // Initialize tables if they don't exist
-  initializeDatabase();
+  // Development mode
+  const dataDir = path.join(process.cwd(), 'data');
+  if (!existsSync(dataDir)) {
+    mkdirSync(dataDir, { recursive: true });
+  }
+  return path.join(dataDir, 'tpb-manage.db');
 }
 
-export { db };
+// Check configuration
+const hasTursoCredentials = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+// Disable sync on Vercel (read-only filesystem) - always use cloud-only mode
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+const syncEnabled = !isVercel && process.env.TURSO_SYNC_ENABLED === 'true';
 
-// Initialize database tables (Only for Local Mode)
-// For Cloud mode, we should use migrations, but for simplicity we can run raw SQL if client allows,
-// OR just rely on the migration script to set it up.
-export function initializeDatabase() {
-  if (isCloudMode) {
-    // In cloud mode, we skip local init.
-    // The user should run the migration/push script to set up the cloud DB.
-    return;
+let client: Client;
+let db: ReturnType<typeof drizzle>;
+
+if (hasTursoCredentials && syncEnabled) {
+  // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync
+  // Reads are fast (local), writes sync to cloud
+  console.log('🔄 Database: Embedded Replicas Mode (Local + Cloud Sync)');
+
+  const localPath = getLocalDbPath();
+  console.log(`   Local replica: ${localPath}`);
+  console.log(`   Cloud sync: ${process.env.TURSO_DATABASE_URL}`);
+
+  client = createClient({
+    url: `file:${localPath}`,
+    syncUrl: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
+  });
+
+  db = drizzle(client, { schema });
+
+  // Initial sync from cloud to local
+  syncDatabase().catch(err => {
+    console.error('Initial sync failed:', err.message);
+  });
+
+} else if (hasTursoCredentials) {
+  // CLOUD ONLY MODE: Direct connection to Turso
+  console.log('☁️  Database: Cloud Only Mode (Turso)');
+
+  client = createClient({
+    url: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
+  });
+
+  db = drizzle(client, { schema });
+
+} else {
+  // LOCAL ONLY MODE: Just local SQLite
+  console.log('💾 Database: Local Only Mode');
+
+  const localPath = getLocalDbPath();
+  console.log(`   Database: ${localPath}`);
+
+  client = createClient({
+    url: `file:${localPath}`,
+  });
+
+  db = drizzle(client, { schema });
+}
+
+// Export database instance
+export { db, client };
+
+// Sync function for embedded replicas
+export async function syncDatabase() {
+  if (!hasTursoCredentials || !syncEnabled) {
+    return { success: true, message: 'Sync not enabled' };
   }
 
+  try {
+    await client.sync();
+    console.log('✓ Database synced with cloud');
+    return { success: true, message: 'Synced successfully' };
+  } catch (error: any) {
+    console.error('✗ Sync failed:', error.message);
+    return { success: false, message: error.message };
+  }
+}
+
+// Initialize database tables
+export async function initializeDatabase() {
   console.log('Initializing database tables...');
 
-  const runSafe = (sql: string, description: string) => {
+  const runSafe = async (sql: string, description: string) => {
     try {
-      sqlite.exec(sql);
-      console.log(`\u2713 ${description} checked/created.`);
+      await client.execute(sql);
+      console.log(`✓ ${description} checked/created.`);
     } catch (error: any) {
-      console.error(`\u2717 Failed to init ${description}:`, error.message);
+      // Ignore "already exists" errors
+      if (!error.message.includes('already exists')) {
+        console.error(`✗ Failed to init ${description}:`, error.message);
+      }
     }
   };
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
@@ -85,7 +127,7 @@ export function initializeDatabase() {
     );
   `, 'customers');
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS subscriptions (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       customer_id INTEGER NOT NULL REFERENCES customers(id),
@@ -95,8 +137,8 @@ export function initializeDatabase() {
       distribution TEXT,
       revenue REAL DEFAULT 0,
       cost REAL DEFAULT 0,
-      renewal_status TEXT NOT NULL DEFAULT 'pending' CHECK(renewal_status IN ('pending', 'renewed', 'not_renewing')),
-      payment_status TEXT NOT NULL DEFAULT 'unpaid' CHECK(payment_status IN ('unpaid', 'paid', 'not_paying')),
+      renewal_status TEXT NOT NULL DEFAULT 'pending',
+      payment_status TEXT NOT NULL DEFAULT 'unpaid',
       last_contacted_at TEXT,
       reminder_date TEXT,
       contact_count INTEGER DEFAULT 0,
@@ -107,14 +149,14 @@ export function initializeDatabase() {
     );
   `, 'subscriptions');
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS inventory_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       service TEXT NOT NULL,
       distribution TEXT,
       secret_payload TEXT NOT NULL,
       secret_masked TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'available' CHECK(status IN ('available', 'delivered', 'invalid')),
+      status TEXT NOT NULL DEFAULT 'available',
       import_batch TEXT,
       cost REAL DEFAULT 0,
       note TEXT,
@@ -123,7 +165,7 @@ export function initializeDatabase() {
     );
   `, 'inventory_items');
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS deliveries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       subscription_id INTEGER NOT NULL REFERENCES subscriptions(id),
@@ -133,7 +175,7 @@ export function initializeDatabase() {
     );
   `, 'deliveries');
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS warranties (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       subscription_id INTEGER NOT NULL REFERENCES subscriptions(id),
@@ -142,13 +184,13 @@ export function initializeDatabase() {
       replacement_inventory_id INTEGER REFERENCES inventory_items(id),
       resolved_date TEXT,
       cost REAL DEFAULT 0,
-      warranty_status TEXT NOT NULL DEFAULT 'pending' CHECK(warranty_status IN ('pending', 'resolved', 'rejected')),
+      warranty_status TEXT NOT NULL DEFAULT 'pending',
       note TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
   `, 'warranties');
 
-  runSafe(`
+  await runSafe(`
     CREATE TABLE IF NOT EXISTS system_config (
       key TEXT PRIMARY KEY,
       value TEXT NOT NULL,
@@ -156,12 +198,16 @@ export function initializeDatabase() {
     );
   `, 'system_config');
 
-  runSafe(`
-    CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions(customer_id);
-    CREATE INDEX IF NOT EXISTS idx_subscriptions_end_date ON subscriptions(end_date);
-    CREATE INDEX IF NOT EXISTS idx_inventory_status ON inventory_items(status);
-    CREATE INDEX IF NOT EXISTS idx_inventory_service ON inventory_items(service);
-    CREATE INDEX IF NOT EXISTS idx_deliveries_subscription ON deliveries(subscription_id);
-    CREATE INDEX IF NOT EXISTS idx_warranties_subscription ON warranties(subscription_id);
-  `, 'indices');
+  // Create indexes
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_subscriptions_customer ON subscriptions(customer_id);`, 'idx_subscriptions_customer');
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_subscriptions_end_date ON subscriptions(end_date);`, 'idx_subscriptions_end_date');
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_inventory_status ON inventory_items(status);`, 'idx_inventory_status');
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_inventory_service ON inventory_items(service);`, 'idx_inventory_service');
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_deliveries_subscription ON deliveries(subscription_id);`, 'idx_deliveries_subscription');
+  await runSafe(`CREATE INDEX IF NOT EXISTS idx_warranties_subscription ON warranties(subscription_id);`, 'idx_warranties_subscription');
+
+  // Sync after initialization if in embedded replicas mode
+  if (hasTursoCredentials && syncEnabled) {
+    await syncDatabase();
+  }
 }

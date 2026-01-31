@@ -3,6 +3,8 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+const isVercel = process.env.VERCEL === '1' || !!process.env.VERCEL_ENV;
+
 const DATA_DIR = path.join(process.cwd(), 'data');
 const TEMPLATES_FILE = path.join(DATA_DIR, 'templates.json');
 
@@ -54,12 +56,26 @@ const DEFAULT_TEMPLATES: Template[] = [
     }
 ];
 
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
+// Ensure data directory exists (skip on Vercel - read-only filesystem)
+function ensureDataDir() {
+    if (isVercel) return;
+    try {
+        if (!fs.existsSync(DATA_DIR)) {
+            fs.mkdirSync(DATA_DIR, { recursive: true });
+        }
+    } catch (error) {
+        console.error('Cannot create data directory:', error);
+    }
 }
 
 export async function getTemplates(): Promise<Template[]> {
+    // On Vercel, return default templates
+    if (isVercel) {
+        return DEFAULT_TEMPLATES;
+    }
+
+    ensureDataDir();
+
     if (!fs.existsSync(TEMPLATES_FILE)) {
         await saveTemplates(DEFAULT_TEMPLATES);
         return DEFAULT_TEMPLATES;
@@ -75,6 +91,12 @@ export async function getTemplates(): Promise<Template[]> {
 }
 
 export async function saveTemplates(templates: Template[]): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng lưu mẫu chỉ hoạt động trên App local');
+    }
+
+    ensureDataDir();
+
     try {
         fs.writeFileSync(TEMPLATES_FILE, JSON.stringify(templates, null, 2), 'utf-8');
     } catch (error) {
@@ -84,6 +106,10 @@ export async function saveTemplates(templates: Template[]): Promise<void> {
 }
 
 export async function addTemplate(template: Omit<Template, 'id'>): Promise<Template> {
+    if (isVercel) {
+        throw new Error('Tính năng lưu mẫu chỉ hoạt động trên App local');
+    }
+
     const templates = await getTemplates();
     const newTemplate = {
         ...template,
@@ -95,6 +121,10 @@ export async function addTemplate(template: Omit<Template, 'id'>): Promise<Templ
 }
 
 export async function updateTemplate(id: string, updates: Partial<Template>): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng lưu mẫu chỉ hoạt động trên App local');
+    }
+
     const templates = await getTemplates();
     const index = templates.findIndex(t => t.id === id);
     if (index !== -1) {
@@ -104,7 +134,12 @@ export async function updateTemplate(id: string, updates: Partial<Template>): Pr
 }
 
 export async function deleteTemplate(id: string): Promise<void> {
+    if (isVercel) {
+        throw new Error('Tính năng lưu mẫu chỉ hoạt động trên App local');
+    }
+
     const templates = await getTemplates();
     const filtered = templates.filter(t => t.id !== id);
     await saveTemplates(filtered);
 }
+

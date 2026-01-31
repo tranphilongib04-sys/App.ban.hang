@@ -64,6 +64,7 @@ export interface SubscriptionWithCustomer {
     category: string | null;
     hasWarranty?: boolean;
     reminderDate?: string | null;
+    completedAt?: string | null;
 }
 
 // Extended warranty with subscription info

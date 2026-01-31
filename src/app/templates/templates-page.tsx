@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Template } from '@/lib/templates';
+import { Template } from '@/lib/db/schema';
 import { replaceVariables } from '@/lib/variable-replacer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -66,7 +66,7 @@ export function TemplatesPageClient({ templates }: TemplatesPageClientProps) {
         setIsEditorOpen(true);
     };
 
-    const handleDelete = async (id: string) => {
+    const handleDelete = async (id: number) => {
         if (!confirm('Bạn có chắc muốn xóa mẫu này?')) return;
         try {
             await deleteTemplateAction(id);

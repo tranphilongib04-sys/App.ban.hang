@@ -35,6 +35,7 @@ export function EditOrderDialog({ subscription, trigger }: EditOrderDialogProps)
 
         try {
             const data = {
+                customerName: formData.get('customerName') as string,
                 service: formData.get('service') as string,
                 revenue: parseFloat(formData.get('revenue') as string) || 0,
                 cost: parseFloat(formData.get('cost') as string) || 0,
@@ -69,6 +70,15 @@ export function EditOrderDialog({ subscription, trigger }: EditOrderDialogProps)
                     <DialogTitle>Chỉnh sửa đơn hàng - {subscription.customerName}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4">
+                    <div className="col-span-2">
+                        <Label htmlFor="customerName">Tên khách hàng</Label>
+                        <Input
+                            name="customerName"
+                            defaultValue={subscription.customerName}
+                            required
+                        />
+                    </div>
+
                     <div className="col-span-2">
                         <Label htmlFor="service">Dịch vụ</Label>
                         <Input

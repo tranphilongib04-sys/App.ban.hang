@@ -12,7 +12,7 @@ import {
     BarChart3,
     Settings,
     MessageSquareText,
-    Lock,
+    Users2,
     Menu,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -24,7 +24,7 @@ const navItems = [
     { href: '/orders', label: 'Orders', icon: ShoppingBag },
     { href: '/customers', label: 'Customers', icon: Users },
     { href: '/inventory', label: 'Inventory', icon: Package },
-    { href: '/accounts', label: 'Vault', icon: Lock },
+    { href: '/family', label: 'Family', icon: Users2 },
     { href: '/warranty', label: 'Warranty', icon: Shield },
     { href: '/templates', label: 'Templates', icon: MessageSquareText },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
@@ -54,7 +54,7 @@ function NavContent({ isMobile = false, onItemClick }: { isMobile?: boolean, onI
             </div>
 
             {/* Navigation */}
-            <nav className="flex-1 p-4 space-y-1.5 overflow-y-auto">
+            <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
                 {navItems.map((item) => {
                     const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
                     const Icon = item.icon;
@@ -65,7 +65,7 @@ function NavContent({ isMobile = false, onItemClick }: { isMobile?: boolean, onI
                             href={item.href}
                             onClick={onItemClick}
                             className={cn(
-                                'flex items-center gap-3 px-4 py-3 rounded-2xl text-sm font-semibold transition-all duration-300 group',
+                                'flex items-center gap-3 px-4 py-3.5 rounded-2xl text-sm font-semibold transition-all duration-300 group min-h-[48px] active:scale-[0.98]',
                                 isActive
                                     ? 'bg-gradient-to-r from-indigo-500/90 to-violet-600/90 text-white shadow-lg shadow-indigo-500/20 translate-x-1'
                                     : 'text-gray-600 hover:bg-white/40 hover:text-indigo-600 hover:shadow-sm'

@@ -14,12 +14,18 @@ lsof -ti:3210 | xargs kill -9 2>/dev/null
 echo -e "${GREEN}Đang tối ưu hoá ứng dụng (Mất khoảng 1-2 phút lần đầu)...${RESET}"
 echo -e "Vui lòng đợi..."
 
-# Try to build. If build fails, fallback to dev mode but warn user.
+echo -e "${GREEN}Đang dọn dẹp cache cũ...${RESET}"
+rm -rf .next
 rm -f build.log
+
 if npm run build > build.log 2>&1; then
-    echo -e "${GREEN}Tối ưu hoá thành công! Đang khởi động...${RESET}"
-    rm -f server.log
+    # Revert to standard start for stability (handles assets better)
     npm run start -- -H 0.0.0.0 -p 3210 > server.log 2>&1 &
+    # if [ -f ".next/standalone/server.js" ]; then
+    #    PORT=3210 HOSTNAME=0.0.0.0 node .next/standalone/server.js > server.log 2>&1 &
+    # else
+    #    npm run start -- -H 0.0.0.0 -p 3210 > server.log 2>&1 &
+    # fi
     SERVER_PID=$!
 else
     echo -e "\033[0;31mBuild thất bại. Cố gắng chạy chế độ Dev... (Có thể chậm)\033[0m"
@@ -29,42 +35,43 @@ else
     SERVER_PID=$!
 fi
 
-# 3. Start Tunnel (Internet Access)
-echo -e "${GREEN}Đang kết nối Server VIP 1 (localhost.run)...${RESET}"
+# 3. Start Tunnel (Internet Access - Priority Fixed Link)
+echo -e "${GREEN}Đang kết nối Server Internet (Link Cố Định)...${RESET}"
 rm -f tunnel.log
 
-# Try localhost.run
-ssh -R 80:localhost:3210 nokey@localhost.run -o StrictHostKeyChecking=no > tunnel.log 2>&1 &
+# PREFERRED: Serveo with Custom Alias (long-tpb-manager)
+# This keeps the link THE SAME every time: https://long-tpb-manager.serveo.net
+ssh -R long-tpb-manager:80:localhost:3210 serveo.net -o StrictHostKeyChecking=no > tunnel.log 2>&1 &
 TUNNEL_PID=$!
 
 TUNNEL_URL=""
 for i in {1..10}; do
-    if grep -q "Connect to your tunnel at" tunnel.log; then
-        TUNNEL_URL=$(grep "Connect to your tunnel at" tunnel.log | awk '{print $6}')
+    if grep -q "Forwarding HTTP traffic from" tunnel.log; then
+        TUNNEL_URL=$(grep "Forwarding HTTP traffic from" tunnel.log | awk '{print $5}')
         break
     fi
     sleep 1
 done
 
-# Fallback 1: Serveo.net
+# Fallback: Localhost.run (Random Link) if Serveo fails
 if [ -z "$TUNNEL_URL" ]; then
-    echo -e "${GREEN}Server VIP 1 bận. Đang thử Server VIP 2 (serveo.net)...${RESET}"
+    echo -e "${GREEN}Server VIP 1 bận. Chuyển sang Server dự phòng (Link Ngẫu nhiên)...${RESET}"
     kill $TUNNEL_PID 2>/dev/null
     rm -f tunnel.log
     
-    ssh -R 80:localhost:3210 serveo.net -o StrictHostKeyChecking=no > tunnel.log 2>&1 &
+    ssh -R 80:localhost:3210 nokey@localhost.run -o StrictHostKeyChecking=no > tunnel.log 2>&1 &
     TUNNEL_PID=$!
-    
+
     for i in {1..10}; do
-        if grep -q "Forwarding HTTP traffic from" tunnel.log; then
-            TUNNEL_URL=$(grep "Forwarding HTTP traffic from" tunnel.log | awk '{print $5}')
+        if grep -q "Connect to your tunnel at" tunnel.log; then
+            TUNNEL_URL=$(grep "Connect to your tunnel at" tunnel.log | awk '{print $6}')
             break
         fi
         sleep 1
     done
 fi
 
-# Fallback 2: LocalTunnel (Last Resort)
+# Fallback 2: LocalTunnel
 if [ -z "$TUNNEL_URL" ]; then
     echo -e "${GREEN}Server VIP bận, đang chuyển sang Server dự phòng (Localtunnel)...${RESET}"
     kill $TUNNEL_PID 2>/dev/null

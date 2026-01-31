@@ -39,13 +39,15 @@ import { InventoryItem, Customer } from '@/lib/db/schema';
 import { formatCurrency } from '@/lib/business';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
-import { Plus, Upload, Package, Search, Copy, XCircle, CheckCircle, Truck, ShoppingCart } from 'lucide-react';
+import { Plus, Upload, Package, Search, Copy, XCircle, CheckCircle, Truck, ShoppingCart, Pencil, Trash } from 'lucide-react';
 import { toast } from 'sonner';
 import { copyToClipboard } from '@/lib/messages';
 import {
     createInventoryItemAction,
     importInventoryAction,
     updateInventoryStatusAction,
+    updateInventoryItemAction,
+    deleteInventoryItemAction,
     sellInventoryItemAction,
 } from '@/app/actions';
 import { SalesDialog } from '@/components/inventory/sales-dialog';
@@ -68,7 +70,13 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
     const [sellCustomer, setSellCustomer] = useState('');
     const [sellContact, setSellContact] = useState('');
     const [sellPrice, setSellPrice] = useState('');
-    const [sellDuration, setSellDuration] = useState('1');
+    // Date states for selling
+    const today = new Date();
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const formatDateForInput = (d: Date) => d.toISOString().split('T')[0];
+    const [sellStartDate, setSellStartDate] = useState(formatDateForInput(today));
+    const [sellEndDate, setSellEndDate] = useState(formatDateForInput(oneMonthLater));
     const [sellNote, setSellNote] = useState('');
     const [sellPaymentStatus, setSellPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
 
@@ -89,6 +97,17 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
     const [importText, setImportText] = useState('');
     const [importService, setImportService] = useState('');
     const [importCost, setImportCost] = useState('');
+    const [importExpiresAt, setImportExpiresAt] = useState('');
+    const [importDistribution, setImportDistribution] = useState('');
+
+    // Edit Dialog State
+    const [isEditOpen, setIsEditOpen] = useState(false);
+    const [editItem, setEditItem] = useState<InventoryItem | null>(null);
+    const [editService, setEditService] = useState('');
+    const [editSecret, setEditSecret] = useState('');
+    const [editCost, setEditCost] = useState('');
+    const [editExpiresAt, setEditExpiresAt] = useState('');
+    const [editNote, setEditNote] = useState('');
 
     // Pre-calculate filtered items based on Search & Service ONLY
     const baseFilteredItems = items.filter((item) => {
@@ -146,6 +165,8 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
             service: importService,
             secretPayload: line,
             cost: parseFloat(importCost) || 0,
+            expiresAt: importExpiresAt || null,
+            distribution: importDistribution || undefined,
         }));
 
         try {
@@ -155,6 +176,8 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
             setImportText('');
             setImportService('');
             setImportCost('');
+            setImportExpiresAt('');
+            setImportDistribution('');
             router.refresh();
         } catch {
             toast.error('Có lỗi khi import');
@@ -176,13 +199,57 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
         }
     };
 
+    const openEditDialog = (item: InventoryItem) => {
+        setEditItem(item);
+        setEditService(item.service);
+        setEditSecret(item.secretPayload);
+        setEditCost(item.cost?.toString() || '0');
+        setEditExpiresAt(item.expiresAt?.split('T')[0] || '');
+        setEditNote(item.note || '');
+        setIsEditOpen(true);
+    };
+
+    const handleEditItem = async () => {
+        if (!editItem) return;
+        try {
+            await updateInventoryItemAction(editItem.id, {
+                service: editService,
+                secretPayload: editSecret,
+                cost: parseFloat(editCost) || 0,
+                expiresAt: editExpiresAt || null,
+                note: editNote,
+            });
+            toast.success('Đã cập nhật item');
+            setIsEditOpen(false);
+            router.refresh();
+        } catch {
+            toast.error('Có lỗi khi cập nhật');
+        }
+    };
+
+    const handleDeleteItem = async (id: number) => {
+        if (!confirm('Bạn có chắc chắn muốn xoá item này? Hành động không thể hoàn tác.')) return;
+        try {
+            await deleteInventoryItemAction(id);
+            toast.success('Đã xoá item');
+            router.refresh();
+        } catch {
+            toast.error('Có lỗi khi xoá');
+        }
+    };
+
     const openSellDialog = (item: InventoryItem) => {
         setSellItem(item);
         setSellCustomer('');
         setCustomerSearch(''); // Reset search
         setSellContact('');
         setSellPrice(item.cost?.toString() || '0');
-        setSellDuration('1');
+        // Reset dates
+        const now = new Date();
+        const nextMonth = new Date(now);
+        nextMonth.setMonth(nextMonth.getMonth() + 1);
+        setSellStartDate(now.toISOString().split('T')[0]);
+        setSellEndDate(nextMonth.toISOString().split('T')[0]);
         setSellNote('');
         setSellPaymentStatus('unpaid');
         setSoldSecret(null); // Reset sold secret
@@ -212,7 +279,8 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
         formData.append('customerName', finalCustomerName);
         formData.append('contact', sellContact);
         formData.append('salePrice', sellPrice);
-        formData.append('durationMonths', sellDuration);
+        formData.append('startDate', sellStartDate);
+        formData.append('endDate', sellEndDate);
         formData.append('note', sellNote);
         formData.append('paymentStatus', sellPaymentStatus);
 
@@ -249,13 +317,14 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                             <TableHead>Chi phí</TableHead>
                             <TableHead>Trạng thái</TableHead>
                             <TableHead>Ngày thêm</TableHead>
+                            <TableHead>Hết hạn</TableHead>
                             <TableHead className="text-right">Hành động</TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {data.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                                <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                                     Không có item nào
                                 </TableCell>
                             </TableRow>
@@ -273,6 +342,9 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                                     </TableCell>
                                     <TableCell className="text-gray-500 text-sm">
                                         {format(new Date(item.createdAt), 'dd/MM/yyyy', { locale: vi })}
+                                    </TableCell>
+                                    <TableCell className="text-gray-500 text-sm">
+                                        {item.expiresAt ? format(new Date(item.expiresAt), 'dd/MM/yyyy', { locale: vi }) : '--'}
                                     </TableCell>
                                     <TableCell>
                                         <div className="flex gap-1 justify-end">
@@ -295,17 +367,34 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                                             >
                                                 <Copy className="h-4 w-4" />
                                             </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => openEditDialog(item)}
+                                                title="Chỉnh sửa"
+                                            >
+                                                <Pencil className="h-4 w-4" />
+                                            </Button>
                                             {showActions && item.status === 'available' && (
                                                 <Button
                                                     variant="ghost"
                                                     size="sm"
                                                     onClick={() => handleMarkInvalid(item.id)}
-                                                    className="text-red-500"
+                                                    className="text-orange-500"
                                                     title="Đánh dấu lỗi"
                                                 >
                                                     <XCircle className="h-4 w-4" />
                                                 </Button>
                                             )}
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={() => handleDeleteItem(item.id)}
+                                                className="text-red-500"
+                                                title="Xoá"
+                                            >
+                                                <Trash className="h-4 w-4" />
+                                            </Button>
                                         </div>
                                     </TableCell>
                                 </TableRow>
@@ -441,9 +530,15 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                                 <Label htmlFor="secretPayload">TK/MK hoặc Key</Label>
                                 <Input name="secretPayload" placeholder="email@example.com|password123" required />
                             </div>
-                            <div>
-                                <Label htmlFor="cost">Chi phí (VNĐ)</Label>
-                                <Input name="cost" type="number" placeholder="0" />
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="cost">Chi phí (VNĐ)</Label>
+                                    <Input name="cost" type="number" placeholder="0" />
+                                </div>
+                                <div>
+                                    <Label htmlFor="expiresAt">Ngày hết hạn</Label>
+                                    <Input name="expiresAt" type="date" />
+                                </div>
                             </div>
                             <div>
                                 <Label htmlFor="distribution">Kênh phân phối</Label>
@@ -476,13 +571,31 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                                     placeholder="VD: ChatGPT Plus"
                                 />
                             </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Chi phí / item (VNĐ)</Label>
+                                    <Input
+                                        type="number"
+                                        value={importCost}
+                                        onChange={(e) => setImportCost(e.target.value)}
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Ngày hết hạn</Label>
+                                    <Input
+                                        type="date"
+                                        value={importExpiresAt}
+                                        onChange={(e) => setImportExpiresAt(e.target.value)}
+                                    />
+                                </div>
+                            </div>
                             <div>
-                                <Label>Chi phí / item (VNĐ)</Label>
+                                <Label>Nguồn hàng</Label>
                                 <Input
-                                    type="number"
-                                    value={importCost}
-                                    onChange={(e) => setImportCost(e.target.value)}
-                                    placeholder="0"
+                                    value={importDistribution}
+                                    onChange={(e) => setImportDistribution(e.target.value)}
+                                    placeholder="VD: MMO, Chợ TTV, Tự mua..."
                                 />
                             </div>
                             <div>
@@ -501,6 +614,62 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                     </DialogContent>
                 </Dialog>
 
+                {/* Edit Dialog */}
+                <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Chỉnh sửa item</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                            <div>
+                                <Label>Dịch vụ</Label>
+                                <Input
+                                    value={editService}
+                                    onChange={(e) => setEditService(e.target.value)}
+                                    placeholder="VD: ChatGPT Plus"
+                                />
+                            </div>
+                            <div>
+                                <Label>TK/MK hoặc Key</Label>
+                                <Input
+                                    value={editSecret}
+                                    onChange={(e) => setEditSecret(e.target.value)}
+                                    placeholder="email@example.com|password123"
+                                />
+                            </div>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <Label>Chi phí (VNĐ)</Label>
+                                    <Input
+                                        type="number"
+                                        value={editCost}
+                                        onChange={(e) => setEditCost(e.target.value)}
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div>
+                                    <Label>Ngày hết hạn</Label>
+                                    <Input
+                                        type="date"
+                                        value={editExpiresAt}
+                                        onChange={(e) => setEditExpiresAt(e.target.value)}
+                                    />
+                                </div>
+                            </div>
+                            <div>
+                                <Label>Ghi chú</Label>
+                                <Input
+                                    value={editNote}
+                                    onChange={(e) => setEditNote(e.target.value)}
+                                    placeholder="Ghi chú thêm..."
+                                />
+                            </div>
+                            <Button onClick={handleEditItem} className="w-full">
+                                Lưu thay đổi
+                            </Button>
+                        </div>
+                    </DialogContent>
+                </Dialog>
                 <SalesDialog
                     open={isSellOpen}
                     onOpenChange={setIsSellOpen}

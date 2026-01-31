@@ -16,6 +16,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { SalesDialog } from '@/components/inventory/sales-dialog';
 import { toast } from 'sonner';
+import { sellInventoryItemAction } from '@/app/actions';
 
 interface TodayDashboardProps {
     needsReminder: SubscriptionWithCustomer[];
@@ -28,6 +29,7 @@ interface TodayDashboardProps {
     growthStats: { name: string; revenue: number; profit: number }[];
     inventoryItems: InventoryItem[];
     customers: Customer[];
+    currentDateStr?: string;
 }
 
 export function TodayDashboard({
@@ -40,7 +42,8 @@ export function TodayDashboard({
     todayProfit,
     growthStats,
     inventoryItems,
-    customers
+    customers,
+    currentDateStr
 }: TodayDashboardProps) {
     const router = useRouter();
 
@@ -54,9 +57,27 @@ export function TodayDashboard({
     const [sellMode, setSellMode] = useState<'inventory' | 'manual'>('inventory');
 
     // Manual entry state
+    // Manual entry state & Extended Form
     const [manualService, setManualService] = useState('');
     const [manualSecret, setManualSecret] = useState('');
     const [manualCost, setManualCost] = useState('0');
+
+    // Full form state (borrowed from SalesDialog)
+    const [customerName, setCustomerName] = useState('');
+    const [contact, setContact] = useState('');
+    const [price, setPrice] = useState('0');
+    // Date states for manual entry
+    const today = new Date();
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const formatDateForInput = (d: Date) => d.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState(formatDateForInput(today));
+    const [endDate, setEndDate] = useState(formatDateForInput(oneMonthLater));
+    const [note, setNote] = useState('');
+    const [source, setSource] = useState('Fb TPL');
+    const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
 
     // Get unique services from available inventory
     const availableServices = [...new Set(inventoryItems.map(i => i.service))];
@@ -84,39 +105,54 @@ export function TodayDashboard({
         setIsSellOpen(true);
     };
 
-    const handleCreateManualOrder = () => {
-        if (!manualService.trim()) {
-            toast.error('Vui lòng nhập tên sản phẩm');
-            return;
-        }
-        if (!manualSecret.trim()) {
-            toast.error('Vui lòng nhập thông tin tài khoản');
+    const handleExecuteManualSale = async () => {
+        if (!manualService.trim() || !customerName.trim()) {
+            toast.error('Vui lòng nhập Tên sản phẩm và Khách hàng');
             return;
         }
 
-        // Create a virtual inventory item for manual entry
-        const manualItem: InventoryItem = {
-            id: -1, // Virtual ID
-            service: manualService.trim(),
-            distribution: null,
-            secretPayload: manualSecret.trim(),
-            secretMasked: manualSecret.trim().substring(0, 20) + '...',
-            status: 'available',
-            importBatch: null,
-            cost: parseFloat(manualCost) || 0,
-            note: null,
-            category: null,
-            createdAt: new Date().toISOString(),
-        };
+        setIsSubmitting(true);
 
-        setSellItem(manualItem);
-        setIsNewOrderOpen(false);
-        setIsSellOpen(true);
+        try {
+            const formData = new FormData();
+            // ID = -1 for virtual item
+            formData.append('inventoryId', '-1');
 
-        // Reset manual form
-        setManualService('');
-        setManualSecret('');
-        setManualCost('0');
+            // Manual overrides for virtual item
+            formData.append('virtualService', manualService);
+            formData.append('virtualSecret', manualSecret || 'Manually added');
+            formData.append('virtualCost', manualCost);
+
+            // Standard fields
+            formData.append('customerName', customerName);
+            formData.append('contact', contact);
+            formData.append('salePrice', price);
+            formData.append('startDate', startDate);
+            formData.append('endDate', endDate);
+            formData.append('note', note);
+            formData.append('source', source);
+            formData.append('paymentStatus', paymentStatus);
+
+            const result = await sellInventoryItemAction(formData);
+
+            if (result.success) {
+                toast.success('Đã tạo đơn hàng thành công!');
+                setIsNewOrderOpen(false);
+                router.refresh();
+
+                // Cleanup
+                setManualService('');
+                setManualSecret('');
+                setCustomerName('');
+                setPrice('0');
+            } else {
+                toast.error('Lỗi: ' + result.error);
+            }
+        } catch (error) {
+            toast.error('Có lỗi xảy ra');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleUpdate = () => {
@@ -166,8 +202,8 @@ export function TodayDashboard({
 
     return (
         <div className="space-y-6">
-            {/* Quick Sell Action for Mobile */}
-            <div className="md:hidden">
+            {/* Quick Sell Action - Visible on both Mobile and Desktop */}
+            <div className="flex justify-end mb-4 md:mb-6">
                 <Dialog open={isNewOrderOpen} onOpenChange={(open) => {
                     setIsNewOrderOpen(open);
                     if (!open) {
@@ -180,8 +216,8 @@ export function TodayDashboard({
                     }
                 }}>
                     <DialogTrigger asChild>
-                        <Button className="w-full h-14 text-lg font-bold bg-green-600 hover:bg-green-700 shadow-lg mb-2 rounded-2xl animate-pulse-subtle">
-                            <Plus className="h-6 w-6 mr-2" />
+                        <Button className="w-full md:w-auto h-14 md:h-12 text-lg md:text-base font-bold bg-green-600 hover:bg-green-700 shadow-lg rounded-2xl md:rounded-xl animate-pulse-subtle md:animate-none flex items-center justify-center md:px-8">
+                            <Plus className="h-6 w-6 md:h-5 md:w-5 mr-2" />
                             BÁN HÀNG NGAY
                         </Button>
                     </DialogTrigger>
@@ -256,41 +292,163 @@ export function TodayDashboard({
                         {/* Manual Mode */}
                         {sellMode === 'manual' && (
                             <div className="space-y-4 pt-2">
-                                <div className="space-y-2">
-                                    <Label className="text-base">Tên sản phẩm *</Label>
-                                    <Input
-                                        value={manualService}
-                                        onChange={(e) => setManualService(e.target.value)}
-                                        placeholder="VD: Netflix Premium, Spotify..."
-                                        className="h-12 text-base"
-                                    />
+                                {/* Product Info */}
+                                <div className="p-3 bg-gray-50 rounded-lg border space-y-3">
+                                    <div>
+                                        <Label className="text-xs text-gray-500 uppercase">Sản phẩm</Label>
+                                        <Input
+                                            value={manualService}
+                                            onChange={(e) => setManualService(e.target.value)}
+                                            placeholder="Tên dịch vụ (VD: Netflix)..."
+                                            className="h-9 mt-1 bg-white"
+                                        />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <Label className="text-xs text-gray-500 uppercase">Giá vốn</Label>
+                                            <Input
+                                                type="number"
+                                                value={manualCost}
+                                                onChange={(e) => setManualCost(e.target.value)}
+                                                placeholder="0"
+                                                className="h-9 mt-1 bg-white"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label className="text-xs text-gray-500 uppercase">Tài khoản</Label>
+                                            <Input
+                                                value={manualSecret}
+                                                onChange={(e) => setManualSecret(e.target.value)}
+                                                placeholder="User/Pass..."
+                                                className="h-9 mt-1 bg-white"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-base">Thông tin tài khoản *</Label>
-                                    <Textarea
-                                        value={manualSecret}
-                                        onChange={(e) => setManualSecret(e.target.value)}
-                                        placeholder="Email: xxx@gmail.com&#10;Password: xxxxxx"
-                                        rows={3}
-                                        className="text-base resize-none"
-                                    />
+
+                                {/* Customer Info */}
+                                <div className="space-y-3">
+                                    <div className="relative">
+                                        <Label>Khách hàng</Label>
+                                        <Input
+                                            value={customerName}
+                                            onChange={(e) => {
+                                                setCustomerName(e.target.value);
+                                                setShowSuggestions(true);
+                                            }}
+                                            onFocus={() => setShowSuggestions(true)}
+                                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                            placeholder="Tên khách hàng..."
+                                            required
+                                            className="mt-1"
+                                        />
+                                        {showSuggestions && customerName && (
+                                            <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-48 overflow-auto">
+                                                {customers
+                                                    .filter(c => c.name.toLowerCase().includes(customerName.toLowerCase()))
+                                                    .slice(0, 5)
+                                                    .map(customer => (
+                                                        <div
+                                                            key={customer.id}
+                                                            className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm"
+                                                            onClick={() => {
+                                                                setCustomerName(customer.name);
+                                                                setContact(customer.contact || '');
+                                                                setShowSuggestions(false);
+                                                            }}
+                                                        >
+                                                            <div className="font-medium">{customer.name}</div>
+                                                            {customer.contact && <div className="text-xs text-gray-500">{customer.contact}</div>}
+                                                        </div>
+                                                    ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <Label>Liên hệ</Label>
+                                            <Input
+                                                value={contact}
+                                                onChange={(e) => setContact(e.target.value)}
+                                                placeholder="SĐT/Facebook..."
+                                                className="mt-1"
+                                            />
+                                        </div>
+                                        <div>
+                                            <Label>Kênh bán</Label>
+                                            <Input
+                                                value={source}
+                                                onChange={(e) => setSource(e.target.value)}
+                                                placeholder="Nguồn..."
+                                                className="mt-1"
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label className="text-base">Giá vốn (VNĐ)</Label>
+
+                                {/* Sales Info */}
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label>Ngày bắt đầu</Label>
+                                        <Input
+                                            type="date"
+                                            value={startDate}
+                                            onChange={(e) => setStartDate(e.target.value)}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label>Ngày kết thúc</Label>
+                                        <Input
+                                            type="date"
+                                            value={endDate}
+                                            onChange={(e) => setEndDate(e.target.value)}
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <Label>Giá bán (VNĐ)</Label>
                                     <Input
                                         type="number"
-                                        value={manualCost}
-                                        onChange={(e) => setManualCost(e.target.value)}
-                                        placeholder="0"
-                                        className="h-12 text-base"
+                                        value={price}
+                                        onChange={(e) => setPrice(e.target.value)}
+                                        className="mt-1"
                                     />
                                 </div>
+
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <Label>Thanh toán</Label>
+                                        <Select value={paymentStatus} onValueChange={(v: any) => setPaymentStatus(v)}>
+                                            <SelectTrigger className="mt-1">
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="paid">Đã thanh toán</SelectItem>
+                                                <SelectItem value="unpaid">Chưa thanh toán</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label>Ghi chú</Label>
+                                        <Input
+                                            value={note}
+                                            onChange={(e) => setNote(e.target.value)}
+                                            placeholder="..."
+                                            className="mt-1"
+                                        />
+                                    </div>
+                                </div>
+
                                 <Button
-                                    onClick={handleCreateManualOrder}
-                                    className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 shadow-sm"
-                                    disabled={!manualService.trim() || !manualSecret.trim()}
+                                    onClick={handleExecuteManualSale}
+                                    className="w-full h-12 text-base font-semibold bg-blue-600 hover:bg-blue-700 shadow-sm mt-2"
+                                    disabled={isSubmitting || !manualService || !customerName}
                                 >
-                                    Tiếp tục
+                                    {isSubmitting ? 'Đang xử lý...' : 'Tạo đơn hàng'}
                                 </Button>
                             </div>
                         )}
@@ -352,33 +510,41 @@ export function TodayDashboard({
 
             {/* Quick Stats Row */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+                <div className="stat-card bg-orange-50 border border-orange-200 rounded-xl p-4 cursor-pointer">
                     <div className="flex items-center gap-2">
-                        <Bell className="h-5 w-5 text-orange-500" />
+                        <div className="p-2 bg-orange-100 rounded-lg">
+                            <Bell className="h-5 w-5 text-orange-500" />
+                        </div>
                         <span className="text-sm font-medium text-orange-700">Cần nhắc</span>
                     </div>
-                    <p className="text-2xl font-semibold text-orange-900 mt-2">{needsReminder.length}</p>
+                    <p className="text-2xl font-bold text-orange-900 mt-2">{needsReminder.length}</p>
                 </div>
-                <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                <div className="stat-card bg-indigo-50 border border-indigo-200 rounded-xl p-4 cursor-pointer">
                     <div className="flex items-center gap-2">
-                        <MessageCircle className="h-5 w-5 text-indigo-500" />
+                        <div className="p-2 bg-indigo-100 rounded-lg">
+                            <MessageCircle className="h-5 w-5 text-indigo-500" />
+                        </div>
                         <span className="text-sm font-medium text-indigo-700">Đã liên hệ</span>
                     </div>
-                    <p className="text-2xl font-semibold text-indigo-900 mt-2">{contacted.length}</p>
+                    <p className="text-2xl font-bold text-indigo-900 mt-2">{contacted.length}</p>
                 </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                <div className="stat-card bg-blue-50 border border-blue-200 rounded-xl p-4 cursor-pointer">
                     <div className="flex items-center gap-2">
-                        <CreditCard className="h-5 w-5 text-blue-500" />
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                            <CreditCard className="h-5 w-5 text-blue-500" />
+                        </div>
                         <span className="text-sm font-medium text-blue-700">Chờ thanh toán</span>
                     </div>
-                    <p className="text-2xl font-semibold text-blue-900 mt-2">{awaitingPayment.length}</p>
+                    <p className="text-2xl font-bold text-blue-900 mt-2">{awaitingPayment.length}</p>
                 </div>
-                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                <div className="stat-card bg-green-50 border border-green-200 rounded-xl p-4 cursor-pointer">
                     <div className="flex items-center gap-2">
-                        <CheckCircle className="h-5 w-5 text-green-500" />
+                        <div className="p-2 bg-green-100 rounded-lg">
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                        </div>
                         <span className="text-sm font-medium text-green-700">Hoàn tất hôm nay</span>
                     </div>
-                    <p className="text-2xl font-semibold text-green-900 mt-2">{completedToday.length}</p>
+                    <p className="text-2xl font-bold text-green-900 mt-2">{completedToday.length}</p>
                 </div>
             </div>
 

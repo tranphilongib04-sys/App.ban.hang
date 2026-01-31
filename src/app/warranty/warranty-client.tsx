@@ -61,10 +61,11 @@ import {
     createWarrantyAction,
     resolveWarrantyAction,
     rejectWarrantyAction,
+    resolveAllPendingWarrantiesAction,
 } from '@/app/actions';
 import { cn } from '@/lib/utils';
 import { formatCurrency } from '@/lib/business';
-import { Eye } from 'lucide-react';
+import { Eye, Zap } from 'lucide-react';
 
 interface WarrantyClientProps {
     warranties: WarrantyWithDetails[];
@@ -170,6 +171,26 @@ export function WarrantyClient({ warranties, subscriptions }: WarrantyClientProp
         setLoading((prev) => ({ ...prev, [warranty.id]: '' }));
     };
 
+    const handleAutoApproveAll = async () => {
+        if (!confirm('Bạn có chắc muốn tự động duyệt tất cả yêu cầu đang chờ? Hệ thống sẽ lấy tài khoản từ kho để cấp phát.')) {
+            return;
+        }
+
+        setLoading((prev) => ({ ...prev, [-1]: 'approve-all' })); // Use -1 for global loading
+        try {
+            const result = await resolveAllPendingWarrantiesAction();
+            if (result.success) {
+                toast.success(result.message);
+                router.refresh();
+            } else {
+                toast.error(result.error);
+            }
+        } catch {
+            toast.error('Có lỗi xảy ra');
+        }
+        setLoading((prev) => ({ ...prev, [-1]: '' }));
+    };
+
     const handleReject = async (id: number) => {
         setLoading((prev) => ({ ...prev, [id]: 'reject' }));
         try {
@@ -255,12 +276,23 @@ export function WarrantyClient({ warranties, subscriptions }: WarrantyClientProp
                 </Select>
 
                 <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
-                    <DialogTrigger asChild>
-                        <Button>
-                            <Plus className="h-4 w-4 mr-2" />
-                            Tạo bảo hành
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            className="text-blue-600 border-blue-200 hover:bg-blue-50"
+                            onClick={handleAutoApproveAll}
+                            disabled={loading[-1] === 'approve-all' || stats.pending === 0}
+                        >
+                            <Zap className="h-4 w-4 mr-2" />
+                            {loading[-1] === 'approve-all' ? 'Đang xử lý...' : 'Tự động duyệt tất cả'}
                         </Button>
-                    </DialogTrigger>
+                        <DialogTrigger asChild>
+                            <Button>
+                                <Plus className="h-4 w-4 mr-2" />
+                                Tạo bảo hành
+                            </Button>
+                        </DialogTrigger>
+                    </div>
                     <DialogContent className="overflow-visible">
                         <DialogHeader>
                             <DialogTitle>Tạo yêu cầu bảo hành</DialogTitle>

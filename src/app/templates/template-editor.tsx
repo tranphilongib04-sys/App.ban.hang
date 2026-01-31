@@ -19,7 +19,10 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Template, TemplateCategory } from '@/lib/templates';
+import { Template } from '@/lib/db/schema';
+// import { TemplateCategory } from '@/lib/templates';
+
+type TemplateCategory = 'sale' | 'renewal' | 'support' | 'general';
 import { VARIABLES } from '@/lib/variable-replacer';
 import { addTemplateAction, updateTemplateAction } from '@/app/actions';
 import { toast } from 'sonner';
@@ -38,7 +41,7 @@ export function TemplateEditor({ open, onOpenChange, template, services, onSucce
     const [title, setTitle] = useState(template?.title || '');
     const [content, setContent] = useState(template?.content || '');
     const [service, setService] = useState(template?.service || '');
-    const [category, setCategory] = useState<TemplateCategory>(template?.category || 'general');
+    const [category, setCategory] = useState<TemplateCategory>((template?.category as TemplateCategory) || 'general');
 
     // Reset when opening for new item
     // Note: This simple effect might run too often, relying on key chang or manual reset is better in parent

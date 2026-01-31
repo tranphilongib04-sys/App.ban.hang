@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -154,16 +154,19 @@ export function OrdersClient({ subscriptions, customers, inventoryItems }: Order
         setIsSellOpen(true);
     };
 
-    // Filter by search
-    const searchFiltered = subscriptions.filter((sub) => {
-        const matchesSearch = sub.customerName.toLowerCase().includes(search.toLowerCase()) ||
-            sub.service.toLowerCase().includes(search.toLowerCase());
+    // Filter by search - memoized to avoid re-calculation
+    const searchFiltered = useMemo(() =>
+        subscriptions.filter((sub) => {
+            const matchesSearch = sub.customerName.toLowerCase().includes(search.toLowerCase()) ||
+                sub.service.toLowerCase().includes(search.toLowerCase());
+            return matchesSearch;
+        })
+        , [subscriptions, search]);
 
-        return matchesSearch;
-    });
-
-    // 1. Not Renewing Subscriptions
-    const notRenewingSubs = searchFiltered.filter(sub => sub.renewalStatus === 'not_renewing');
+    // 1. Not Renewing Subscriptions - memoized
+    const notRenewingSubs = useMemo(() =>
+        searchFiltered.filter(sub => sub.renewalStatus === 'not_renewing')
+        , [searchFiltered]);
 
     // Helper: Check if expiring this month (Robust)
     const isExpiringThisMonth = (dateStr: string) => {
@@ -176,94 +179,65 @@ export function OrdersClient({ subscriptions, customers, inventoryItems }: Order
         return date.getMonth() === now.getMonth() && date.getFullYear() === now.getFullYear();
     };
 
-    // 2. Renewed / Sold Successfully Subscriptions
-    // User Request: Include Renewed, Manual, Inventory Sales (All Success)
-    // EXCLUDE items expiring this month (they belong in Upcoming)
-    const renewedSubs = searchFiltered.filter(sub => {
+    // 2. Renewed / Sold Successfully Subscriptions - memoized
+    const renewedSubs = useMemo(() => searchFiltered.filter(sub => {
         const isRenewed = sub.renewalStatus === 'renewed';
-        // Only Paid Active items go here (Unpaid always go to Upcoming)
         const isActivePaid = sub.overallStatus === 'active' && sub.paymentStatus === 'paid';
-
-        // If it's active but expiring this month, it moves to "Upcoming", so exclude here
         if (isActivePaid && isExpiringThisMonth(sub.endDate)) return false;
-
         return isRenewed || isActivePaid;
-    });
+    }), [searchFiltered]);
 
-    // 3. Upcoming Subscriptions:
-    // - Needs Reminder / Overdue / Awaiting Payment
-    // - Active Paid (Expiring This Month)
-    // - User Constraint: "Only see until 31/1" -> Exclude future months
-    const upcomingSubs = searchFiltered.filter(sub => {
+    // 3. Upcoming Subscriptions - memoized
+    const upcomingSubs = useMemo(() => {
         const now = new Date();
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0); // Last day of this month
+        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
         endOfMonth.setHours(23, 59, 59, 999);
 
-        const subEndDate = new Date(sub.endDate);
-        subEndDate.setHours(0, 0, 0, 0); // compare date part
+        return searchFiltered.filter(sub => {
+            const subEndDate = new Date(sub.endDate);
+            subEndDate.setHours(0, 0, 0, 0);
+            if (subEndDate > endOfMonth) return false;
 
-        // Strict constraint: Must NOT be later than end of this month
-        // (Unless it's active/renewed logic handled elsewhere, but for 'Need Action', we focus on current timeframe)
-        // Actually, Overdue is < Now < EndOfMonth, so logic holds.
-        // Future months (Feb, Mar) > EndOfMonth -> Exclude.
-        if (subEndDate > endOfMonth) return false;
+            const attentionStatuses = ['needs_reminder', 'overdue', 'awaiting_payment'];
+            const isUnpaid = sub.paymentStatus === 'unpaid';
+            const isActivePaidExpiringSoon = sub.overallStatus === 'active' &&
+                sub.paymentStatus === 'paid' && isExpiringThisMonth(sub.endDate);
 
-        const attentionStatuses = ['needs_reminder', 'overdue', 'awaiting_payment'];
-        const isUnpaid = sub.paymentStatus === 'unpaid';
-        const isActivePaidExpiringSoon = sub.overallStatus === 'active' &&
-            sub.paymentStatus === 'paid' &&
-            isExpiringThisMonth(sub.endDate);
+            if (sub.reminderDate) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const reminder = new Date(sub.reminderDate);
+                reminder.setHours(0, 0, 0, 0);
+                if (reminder > today) return false;
+            }
 
-        if (sub.reminderDate) {
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const reminder = new Date(sub.reminderDate);
-            reminder.setHours(0, 0, 0, 0);
-            if (reminder > today) return false;
-        }
+            if (sub.daysUntilEnd === 0 && (sub.contactCount || 0) > 0) return false;
 
-        return (attentionStatuses.includes(sub.overallStatus) || isUnpaid || isActivePaidExpiringSoon) &&
-            sub.renewalStatus !== 'not_renewing' &&
-            sub.renewalStatus !== 'renewed';
-    }).sort((a, b) => {
-        const getPriority = (sub: typeof a) => {
-            // Priority 0: Overdue (Most Urgent)
-            if (sub.daysUntilEnd < 0) return 0;
-            // Priority 1: Today / Needs Reminder
-            if (sub.daysUntilEnd === 0) return 1;
-            // Priority 2: Future (Least Urgent)
-            return 2;
-        };
+            return (attentionStatuses.includes(sub.overallStatus) || isUnpaid || isActivePaidExpiringSoon) &&
+                sub.renewalStatus !== 'not_renewing' && sub.renewalStatus !== 'renewed';
+        }).sort((a, b) => {
+            const getPriority = (s: typeof a) => s.daysUntilEnd < 0 ? 0 : s.daysUntilEnd === 0 ? 1 : 2;
+            const priA = getPriority(a), priB = getPriority(b);
+            if (priA !== priB) return priA - priB;
+            return new Date(a.endDate).getTime() - new Date(b.endDate).getTime();
+        });
+    }, [searchFiltered]);
 
-        const priA = getPriority(a);
-        const priB = getPriority(b);
-
-        if (priA !== priB) return priA - priB;
-
-        const dateA = new Date(a.endDate).getTime();
-        const dateB = new Date(b.endDate).getTime();
-
-        // Sort by Date ASC (Earliest due date first is generally better for lists)
-        return dateA - dateB;
-    });
-
-    // 2.5 Snoozed Subscriptions (Remind Later)
-    const snoozedSubs = searchFiltered.filter(sub => {
+    // 2.5 Snoozed Subscriptions - memoized
+    const snoozedSubs = useMemo(() => searchFiltered.filter(sub => {
         if (!sub.reminderDate) return false;
-
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         const reminder = new Date(sub.reminderDate);
         reminder.setHours(0, 0, 0, 0);
-
-        // Include if reminder is today or in future
         return reminder >= today && sub.renewalStatus !== 'not_renewing' && sub.renewalStatus !== 'renewed';
-    }).sort((a, b) => new Date(a.reminderDate!).getTime() - new Date(b.reminderDate!).getTime());
+    }).sort((a, b) => new Date(a.reminderDate!).getTime() - new Date(b.reminderDate!).getTime())
+        , [searchFiltered]);
 
-    // 4. History Subscriptions (All orders)
-    const historySubs = searchFiltered.sort((a, b) => {
-        return new Date(b.endDate).getTime() - new Date(a.endDate).getTime();
-    });
+    // 4. History Subscriptions - memoized
+    const historySubs = useMemo(() =>
+        [...searchFiltered].sort((a, b) => new Date(b.endDate).getTime() - new Date(a.endDate).getTime())
+        , [searchFiltered]);
 
     // Helper: Group subscriptions (Deduplicate)
     const applyGrouping = (subs: SubscriptionWithCustomer[]) => {
@@ -359,164 +333,185 @@ export function OrdersClient({ subscriptions, customers, inventoryItems }: Order
 
     return (
         <div className="space-y-4">
-            <div className="flex gap-3 items-center flex-wrap">
-                <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-                    <Input
-                        placeholder="Tìm khách hàng hoặc dịch vụ..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 h-9 text-sm"
-                    />
+            <div className="space-y-3 md:space-y-0 md:flex md:gap-3 md:items-center md:flex-wrap">
+                {/* Search & Refresh Section */}
+                <div className="flex gap-2 w-full md:w-auto md:flex-1 md:max-w-sm">
+                    <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                        <Input
+                            placeholder="Tìm khách hàng..."
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            className="pl-9 h-10 text-sm bg-white shadow-sm"
+                        />
+                    </div>
+
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleRefresh}
+                        disabled={isRefreshing}
+                        className="h-10 w-10 shrink-0 bg-white shadow-sm"
+                        title="Làm mới dữ liệu"
+                    >
+                        <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                    </Button>
                 </div>
 
-                <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={handleRefresh}
-                    disabled={isRefreshing}
-                    className="h-9 w-9"
-                    title="Làm mới dữ liệu"
-                >
-                    <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
-                </Button>
+                {/* Actions Grid */}
+                <div className="grid grid-cols-2 gap-2 w-full md:w-auto md:flex md:gap-3">
+                    {/* Group Toggle */}
+                    <div className="col-span-2 md:col-span-auto flex items-center justify-center md:justify-start space-x-2 bg-white px-3 h-10 rounded-lg border border-gray-200 shadow-sm cursor-pointer hover:bg-gray-50 transition-colors" onClick={() => setIsGrouped(!isGrouped)}>
+                        <Checkbox
+                            id="grouping"
+                            checked={isGrouped}
+                            onCheckedChange={(c) => setIsGrouped(!!c)}
+                        />
+                        <Label htmlFor="grouping" className="text-sm cursor-pointer font-medium text-gray-700">
+                            Gộp khách hàng
+                        </Label>
+                    </div>
 
-                <div className="flex items-center space-x-2 bg-white px-3 py-1.5 rounded-lg border border-gray-200 h-9">
-                    <Checkbox
-                        id="grouping"
-                        checked={isGrouped}
-                        onCheckedChange={(c) => setIsGrouped(!!c)}
-                    />
-                    <Label htmlFor="grouping" className="text-xs sm:text-sm cursor-pointer font-medium text-gray-700">
-                        Gộp khách hàng
-                    </Label>
-                </div>
-
-                <Dialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen}>
-                    <DialogTrigger asChild>
-                        <Button className="bg-green-600 hover:bg-green-700 h-9 text-sm px-3">
-                            <Plus className="h-4 w-4 mr-1.5" />
-                            Tạo Đơn Hàng
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md">
-                        <DialogHeader>
-                            <DialogTitle>Tạo Đơn Hàng Mới từ Kho</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-5 pt-2">
-                            <div className="space-y-2">
-                                <Label className="text-base">Chọn dịch vụ</Label>
-                                <Select value={selectedService} onValueChange={setSelectedService}>
-                                    <SelectTrigger className="h-12 text-base">
-                                        <SelectValue placeholder="Chọn dịch vụ từ kho..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {availableServices.length === 0 ? (
-                                            <SelectItem value="empty" disabled>
-                                                Không có sản phẩm trong kho
-                                            </SelectItem>
-                                        ) : (
-                                            availableServices.map((service) => {
-                                                const count = inventoryItems.filter(i => i.service === service).length;
-                                                return (
-                                                    <SelectItem key={service} value={service} className="py-3 text-base">
-                                                        {service} ({count} trong kho)
-                                                    </SelectItem>
-                                                );
-                                            })
-                                        )}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                            <Button
-                                onClick={handleCreateNewOrder}
-                                className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 shadow-sm"
-                                disabled={!selectedService || availableServices.length === 0}
-                            >
-                                Tiếp tục
+                    <Dialog open={isNewOrderOpen} onOpenChange={setIsNewOrderOpen}>
+                        <DialogTrigger asChild>
+                            <Button className="bg-green-600 hover:bg-green-700 h-10 text-sm shadow-sm w-full md:w-auto">
+                                <Plus className="h-4 w-4 mr-1.5" />
+                                Tạo Đơn
                             </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-
-                <Dialog open={isAddOpen} onOpenChange={(open) => {
-                    setIsAddOpen(open);
-                    if (!open) resetManualForm();
-                }}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline" className="h-9 text-sm px-3">
-                            <Plus className="h-4 w-4 mr-1.5" />
-                            Thêm thủ công
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-md w-[95vw] rounded-2xl">
-                        <DialogHeader>
-                            <DialogTitle>Thêm đơn hàng thủ công</DialogTitle>
-                        </DialogHeader>
-                        <form onSubmit={handleAddSubscription} className="space-y-5 py-2">
-                            <div className="space-y-2">
-                                <Label className="text-base">Khách hàng</Label>
-                                <div className="relative">
-                                    <Input
-                                        value={manualCustomerName}
-                                        onChange={(e) => {
-                                            setManualCustomerName(e.target.value);
-                                            setShowCustomerSuggestions(true);
-                                        }}
-                                        onFocus={() => setShowCustomerSuggestions(true)}
-                                        onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 200)}
-                                        placeholder="Tìm hoặc nhập tên khách hàng mới..."
-                                        required
-                                        autoComplete="off"
-                                        className="h-12 text-base"
-                                    />
-                                    {showCustomerSuggestions && manualCustomerName && (
-                                        <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
-                                            {filteredCustomers.length > 0 ? (
-                                                filteredCustomers.map(customer => (
-                                                    <div
-                                                        key={customer.id}
-                                                        className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base border-b border-gray-50 last:border-0"
-                                                        onClick={() => handleSelectCustomer(customer)}
-                                                    >
-                                                        <div className="font-medium">{customer.name}</div>
-                                                        {customer.contact && (
-                                                            <div className="text-xs text-gray-500">{customer.contact}</div>
-                                                        )}
-                                                    </div>
-                                                ))
-                                            ) : null}
-                                            {isNewCustomer && (
-                                                <div className="px-4 py-3 bg-blue-50 border-t border-gray-200">
-                                                    <div className="flex items-center gap-2 text-blue-600 text-sm">
-                                                        <UserPlus className="h-4 w-4" />
-                                                        <span>Tạo khách hàng mới: <strong>{manualCustomerName}</strong></span>
-                                                    </div>
-                                                </div>
+                        </DialogTrigger>
+                        {/* ... Dialog Content ... */}
+                        <DialogContent className="max-w-md">
+                            <DialogHeader>
+                                <DialogTitle>Tạo Đơn Hàng Mới từ Kho</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-5 pt-2">
+                                <div className="space-y-2">
+                                    <Label className="text-base">Chọn dịch vụ</Label>
+                                    <Select value={selectedService} onValueChange={setSelectedService}>
+                                        <SelectTrigger className="h-12 text-base">
+                                            <SelectValue placeholder="Chọn dịch vụ từ kho..." />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {availableServices.length === 0 ? (
+                                                <SelectItem value="empty" disabled>
+                                                    Không có sản phẩm trong kho
+                                                </SelectItem>
+                                            ) : (
+                                                availableServices.map((service) => {
+                                                    const count = inventoryItems.filter(i => i.service === service).length;
+                                                    return (
+                                                        <SelectItem key={service} value={service} className="py-3 text-base">
+                                                            {service} ({count} trong kho)
+                                                        </SelectItem>
+                                                    );
+                                                })
                                             )}
-                                        </div>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <Button
+                                    onClick={handleCreateNewOrder}
+                                    className="w-full h-12 text-base font-semibold bg-green-600 hover:bg-green-700 shadow-sm"
+                                    disabled={!selectedService || availableServices.length === 0}
+                                >
+                                    Tiếp tục
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog open={isAddOpen} onOpenChange={(open) => {
+                        setIsAddOpen(open);
+                        if (!open) resetManualForm();
+                    }}>
+                        <DialogTrigger asChild>
+                            <Button variant="outline" className="h-10 text-sm shadow-sm w-full md:w-auto bg-white">
+                                <Plus className="h-4 w-4 mr-1.5" />
+                                Thêm thủ công
+                            </Button>
+                        </DialogTrigger>
+                        {/* ... Dialog Content ... */}
+                        <DialogContent className="max-w-md w-[95vw] rounded-2xl">
+                            <DialogHeader>
+                                <DialogTitle>Thêm đơn hàng thủ công</DialogTitle>
+                            </DialogHeader>
+                            <form onSubmit={handleAddSubscription} className="space-y-5 py-2">
+                                <div className="space-y-2">
+                                    <Label className="text-base">Khách hàng</Label>
+                                    <div className="relative">
+                                        <Input
+                                            value={manualCustomerName}
+                                            onChange={(e) => {
+                                                setManualCustomerName(e.target.value);
+                                                setShowCustomerSuggestions(true);
+                                            }}
+                                            onFocus={() => setShowCustomerSuggestions(true)}
+                                            onBlur={() => setTimeout(() => setShowCustomerSuggestions(false), 200)}
+                                            placeholder="Tìm hoặc nhập tên khách hàng mới..."
+                                            required
+                                            autoComplete="off"
+                                            className="h-12 text-base"
+                                        />
+                                        {showCustomerSuggestions && manualCustomerName && (
+                                            <div className="absolute z-10 w-full bg-white border border-gray-200 rounded-md shadow-lg mt-1 max-h-60 overflow-auto">
+                                                {filteredCustomers.length > 0 ? (
+                                                    filteredCustomers.map(customer => (
+                                                        <div
+                                                            key={customer.id}
+                                                            className="px-4 py-3 hover:bg-gray-100 cursor-pointer text-base border-b border-gray-50 last:border-0"
+                                                            onClick={() => handleSelectCustomer(customer)}
+                                                        >
+                                                            <div className="font-medium">{customer.name}</div>
+                                                            {customer.contact && (
+                                                                <div className="text-xs text-gray-500">{customer.contact}</div>
+                                                            )}
+                                                        </div>
+                                                    ))
+                                                ) : null}
+                                                {isNewCustomer && (
+                                                    <div className="px-4 py-3 bg-blue-50 border-t border-gray-200">
+                                                        <div className="flex items-center gap-2 text-blue-600 text-sm">
+                                                            <UserPlus className="h-4 w-4" />
+                                                            <span>Tạo khách hàng mới: <strong>{manualCustomerName}</strong></span>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                    {isNewCustomer && !showCustomerSuggestions && manualCustomerName && (
+                                        <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
+                                            <UserPlus className="h-3 w-3" />
+                                            Khách hàng mới sẽ được tạo
+                                        </p>
                                     )}
                                 </div>
-                                {isNewCustomer && !showCustomerSuggestions && manualCustomerName && (
-                                    <p className="text-xs text-blue-600 mt-1 flex items-center gap-1">
-                                        <UserPlus className="h-3 w-3" />
-                                        Khách hàng mới sẽ được tạo
-                                    </p>
-                                )}
-                            </div>
 
-                            {isNewCustomer && (
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div className="space-y-2">
-                                        <Label className="text-base">Liên hệ (SĐT/Zalo)</Label>
-                                        <Input
-                                            value={manualCustomerContact}
-                                            onChange={(e) => setManualCustomerContact(e.target.value)}
-                                            placeholder="0912..."
-                                            className="h-12 text-base"
-                                            inputMode="tel"
-                                        />
+                                {isNewCustomer && (
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-base">Liên hệ (SĐT/Zalo)</Label>
+                                            <Input
+                                                value={manualCustomerContact}
+                                                onChange={(e) => setManualCustomerContact(e.target.value)}
+                                                placeholder="0912..."
+                                                className="h-12 text-base"
+                                                inputMode="tel"
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-base">Kênh bán</Label>
+                                            <Input
+                                                value={manualSource}
+                                                onChange={(e) => setManualSource(e.target.value)}
+                                                placeholder="Fb TPL..."
+                                                className="h-12 text-base"
+                                            />
+                                        </div>
                                     </div>
+                                )}
+
+                                {!isNewCustomer && (
                                     <div className="space-y-2">
                                         <Label className="text-base">Kênh bán</Label>
                                         <Input
@@ -526,105 +521,93 @@ export function OrdersClient({ subscriptions, customers, inventoryItems }: Order
                                             className="h-12 text-base"
                                         />
                                     </div>
-                                </div>
-                            )}
+                                )}
 
-                            {!isNewCustomer && (
                                 <div className="space-y-2">
-                                    <Label className="text-base">Kênh bán</Label>
-                                    <Input
-                                        value={manualSource}
-                                        onChange={(e) => setManualSource(e.target.value)}
-                                        placeholder="Fb TPL..."
-                                        className="h-12 text-base"
-                                    />
+                                    <Label htmlFor="service" className="text-base">Dịch vụ</Label>
+                                    <Input name="service" placeholder="VD: ChatGPT Plus" required className="h-12 text-base" />
                                 </div>
-                            )}
-
-                            <div className="space-y-2">
-                                <Label htmlFor="service" className="text-base">Dịch vụ</Label>
-                                <Input name="service" placeholder="VD: ChatGPT Plus" required className="h-12 text-base" />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="startDate">Ngày bắt đầu</Label>
-                                    <Input
-                                        name="startDate"
-                                        type="date"
-                                        defaultValue={format(new Date(), 'yyyy-MM-dd')}
-                                        required
-                                        className="h-12 text-base"
-                                    />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="startDate">Ngày bắt đầu</Label>
+                                        <Input
+                                            name="startDate"
+                                            type="date"
+                                            defaultValue={format(new Date(), 'yyyy-MM-dd')}
+                                            required
+                                            className="h-12 text-base"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="endDate">Ngày kết hạn</Label>
+                                        <Input
+                                            name="endDate"
+                                            type="date"
+                                            defaultValue={format(addDays(new Date(), 30), 'yyyy-MM-dd')}
+                                            required
+                                            className="h-12 text-base"
+                                        />
+                                    </div>
                                 </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="endDate">Ngày kết hạn</Label>
-                                    <Input
-                                        name="endDate"
-                                        type="date"
-                                        defaultValue={format(addDays(new Date(), 30), 'yyyy-MM-dd')}
-                                        required
-                                        className="h-12 text-base"
-                                    />
+
+                                <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                                    <Checkbox id="paymentStatus" name="paymentStatus" className="h-5 w-5" />
+                                    <Label htmlFor="paymentStatus" className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
+                                        Đã thanh toán (Paid)
+                                    </Label>
                                 </div>
-                            </div>
 
-                            <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg border border-gray-100">
-                                <Checkbox id="paymentStatus" name="paymentStatus" className="h-5 w-5" />
-                                <Label htmlFor="paymentStatus" className="text-base font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                                    Đã thanh toán (Paid)
-                                </Label>
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="revenue">Doanh thu</Label>
-                                    <Input name="revenue" type="number" placeholder="0" className="h-12 text-base" inputMode="numeric" />
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="revenue">Doanh thu</Label>
+                                        <Input name="revenue" type="number" placeholder="0" className="h-12 text-base" inputMode="numeric" />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="cost">Chi phí</Label>
+                                        <Input name="cost" type="number" placeholder="0" className="h-12 text-base" inputMode="numeric" />
+                                    </div>
                                 </div>
                                 <div className="space-y-2">
-                                    <Label htmlFor="cost">Chi phí</Label>
-                                    <Input name="cost" type="number" placeholder="0" className="h-12 text-base" inputMode="numeric" />
+                                    <Label htmlFor="accountInfo">Tên tài khoản</Label>
+                                    <Input name="accountInfo" placeholder="VD: email@gmail.com | pass" className="h-12 text-base" />
                                 </div>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="accountInfo">Tên tài khoản</Label>
-                                <Input name="accountInfo" placeholder="VD: email@gmail.com | pass" className="h-12 text-base" />
-                            </div>
 
-                            <Button type="submit" className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-sm mt-4">
-                                {isNewCustomer ? 'Tạo khách hàng & đơn hàng' : 'Tạo đơn hàng'}
-                            </Button>
-                        </form>
-                    </DialogContent>
-                </Dialog>
+                                <Button type="submit" className="w-full h-12 text-base font-semibold bg-indigo-600 hover:bg-indigo-700 shadow-sm mt-4">
+                                    {isNewCustomer ? 'Tạo khách hàng & đơn hàng' : 'Tạo đơn hàng'}
+                                </Button>
+                            </form>
+                        </DialogContent>
+                    </Dialog>
 
-                <Button
-                    variant="outline"
-                    onClick={async () => {
-                        if (!confirm('Bạn có chắc chắn muốn xóa các bản ghi trùng lặp?')) return;
-                        setLoading((prev) => ({ ...prev, [-2]: 'cleanup' }));
-                        try {
-                            const { cleanupDuplicatesAction } = await import('@/app/actions');
-                            await cleanupDuplicatesAction();
-                            toast.success('Đã xóa dữ liệu trùng lặp');
-                            router.refresh();
-                        } catch {
-                            toast.error('Có lỗi xảy ra');
-                        }
-                        setLoading((prev) => ({ ...prev, [-2]: '' }));
-                    }}
-                    disabled={loading[-2] === 'cleanup'}
-                    className="border-orange-200 text-orange-600 hover:bg-orange-50 h-9 text-sm px-3"
-                >
-                    <RefreshCw className={`h-4 w-4 mr-1.5 ${loading[-2] === 'cleanup' ? 'animate-spin' : ''}`} />
-                    Xóa Trùng Lặp
-                </Button>
+                    <Button
+                        variant="outline"
+                        onClick={async () => {
+                            if (!confirm('Hệ thống sẽ chỉ xoá các bản ghi trùng khớp HOÀN TOÀN (Tên, Dịch vụ, Tài khoản, Ngày Bắt đầu & Kết thúc). Bạn có chắc chắn?')) return;
+                            setLoading((prev) => ({ ...prev, [-2]: 'cleanup' }));
+                            try {
+                                const { cleanupDuplicatesAction } = await import('@/app/actions');
+                                await cleanupDuplicatesAction();
+                                toast.success('Đã xóa dữ liệu trùng lặp');
+                                router.refresh();
+                            } catch {
+                                toast.error('Có lỗi xảy ra');
+                            }
+                            setLoading((prev) => ({ ...prev, [-2]: '' }));
+                        }}
+                        disabled={loading[-2] === 'cleanup'}
+                        className="border-orange-200 text-orange-600 hover:bg-orange-50 h-10 text-sm px-3 shadow-sm w-full md:w-auto"
+                    >
+                        <RefreshCw className={`h-4 w-4 mr-1.5 ${loading[-2] === 'cleanup' ? 'animate-spin' : ''}`} />
+                        Xóa Trùng Lặp
+                    </Button>
+                </div>
             </div>
 
             <Tabs defaultValue="upcoming" className="w-full">
-                <TabsList className="flex w-full max-w-[800px] h-10 glass-panel p-1 rounded-xl">
+                <TabsList className="flex w-full md:w-auto md:max-w-[800px] h-12 md:h-10 glass-panel p-1 rounded-xl overflow-x-auto no-scrollbar shrink-0">
                     <TabsTrigger
                         value="upcoming"
-                        className="flex-1 rounded-lg data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:font-bold transition-all text-xs font-medium py-1"
+                        className="flex-1 min-w-[100px] rounded-lg data-[state=active]:bg-indigo-50 data-[state=active]:text-indigo-600 data-[state=active]:shadow-sm data-[state=active]:font-bold transition-all text-xs font-medium py-1"
                     >
                         <ShoppingBag className="w-3.5 h-3.5 mr-1.5" />
                         Cần xử lý

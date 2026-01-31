@@ -19,10 +19,12 @@ import {
     MessageCircle,
     RotateCcw,
     Clock,
+    Trash2,
 } from 'lucide-react';
 import {
     updateSubscriptionAction,
     quickRenewAction, // Kept for history renew if needed, or remove if unused
+    deleteSubscriptionAction,
 } from '@/app/actions';
 import { RenewDialog } from '@/components/orders/renew-dialog';
 import { RemindLaterDialog } from '@/components/orders/remind-later-dialog';
@@ -115,25 +117,40 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
         setLoading(null);
     };
 
+    const handleDelete = async () => {
+        if (!confirm('Bạn có chắc chắn muốn xoá đơn hàng này? Hành động này không thể hoàn tác.')) {
+            return;
+        }
+        setLoading('delete');
+        try {
+            await deleteSubscriptionAction(subscription.id);
+            toast.success('Đã xoá đơn hàng');
+            onUpdate?.();
+        } catch {
+            toast.error('Có lỗi xảy ra');
+        }
+        setLoading(null);
+    };
+
     return (
         <Card className="liquid-card border-white/40 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group relative overflow-hidden bg-white/40">
             <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-white/10 pointer-events-none" />
             <div className="relative z-10">
                 <CardHeader className="pb-3">
-                    <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                            <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 {index !== undefined && (
-                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-600 border border-gray-200">
+                                    <span className="flex items-center justify-center w-5 h-5 rounded-full bg-gray-100 text-[10px] font-bold text-gray-600 border border-gray-200 shrink-0">
                                         {index + 1}
                                     </span>
                                 )}
-                                <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">
+                                <CardTitle className="text-lg font-bold text-gray-900 group-hover:text-indigo-700 transition-colors truncate">
                                     {subscription.customerName}
                                 </CardTitle>
                                 {(subscription.contactCount ?? 0) > 0 && (
                                     <span
-                                        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors"
+                                        className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-blue-100 text-blue-700 cursor-pointer hover:bg-blue-200 transition-colors shrink-0"
                                         onClick={handleMarkContacted}
                                         title="Click để thêm lượt liên hệ"
                                     >
@@ -142,9 +159,12 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                                     </span>
                                 )}
                             </div>
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <StatusBadge type="overall" status={subscription.overallStatus} />
+                            </div>
                             <p className="text-sm text-gray-500 mt-1">{subscription.service}</p>
                             {subscription.accountInfo && (
-                                <p className="text-xs font-mono text-gray-400 mt-1 truncate max-w-[200px]" title={subscription.accountInfo}>
+                                <p className="text-xs font-mono text-gray-400 mt-1 truncate" title={subscription.accountInfo}>
                                     {subscription.accountInfo}
                                 </p>
                             )}
@@ -166,7 +186,16 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             )}
                         </div>
 
-                        <StatusBadge type="overall" status={subscription.overallStatus} />
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={handleDelete}
+                            disabled={loading === 'delete'}
+                            className="h-8 w-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border-2 border-red-300 hover:border-red-400 rounded-lg transition-all shadow-sm hover:shadow-md shrink-0"
+                            title="Xoá đơn hàng"
+                        >
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
                     </div>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -214,7 +243,6 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             {/* Stage 1: Needs Reminder (Not contacted yet) */}
                             {subscription.overallStatus === 'needs_reminder' && (subscription.contactCount === 0 || subscription.contactCount === null) && (
                                 <>
-
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -223,9 +251,9 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                                             await handleMarkContacted();
                                         }}
                                         disabled={loading === 'contacted'}
-                                        className="text-xs text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 transition-colors w-full"
+                                        className="text-sm min-h-[44px] text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 transition-colors w-full active:scale-[0.98]"
                                     >
-                                        <MessageCircle className="h-3.5 w-3.5 mr-1" />
+                                        <MessageCircle className="h-4 w-4 mr-1.5" />
                                         Nhắn tin
                                     </Button>
                                 </>
@@ -234,50 +262,36 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             {/* Stage 2: Contacted (Needs Reminder + Contacted) */}
                             {subscription.overallStatus === 'needs_reminder' && (subscription.contactCount || 0) > 0 && (
                                 <>
-                                    <div className="grid grid-cols-2 gap-2 w-full mb-2">
+                                    <div className="flex gap-2 w-full">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleCopyMessage}
+                                            className="min-h-[44px] px-3 text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 active:scale-[0.98]"
+                                            title="Copy tin nhắn"
+                                        >
+                                            <Copy className="h-4 w-4" />
+                                        </Button>
                                         <RenewDialog subscription={subscription} onSuccess={onUpdate}>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
-                                                className="text-xs text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700 hover:border-green-300"
+                                                className="flex-1 text-sm min-h-[44px] text-green-600 border-green-200 bg-green-50 hover:bg-green-100 hover:text-green-700 hover:border-green-300 active:scale-[0.98]"
                                             >
-                                                <Check className="h-3.5 w-3.5 mr-1" />
+                                                <Check className="h-4 w-4 mr-1.5" />
                                                 Gia hạn
                                             </Button>
                                         </RenewDialog>
 
-                                        <RemindLaterDialog subscription={subscription} onSuccess={onUpdate}>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                className="text-xs text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300"
-                                            >
-                                                <Clock className="h-3.5 w-3.5 mr-1" />
-                                                Nhắc lại sau
-                                            </Button>
-                                        </RemindLaterDialog>
-                                    </div>
-
-                                    <div className="flex gap-2 w-full">
                                         <Button
                                             variant="outline"
                                             size="sm"
                                             onClick={handleNotRenewing}
                                             disabled={loading === 'not_renewing'}
-                                            className="flex-1 text-xs text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700"
+                                            className="flex-1 text-sm min-h-[44px] text-gray-500 border-gray-200 hover:bg-gray-50 hover:text-gray-700 active:scale-[0.98]"
                                         >
-                                            <X className="h-3.5 w-3.5 mr-1" />
+                                            <X className="h-4 w-4 mr-1.5" />
                                             Không gia hạn
-                                        </Button>
-
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={handleCopyMessage}
-                                            className="w-8 px-0 text-gray-400 hover:text-gray-600"
-                                            title="Copy lại tin nhắn"
-                                        >
-                                            <Copy className="h-4 w-4" />
                                         </Button>
                                     </div>
                                 </>
@@ -291,31 +305,24 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                                         size="sm"
                                         onClick={handleMarkPaid}
                                         disabled={loading === 'paid'}
-                                        className="text-xs text-blue-600 hover:text-blue-700"
+                                        className="flex-1 text-sm min-h-[44px] text-blue-600 border-blue-200 bg-blue-50 hover:bg-blue-100 hover:text-blue-700 hover:border-blue-300 w-full mb-2 active:scale-[0.98]"
                                     >
-                                        <CreditCard className="h-3.5 w-3.5 mr-1" />
-                                        Thanh toán
+                                        <CreditCard className="h-4 w-4 mr-1.5" />
+                                        Đã thanh toán
                                     </Button>
-                                    <RenewDialog subscription={subscription} onSuccess={onUpdate}>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            className="text-xs text-green-600 hover:text-green-700"
-                                        >
-                                            <Check className="h-3.5 w-3.5 mr-1" />
-                                            Sửa
-                                        </Button>
-                                    </RenewDialog>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={handleNotRenewing}
-                                        disabled={loading === 'not_renewing'}
-                                        className="text-xs text-red-500 hover:text-red-600"
-                                    >
-                                        <X className="h-3.5 w-3.5 mr-1" />
-                                        Huỷ
-                                    </Button>
+
+                                    <div className="flex gap-2 w-full">
+                                        <RemindLaterDialog subscription={subscription} onSuccess={onUpdate}>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="flex-1 text-xs text-amber-600 border-amber-200 bg-amber-50 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300"
+                                            >
+                                                <Clock className="h-3.5 w-3.5 mr-1" />
+                                                Hẹn ngày thanh toán
+                                            </Button>
+                                        </RemindLaterDialog>
+                                    </div>
                                 </>
                             )}
 
@@ -345,19 +352,34 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                                 </>
                             )}
 
-                            {/* Completed / Active -> Quick Renew for next cycle */}
-                            {(subscription.overallStatus === 'completed' || subscription.overallStatus === 'active') && (
+                            {/* Stage 5: Closed (Allow Restore) */}
+                            {subscription.overallStatus === 'closed' && (
                                 <Button
                                     variant="outline"
                                     size="sm"
-                                    onClick={handleQuickRenew}
-                                    disabled={loading === 'quick_renew'}
-                                    className="text-xs text-purple-600 hover:text-purple-700"
+                                    onClick={async () => {
+                                        setLoading('restore');
+                                        try {
+                                            await updateSubscriptionAction(subscription.id, {
+                                                renewalStatus: 'pending',
+                                                paymentStatus: subscription.paymentStatus === 'not_paying' ? 'unpaid' : subscription.paymentStatus
+                                            });
+                                            toast.success('Đã khôi phục trạng thái');
+                                            onUpdate?.();
+                                        } catch {
+                                            toast.error('Có lỗi xảy ra');
+                                        }
+                                        setLoading(null);
+                                    }}
+                                    disabled={loading === 'restore'}
+                                    className="text-xs text-gray-600 border-gray-200 hover:bg-gray-50 hover:text-gray-900 w-full"
                                 >
-                                    <RefreshCw className="h-3.5 w-3.5 mr-1" />
-                                    Gia hạn tiếp
+                                    <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                                    Khôi phục
                                 </Button>
                             )}
+
+                            {/* Stage 6: Active/Completed - No Quick Renew button (reminder feature handles this) */}
                         </div>
                     )}
                 </CardContent>

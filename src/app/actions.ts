@@ -8,7 +8,8 @@ import { generateTemplate, parseExcel } from '@/lib/import-utils';
 import * as fs from 'fs';
 import { addMonths, format } from 'date-fns';
 import { inventoryItems, deliveries } from '@/lib/db/schema';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray, desc } from 'drizzle-orm';
+import { NewTemplate, Template } from '@/lib/db/schema';
 
 // ==================== CUSTOMERS ====================
 
@@ -55,6 +56,50 @@ export async function deleteCustomerAction(id: number) {
   revalidatePath('/customers');
   revalidatePath('/orders');
   revalidatePath('/today');
+}
+
+export async function mergeCustomersAction(primaryId: number, secondaryIds: number[]) {
+  // Merge all subscriptions from secondary customers to primary customer
+  // Then delete the secondary customers
+
+  if (secondaryIds.length === 0) {
+    return { success: false, error: 'Không có khách hàng nào để gộp' };
+  }
+
+  if (secondaryIds.includes(primaryId)) {
+    return { success: false, error: 'Khách hàng chính không thể nằm trong danh sách gộp' };
+  }
+
+  try {
+    // Get primary customer info
+    const allCustomers = await queries.getCustomers();
+    const primaryCustomer = allCustomers.find(c => c.id === primaryId);
+
+    if (!primaryCustomer) {
+      return { success: false, error: 'Không tìm thấy khách hàng chính' };
+    }
+
+    // Update all subscriptions from secondary customers to point to primary
+    for (const secondaryId of secondaryIds) {
+      await db.update(subscriptions)
+        .set({ customerId: primaryId })
+        .where(eq(subscriptions.customerId, secondaryId));
+    }
+
+    // Delete secondary customers
+    for (const secondaryId of secondaryIds) {
+      await db.delete(customers).where(eq(customers.id, secondaryId));
+    }
+
+    revalidatePath('/customers');
+    revalidatePath('/orders');
+    revalidatePath('/today');
+
+    return { success: true, mergedCount: secondaryIds.length };
+  } catch (error: any) {
+    console.error('Merge customers error:', error);
+    return { success: false, error: error.message || 'Có lỗi xảy ra khi gộp khách hàng' };
+  }
 }
 
 // ==================== SUBSCRIPTIONS ====================
@@ -138,6 +183,8 @@ export async function createOrderWithCustomerAction(formData: FormData) {
     note,
     accountInfo,
     paymentStatus,
+    // Fix: If paid immediately, set completedAt so it shows in Today's revenue
+    completedAt: paymentStatus === 'paid' ? new Date().toISOString() : undefined
   });
 
   revalidatePath('/orders');
@@ -155,8 +202,65 @@ export async function updateSubscriptionAction(id: number, data: {
   accountInfo?: string;
   note?: string;
   reminderDate?: string;
+  completedAt?: string;
+  // Additional fields for edit form
+  service?: string;
+  revenue?: number;
+  cost?: number;
+  startDate?: string;
+  endDate?: string;
+  customerName?: string;
 }) {
-  await queries.updateSubscription(id, data);
+  // Handle customerName update - need to update customers table
+  if (data.customerName) {
+    const subs = await queries.getSubscriptions();
+    const currentSub = subs.find(s => s.id === id);
+    if (currentSub) {
+      // Update the customer's name in the customers table
+      await queries.updateCustomer(currentSub.customerId, { name: data.customerName });
+    }
+  }
+
+  // Remove customerName from data since it's handled separately
+  const { customerName, ...subscriptionData } = data;
+
+  // Auto-set completedAt when order is completed
+  const updateData: typeof subscriptionData & { completedAt?: string } = { ...subscriptionData };
+
+  // If marking as paid or renewed, check if we should set completedAt
+  if (subscriptionData.paymentStatus === 'paid' || subscriptionData.renewalStatus === 'renewed') {
+    // Fetch current state to check if conditions are met
+    const subs = await queries.getSubscriptions();
+    const currentSub = subs.find(s => s.id === id);
+
+    if (currentSub) {
+      const willBePaid = subscriptionData.paymentStatus === 'paid' || currentSub.paymentStatus === 'paid';
+      const willBeRenewed = subscriptionData.renewalStatus === 'renewed' || currentSub.renewalStatus === 'renewed';
+
+      // Get today's date in YYYY-MM-DD format for comparison
+      const todayDateStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+      const todayISOStr = new Date().toISOString();
+
+      // Check if it's a new order (startDate >= today)
+      const isNewOrder = currentSub.startDate >= todayDateStr;
+
+      // Set completedAt if:
+      // 1. BOTH paid AND renewed (renewal workflow), OR
+      // 2. New order AND paid (quick sale workflow)
+      if ((willBePaid && willBeRenewed) || (isNewOrder && willBePaid)) {
+        updateData.completedAt = todayISOStr;
+      }
+    }
+  }
+
+  await queries.updateSubscription(id, updateData);
+  revalidatePath('/orders');
+  revalidatePath('/today');
+  revalidatePath('/customers');
+}
+
+export async function deleteSubscriptionAction(id: number) {
+  await queries.deleteSubscription(id);
   revalidatePath('/orders');
   revalidatePath('/today');
   revalidatePath('/customers');
@@ -171,6 +275,7 @@ export async function quickRenewAction(subscriptionId: number) {
 }
 
 export async function renewSubscriptionAction(oldSubscriptionId: number, formData: FormData) {
+  const customerName = formData.get('customerName') as string;
   const service = formData.get('service') as string;
   const startDate = formData.get('startDate') as string;
   const endDate = formData.get('endDate') as string;
@@ -190,10 +295,15 @@ export async function renewSubscriptionAction(oldSubscriptionId: number, formDat
   const customerId = oldSub.customerId;
   const distribution = (oldSub as any).distribution; // Type might be loose
 
+  // Update customer name if it changed
+  if (customerName && customerName !== oldSub.customerName) {
+    await queries.updateCustomer(customerId, { name: customerName });
+  }
+
   // Create new subscription
   const result = await queries.createSubscription({
     customerId,
-    customerName: oldSub.customerName, // Needed for Excel
+    customerName: customerName || oldSub.customerName, // Use new name if provided
     customerContact: oldSub.customerContact || '', // Needed
     service,
     startDate,
@@ -227,40 +337,55 @@ import { FILES, getWorkbook, saveWorkbook } from '@/lib/excel/client';
 // ==================== CLEANUP ====================
 
 export async function cleanupDuplicatesAction() {
-  const workbook = await getWorkbook(FILES.ORDERS);
-  const sheet = workbook.getWorksheet('DonHang');
-  if (!sheet) return 0;
+  // 1. Fetch all subscriptions from DB
+  const allSubs = await db.select({
+    sub: subscriptions,
+    customerName: customers.name
+  })
+    .from(subscriptions)
+    .leftJoin(customers, eq(subscriptions.customerId, customers.id))
+    .orderBy(desc(subscriptions.id));
 
-  const seen = new Map<string, number>(); // Key -> ID to keep
+  const groups = new Map<string, number[]>(); // Key -> Array of IDs
   const toDelete: number[] = [];
 
-  // Iterate to find duplicates
-  sheet.eachRow((row, rowNumber) => {
-    if (rowNumber === 1) return;
+  // 2. Iterate to find duplicates
+  for (const { sub, customerName } of allSubs) {
+    let key = '';
 
-    const id = Number(row.getCell(1).value);
-    const name = String(row.getCell(2).value || '').trim().toLowerCase();
-    const service = String(row.getCell(5).value || '').trim().toLowerCase(); // Col 5 is Service
-    const endDate = String(row.getCell(8).value || '').trim(); // Col 8 is EndDate
+    // Strict Key: Name + Account + Service + Start + End
+    // This ensures we only delete EXACT duplicates (e.g. double import), not renewals.
+    const name = (customerName || '').trim().toLowerCase();
+    const info = (sub.accountInfo || '').trim().toLowerCase();
+    const service = (sub.service || '').trim().toLowerCase();
+    const start = (sub.startDate || '').trim();
+    const end = (sub.endDate || '').trim();
 
-    // Key for duplication
-    const key = `${name}|${service}|${endDate}`;
+    key = `${name}|${info}|${service}|${start}|${end}`;
 
-    if (seen.has(key)) {
-      // Found duplicate - delete later one
-      toDelete.push(rowNumber);
-    } else {
-      seen.set(key, id);
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key)!.push(sub.id);
+  }
+
+  // 3. Keep latest ID
+  groups.forEach((ids) => {
+    if (ids.length > 1) {
+      ids.sort((a, b) => b - a); // DESC
+      for (let i = 1; i < ids.length; i++) {
+        toDelete.push(ids[i]);
+      }
     }
   });
 
-  // Delete in reverse order to preserve row numbers of earlier rows
-  for (let i = toDelete.length - 1; i >= 0; i--) {
-    sheet.spliceRows(toDelete[i], 1);
-  }
-
+  // 4. Batch delete
   if (toDelete.length > 0) {
-    await saveWorkbook(workbook, FILES.ORDERS);
+    const batchSize = 50;
+    for (let i = 0; i < toDelete.length; i += batchSize) {
+      const batch = toDelete.slice(i, i + batchSize);
+      await db.delete(subscriptions).where(inArray(subscriptions.id, batch));
+    }
   }
 
   revalidatePath('/orders');
@@ -281,9 +406,10 @@ export async function createInventoryItemAction(formData: FormData) {
   const distribution = formData.get('distribution') as string;
   const secretPayload = formData.get('secretPayload') as string;
   const cost = parseFloat(formData.get('cost') as string) || 0;
+  const expiresAt = formData.get('expiresAt') as string || null;
   const note = formData.get('note') as string;
 
-  await queries.createInventoryItem({ service, distribution, secretPayload, cost, note });
+  await queries.createInventoryItem({ service, distribution, secretPayload, cost, expiresAt, note });
   revalidatePath('/inventory');
 }
 
@@ -292,6 +418,7 @@ export async function importInventoryAction(items: Array<{
   distribution?: string;
   secretPayload: string;
   cost?: number;
+  expiresAt?: string | null;
 }>, batchName?: string) {
   const result = await queries.importInventoryItems(items, batchName);
   revalidatePath('/inventory');
@@ -303,12 +430,31 @@ export async function updateInventoryStatusAction(id: number, status: 'available
   revalidatePath('/inventory');
 }
 
+export async function updateInventoryItemAction(id: number, data: {
+  service?: string;
+  secretPayload?: string;
+  cost?: number;
+  expiresAt?: string | null;
+  note?: string;
+  distribution?: string;
+}) {
+  await queries.updateInventoryItem(id, data);
+  revalidatePath('/inventory');
+}
+
+export async function deleteInventoryItemAction(id: number) {
+  await queries.deleteInventoryItem(id);
+  revalidatePath('/inventory');
+}
+
 export async function sellInventoryItemAction(formData: FormData) {
   const inventoryId = parseInt(formData.get('inventoryId') as string);
   const customerName = formData.get('customerName') as string;
   const contact = formData.get('contact') as string;
   const salePrice = parseFloat(formData.get('salePrice') as string) || 0;
-  const durationMonths = parseInt(formData.get('durationMonths') as string) || 1;
+  // Use startDate/endDate instead of durationMonths
+  const startDateStr = formData.get('startDate') as string;
+  const endDateStr = formData.get('endDate') as string;
   const note = formData.get('note') as string;
   const source = formData.get('source') as string || 'Direct Sale';
   const paymentStatus = formData.get('paymentStatus') as 'paid' | 'unpaid' || 'unpaid';
@@ -322,22 +468,41 @@ export async function sellInventoryItemAction(formData: FormData) {
     if (salePrice <= 0) {
       return { success: false, error: 'Giá bán phải lớn hơn 0' };
     }
-    if (durationMonths < 1 || durationMonths > 120) {
-      return { success: false, error: 'Thời hạn phải từ 1 đến 120 tháng' };
-    }
-    if (isNaN(inventoryId) || inventoryId <= 0) {
+    // Allow ID = -1 for virtual/manual items
+    if (isNaN(inventoryId)) {
       return { success: false, error: 'ID sản phẩm không hợp lệ' };
     }
-
-    // Step 2: Pre-flight checks - Verify inventory exists and is available BEFORE any writes
-    const items = await queries.getInventoryItems();
-    const item = items.find(i => i.id === inventoryId);
-
-    if (!item) {
-      return { success: false, error: 'Không tìm thấy sản phẩm trong kho' };
+    // Validate dates
+    if (!startDateStr || !endDateStr) {
+      return { success: false, error: 'Ngày bắt đầu và kết thúc không được để trống' };
     }
-    if (item.status !== 'available') {
-      return { success: false, error: 'Sản phẩm không còn khả dụng (trạng thái: ' + item.status + ')' };
+
+    // Step 2: Pre-flight checks
+    // If ID > 0, verify inventory exists
+    let item: any = null;
+
+    if (inventoryId > 0) {
+      const items = await queries.getInventoryItems();
+      item = items.find(i => i.id === inventoryId);
+
+      if (!item) {
+        return { success: false, error: 'Không tìm thấy sản phẩm trong kho' };
+      }
+      if (item.status !== 'available') {
+        return { success: false, error: 'Sản phẩm không còn khả dụng (trạng thái: ' + item.status + ')' };
+      }
+    } else {
+      // Virtual Item Construction for Manual Entry
+      item = {
+        id: -1,
+        service: formData.get('virtualService') as string,
+        secretPayload: formData.get('virtualSecret') as string,
+        cost: parseFloat(formData.get('virtualCost') as string) || 0,
+        distribution: 'Manual Input',
+        status: 'available' // Virtual status
+      };
+
+      if (!item.service) return { success: false, error: 'Tên sản phẩm không được để trống' };
     }
 
     // All validations passed - proceed with transaction
@@ -365,17 +530,14 @@ export async function sellInventoryItemAction(formData: FormData) {
     // Step 4: Create Subscription
     let sub;
     try {
-      const startDate = new Date();
-      const endDate = addMonths(startDate, durationMonths);
-
       sub = await queries.createSubscription({
         customerId,
         customerName,
         customerContact: contact,
         customerSource: source,
         service: item.service,
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        endDate: format(endDate, 'yyyy-MM-dd'),
+        startDate: startDateStr,
+        endDate: endDateStr,
         revenue: salePrice,
         cost: item.cost || 0,
         distribution: item.distribution || 'Stock',
@@ -390,7 +552,11 @@ export async function sellInventoryItemAction(formData: FormData) {
     try {
       await queries.updateSubscription(sub.id, { contactCount: 1 });
       if (paymentStatus === 'paid') {
-        await queries.updateSubscription(sub.id, { paymentStatus: 'paid' });
+        // Set both paymentStatus AND completedAt so it shows in Today's "Hoàn tất hôm nay"
+        await queries.updateSubscription(sub.id, {
+          paymentStatus: 'paid',
+          completedAt: new Date().toISOString()
+        });
       }
     } catch (error: any) {
       // Non-critical, log but continue
@@ -412,16 +578,19 @@ export async function sellInventoryItemAction(formData: FormData) {
     }
 
     // Step 7: Update Inventory Status (final step)
-    try {
-      await queries.updateInventoryStatus(item.id, 'delivered');
-    } catch (error: any) {
-      // Critical: inventory should be marked as delivered
-      console.error('Critical: Could not update inventory status:', error);
-      return {
-        success: false,
-        error: 'Đã tạo đơn hàng nhưng lỗi khi cập nhật trạng thái kho. Vui lòng kiểm tra lại.',
-        subscriptionId: sub.id
-      };
+    // Only for real inventory items
+    if (inventoryId > 0) {
+      try {
+        await queries.updateInventoryStatus(item.id, 'delivered');
+      } catch (error: any) {
+        // Critical: inventory should be marked as delivered
+        console.error('Critical: Could not update inventory status:', error);
+        return {
+          success: false,
+          error: 'Đã tạo đơn hàng nhưng lỗi khi cập nhật trạng thái kho. Vui lòng kiểm tra lại.',
+          subscriptionId: sub.id
+        };
+      }
     }
 
     // All steps completed successfully
@@ -517,6 +686,47 @@ export async function resolveWarrantyAction(warrantyId: number, service: string,
   } catch (error: any) {
     console.error('Error resolving warranty:', error);
     return { success: false, error: 'Lỗi khi xử lý bảo hành: ' + error.message };
+  }
+}
+
+export async function resolveAllPendingWarrantiesAction() {
+  try {
+    // 1. Get all pending warranties
+    const warranties = await queries.getWarranties({ status: 'pending' });
+
+    if (warranties.length === 0) {
+      return { success: true, count: 0, message: 'Không có yêu cầu nào cần duyệt' };
+    }
+
+    let successCount = 0;
+    let failCount = 0;
+
+    // 2. Loop and resolve each using 'auto' method
+    for (const warranty of warranties) {
+      try {
+        const result = await resolveWarrantyAction(warranty.id, warranty.service);
+        if (result.success) {
+          successCount++;
+        } else {
+          failCount++;
+        }
+      } catch (e) {
+        failCount++;
+      }
+    }
+
+    revalidatePath('/warranty');
+    revalidatePath('/inventory');
+    revalidatePath('/orders');
+
+    return {
+      success: true,
+      count: successCount,
+      failCount,
+      message: `Đã duyệt thành công ${successCount} yêu cầu. Thất bại ${failCount} (do hết kho hoặc lỗi).`
+    };
+  } catch (error: any) {
+    return { success: false, error: 'Lỗi hệ thống: ' + error.message };
   }
 }
 
@@ -973,50 +1183,189 @@ export async function getTodayDashboardDataAction() {
 
 // ==================== TEMPLATES (QUICK REPLIES) ====================
 
-import * as templates from '@/lib/templates';
+// import * as templates from '@/lib/templates'; // Deprecated
 
 export async function getTemplatesAction() {
-  return templates.getTemplates();
+  return queries.getTemplates();
 }
 
-export async function addTemplateAction(template: Omit<templates.Template, 'id'>) {
-  const result = await templates.addTemplate(template);
+export async function addTemplateAction(template: NewTemplate) {
+  const result = await queries.createTemplate(template);
   revalidatePath('/templates');
   return result;
 }
 
-export async function updateTemplateAction(id: string, updates: Partial<templates.Template>) {
-  await templates.updateTemplate(id, updates);
+export async function updateTemplateAction(id: number, updates: Partial<Template>) {
+  await queries.updateTemplate(id, updates);
   revalidatePath('/templates');
 }
 
-export async function deleteTemplateAction(id: string) {
-  await templates.deleteTemplate(id);
+export async function deleteTemplateAction(id: number) {
+  await queries.deleteTemplate(id);
   revalidatePath('/templates');
 }
 
-// ==================== MY ACCOUNTS (VAULT) ====================
+// ==================== FAMILIES ====================
 
-import * as accounts from '@/lib/my-accounts';
+import { families, familyMembers } from '@/lib/db/schema';
+
+export async function getFamiliesAction() {
+  // Get all families with their members
+  const allFamilies = await db.select().from(families).orderBy(families.service, families.name);
+  const allMembers = await db.select().from(familyMembers).orderBy(familyMembers.slotNumber);
+
+  // Group members by familyId
+  const membersByFamily = new Map<number, typeof allMembers>();
+  for (const member of allMembers) {
+    if (!membersByFamily.has(member.familyId)) {
+      membersByFamily.set(member.familyId, []);
+    }
+    membersByFamily.get(member.familyId)!.push(member);
+  }
+
+  // Return families with members
+  return allFamilies.map(family => ({
+    ...family,
+    members: membersByFamily.get(family.id) || []
+  }));
+}
+
+export async function createFamilyAction(formData: FormData) {
+  const name = formData.get('name') as string;
+  const service = formData.get('service') as string;
+  const ownerAccount = formData.get('ownerAccount') as string;
+  const startDate = formData.get('startDate') as string;
+  const endDate = formData.get('endDate') as string;
+  const paymentCard = formData.get('paymentCard') as string;
+  const paymentDay = parseInt(formData.get('paymentDay') as string) || null;
+  const note = formData.get('note') as string;
+
+  const result = await db.insert(families).values({
+    name,
+    service,
+    ownerAccount,
+    startDate,
+    endDate,
+    paymentCard: paymentCard || null,
+    paymentDay,
+    note: note || null,
+  }).returning();
+
+  revalidatePath('/family');
+  return result[0];
+}
+
+export async function updateFamilyAction(id: number, data: {
+  name?: string;
+  service?: string;
+  ownerAccount?: string;
+  startDate?: string;
+  endDate?: string;
+  paymentCard?: string;
+  paymentDay?: number | null;
+  note?: string;
+}) {
+  await db.update(families).set(data).where(eq(families.id, id));
+  revalidatePath('/family');
+}
+
+export async function deleteFamilyAction(id: number) {
+  // Delete all members first
+  await db.delete(familyMembers).where(eq(familyMembers.familyId, id));
+  // Delete family
+  await db.delete(families).where(eq(families.id, id));
+  revalidatePath('/family');
+}
+
+// Family Members
+
+export async function addFamilyMemberAction(familyId: number, formData: FormData) {
+  const slotNumber = parseInt(formData.get('slotNumber') as string) || 1;
+  const memberName = formData.get('memberName') as string;
+  const memberAccount = formData.get('memberAccount') as string;
+  const startDate = formData.get('startDate') as string;
+  const endDate = formData.get('endDate') as string;
+  const note = formData.get('note') as string;
+
+  const result = await db.insert(familyMembers).values({
+    familyId,
+    slotNumber,
+    memberName: memberName || null,
+    memberAccount: memberAccount || null,
+    startDate: startDate || null,
+    endDate: endDate || null,
+    note: note || null,
+  }).returning();
+
+  revalidatePath('/family');
+  return result[0];
+}
+
+export async function updateFamilyMemberAction(id: number, data: {
+  slotNumber?: number;
+  memberName?: string | null;
+  memberAccount?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+  note?: string | null;
+}) {
+  await db.update(familyMembers).set(data).where(eq(familyMembers.id, id));
+  revalidatePath('/family');
+}
+
+export async function deleteFamilyMemberAction(id: number) {
+  await db.delete(familyMembers).where(eq(familyMembers.id, id));
+  revalidatePath('/family');
+}
+
+export async function getFamilyServicesAction() {
+  // Get distinct services from families
+  const result = await db.selectDistinct({ service: families.service }).from(families);
+  return result.map(r => r.service);
+}
+
+export async function confirmFamilyPaymentAction(id: number) {
+  // Get current family
+  const family = await db.select().from(families).where(eq(families.id, id)).limit(1);
+  if (!family.length) return;
+
+  const current = family[0];
+
+  // Add 1 month to start and end dates
+  const startDate = new Date(current.startDate);
+  const endDate = new Date(current.endDate);
+
+  startDate.setMonth(startDate.getMonth() + 1);
+  endDate.setMonth(endDate.getMonth() + 1);
+
+  await db.update(families).set({
+    startDate: startDate.toISOString().split('T')[0],
+    endDate: endDate.toISOString().split('T')[0],
+  }).where(eq(families.id, id));
+
+  revalidatePath('/family');
+}
+
+// ==================== ACCOUNTS ====================
+
+import { getAccounts, addAccount, updateAccount, deleteAccount, AccountItem } from '@/lib/my-accounts';
 
 export async function getAccountsAction() {
-  return accounts.getAccounts();
+  return getAccounts();
 }
 
-export async function addAccountAction(account: Omit<accounts.AccountItem, 'id' | 'updatedAt'>) {
-  const result = await accounts.addAccount(account);
+export async function addAccountAction(data: Omit<AccountItem, 'id' | 'updatedAt'>) {
+  const result = await addAccount(data);
   revalidatePath('/accounts');
   return result;
 }
 
-export async function updateAccountAction(id: string, updates: Partial<accounts.AccountItem>) {
-  await accounts.updateAccount(id, updates);
+export async function updateAccountAction(id: string, data: Partial<AccountItem>) {
+  await updateAccount(id, data);
   revalidatePath('/accounts');
 }
 
 export async function deleteAccountAction(id: string) {
-  await accounts.deleteAccount(id);
+  await deleteAccount(id);
   revalidatePath('/accounts');
 }
-
-

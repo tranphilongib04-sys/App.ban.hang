@@ -61,6 +61,16 @@ export function RenewDialog({ subscription, children, onSuccess }: RenewDialogPr
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4 pt-2">
                     <div>
+                        <Label htmlFor="customerName">Tên khách hàng</Label>
+                        <Input
+                            name="customerName"
+                            defaultValue={subscription.customerName}
+                            placeholder="VD: Nguyễn Văn A"
+                            required
+                        />
+                    </div>
+
+                    <div>
                         <Label htmlFor="service">Dịch vụ</Label>
                         <Input
                             name="service"

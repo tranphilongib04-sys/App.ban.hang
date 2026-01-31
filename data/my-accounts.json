@@ -8,44 +8,12 @@
         "note": "Account"
     },
     {
-        "id": "2",
-        "service": "iCloud",
-        "username": "giang_t1@icloud.com",
-        "password": "Long4804",
-        "category": "icloud",
-        "note": ""
-    },
-    {
-        "id": "3",
-        "service": "iCloud",
-        "username": "Luongthimo1973z@icloud.com",
-        "password": "Long4804",
-        "category": "icloud",
-        "note": "PIN: 7652"
-    },
-    {
-        "id": "4",
-        "service": "iCloud",
-        "username": "Tranvandao093@icloud.com",
-        "password": "Vandao093",
-        "category": "icloud",
-        "note": ""
-    },
-    {
         "id": "5",
         "service": "Google",
         "username": "tranphilongib04@gmail.com",
         "password": "",
         "category": "personal",
         "note": ""
-    },
-    {
-        "id": "6",
-        "service": "iCloud",
-        "username": "Khoakhoi496@icloud.com",
-        "password": "Long12347",
-        "category": "icloud",
-        "note": "PIN: 3752"
     },
     {
         "id": "7",

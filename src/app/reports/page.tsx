@@ -1,5 +1,19 @@
 import { getReportStatsAction, getGrowthStatsAction, getProjectedRevenueAction, getMonthlyServiceStatsAction } from '@/app/actions';
-import { ReportsClient } from './reports-client';
+import dynamic from 'next/dynamic';
+import { Skeleton } from '@/components/ui/skeleton';
+
+const ReportsClient = dynamic(() => import('./reports-client').then(mod => mod.ReportsClient), {
+    loading: () => (
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <Skeleton className="h-[300px] rounded-lg" />
+                <Skeleton className="h-[300px] rounded-lg" />
+            </div>
+            <Skeleton className="h-[400px] rounded-lg" />
+        </div>
+    ),
+});
+
 
 
 export default async function ReportsPage() {
@@ -29,3 +43,4 @@ export default async function ReportsPage() {
         </div>
     );
 }
+

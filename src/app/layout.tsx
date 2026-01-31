@@ -1,8 +1,21 @@
 import type { Metadata } from "next";
+import { Inter, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 import { Sidebar } from "@/components/layout/sidebar";
 import { AutoSyncListener } from "@/components/layout/auto-sync-listener";
 import { Toaster } from "@/components/ui/sonner";
+
+const inter = Inter({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const jakarta = Plus_Jakarta_Sans({
+  subsets: ["latin", "vietnamese"],
+  variable: "--font-jakarta",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Tiệm Bản Quyền - Quản lý Subscription",
@@ -28,7 +41,7 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icon.png" />
       </head>
       <body
-        className="antialiased"
+        className={`${inter.variable} ${jakarta.variable} antialiased font-sans`}
         suppressHydrationWarning
       >
         <div className="flex min-h-screen bg-gray-50 flex-col md:flex-row">

@@ -49,7 +49,13 @@ export function SalesDialog({
     const [customerName, setCustomerName] = useState(initialCustomerName);
     const [contact, setContact] = useState(initialContact);
     const [price, setPrice] = useState('0');
-    const [duration, setDuration] = useState('1');
+    // Date states: default startDate = today, endDate = today + 1 month
+    const today = new Date();
+    const oneMonthLater = new Date(today);
+    oneMonthLater.setMonth(oneMonthLater.getMonth() + 1);
+    const formatDateForInput = (d: Date) => d.toISOString().split('T')[0];
+    const [startDate, setStartDate] = useState(formatDateForInput(today));
+    const [endDate, setEndDate] = useState(formatDateForInput(oneMonthLater));
     const [note, setNote] = useState('');
     const [source, setSource] = useState('Fb TPL'); // Default per user request
     const [paymentStatus, setPaymentStatus] = useState<'paid' | 'unpaid'>('unpaid');
@@ -80,7 +86,12 @@ export function SalesDialog({
             setCustomerName(initialCustomerName);
             setContact(initialContact);
             setPrice(costStr);
-            setDuration('1');
+            // Reset dates
+            const now = new Date();
+            const nextMonth = new Date(now);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            setStartDate(now.toISOString().split('T')[0]);
+            setEndDate(nextMonth.toISOString().split('T')[0]);
             setNote('');
             setPaymentStatus('unpaid');
             setSoldSecret(null);
@@ -112,7 +123,8 @@ export function SalesDialog({
         formData.append('customerName', customerName);
         formData.append('contact', contact);
         formData.append('salePrice', price);
-        formData.append('durationMonths', duration);
+        formData.append('startDate', startDate);
+        formData.append('endDate', endDate);
         formData.append('note', note);
         formData.append('source', source);
         formData.append('paymentStatus', paymentStatus);
@@ -122,11 +134,9 @@ export function SalesDialog({
             if (result.success && result.secretPayload) {
                 toast.success('Đã bán hàng thành công!');
 
-                // Calculate expiry for message
-                const months = parseInt(duration) || 1;
-                const endDate = new Date();
-                endDate.setMonth(endDate.getMonth() + months);
-                const endDateStr = endDate.toLocaleDateString('vi-VN');
+                // Format dates for message
+                const endDateObj = new Date(endDate);
+                const endDateStr = endDateObj.toLocaleDateString('vi-VN');
 
                 const message = `📦 Đơn hàng: ${item.service}
 👤 Khách hàng: ${customerName}
@@ -288,37 +298,45 @@ Cảm ơn bạn đã ủng hộ!`;
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <Label>Giá bán (VNĐ)</Label>
+                                <Label>Ngày bắt đầu</Label>
                                 <Input
-                                    type="number"
-                                    value={price}
-                                    onChange={(e) => setPrice(e.target.value)}
-                                    placeholder="0"
+                                    type="date"
+                                    value={startDate}
+                                    onChange={(e) => setStartDate(e.target.value)}
                                 />
-                                {item && (
-                                    <div className="text-[11px] mt-1 text-right">
-                                        {(() => {
-                                            const p = parseFloat(price) || 0;
-                                            const c = item.cost || 0;
-                                            const profit = p - c;
-                                            return (
-                                                <span className={profit > 0 ? "text-emerald-600 font-medium" : "text-red-500"}>
-                                                    Lãi: {formatCurrency(profit)}
-                                                </span>
-                                            );
-                                        })()}
-                                    </div>
-                                )}
                             </div>
                             <div>
-                                <Label>Thời hạn (Tháng)</Label>
+                                <Label>Ngày kết thúc</Label>
                                 <Input
-                                    type="number"
-                                    value={duration}
-                                    onChange={(e) => setDuration(e.target.value)}
-                                    min="1"
+                                    type="date"
+                                    value={endDate}
+                                    onChange={(e) => setEndDate(e.target.value)}
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <Label>Giá bán (VNĐ)</Label>
+                            <Input
+                                type="number"
+                                value={price}
+                                onChange={(e) => setPrice(e.target.value)}
+                                placeholder="0"
+                            />
+                            {item && (
+                                <div className="text-[11px] mt-1 text-right">
+                                    {(() => {
+                                        const p = parseFloat(price) || 0;
+                                        const c = item.cost || 0;
+                                        const profit = p - c;
+                                        return (
+                                            <span className={profit > 0 ? "text-emerald-600 font-medium" : "text-red-500"}>
+                                                Lãi: {formatCurrency(profit)}
+                                            </span>
+                                        );
+                                    })()}
+                                </div>
+                            )}
                         </div>
 
                         <div>
