@@ -143,11 +143,17 @@ export async function getWarranties(filter?: { status?: string }): Promise<Warra
 
 function calculateDaysUntilEnd(endDateStr: string): number {
     if (!endDateStr) return 0;
-    const end = new Date(endDateStr);
-    end.setHours(0, 0, 0, 0);
+
+    // Calculate based on Vietnam Timezone
     const now = new Date();
-    now.setHours(0, 0, 0, 0);
-    const diffTime = end.getTime() - now.getTime();
+    const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    // Create Date objects from the strings (treated as UTC YYYY-MM-DD)
+    // This allows exact date comparison without time interference
+    const end = new Date(endDateStr);
+    const today = new Date(todayStr);
+
+    const diffTime = end.getTime() - today.getTime();
     return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
@@ -497,9 +503,20 @@ export async function getTodayCompletedSubscriptions() {
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
     // Created today AND paid today (or completedAt is today)
+    // Created today AND paid today (or completedAt is today)
     const todaySubs = subs.filter(s => {
+        // s.startDate is YYYY-MM-DD (typically set as VN date)
         const startedToday = s.startDate === today;
-        const completedToday = (s as any).completedAt && String((s as any).completedAt).startsWith(today);
+
+        // Check completedAt in VN timezone
+        let completedToday = false;
+        if ((s as any).completedAt) {
+            const compDateVN = new Date((s as any).completedAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+            if (compDateVN === today) {
+                completedToday = true;
+            }
+        }
+
         return (startedToday || completedToday) && s.paymentStatus === 'paid';
     });
 
@@ -658,21 +675,28 @@ export async function getTodayDashboardData() {
         )
         .orderBy(desc(subscriptions.endDate));
 
-    // 2. Aggregate Today's Stats via SQL (Fast)
-    // "Completed Today" = completedAt starts with today's date
-    const todayStatsResult = await db.select({
-        revenue: sql<number>`sum(${subscriptions.revenue})`,
-        cost: sql<number>`sum(${subscriptions.cost})`,
-        count: sql<number>`count(*)`
-    })
-        .from(subscriptions)
-        .where(
-            sql`${subscriptions.completedAt} LIKE ${todayStr + '%'}`
-        ).get();
+    // 2. Aggregate Today's Stats via JS (Correct Timezone)
+    // We reuse the fetched 'subs' list which covers recent date range
+    const todayStatsCalc = subs.reduce((acc, { sub }) => {
+        let isToday = false;
+        if (sub.completedAt) {
+            const compDateVN = new Date(sub.completedAt).toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+            if (compDateVN === todayStr) {
+                isToday = true;
+            }
+        }
 
-    const todayRevenue = todayStatsResult?.revenue || 0;
-    const todayCost = todayStatsResult?.cost || 0;
-    const completedCount = todayStatsResult?.count || 0;
+        if (isToday) {
+            acc.revenue += (sub.revenue || 0);
+            acc.cost += (sub.cost || 0);
+            acc.count += 1;
+        }
+        return acc;
+    }, { revenue: 0, cost: 0, count: 0 });
+
+    const todayRevenue = todayStatsCalc.revenue;
+    const todayCost = todayStatsCalc.cost;
+    const completedCount = todayStatsCalc.count;
     const todayProfit = todayRevenue - todayCost;
 
     const fullList = subs.map(({ sub, cust }: { sub: Subscription, cust: Customer }) => ({
