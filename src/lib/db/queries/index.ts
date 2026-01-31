@@ -1,9 +1,28 @@
 
 import { db } from '@/lib/db';
-import { customers, subscriptions, inventoryItems, warranties, deliveries, systemConfig, Customer, Subscription, NewSubscription, InventoryItem, Warranty, Delivery } from '@/lib/db/schema';
+import { customers, subscriptions, inventoryItems, warranties, deliveries, systemConfig, families, familyMembers, templates, Customer, Subscription, NewSubscription, InventoryItem, Warranty, Delivery, Family, FamilyMember, Template, NewTemplate } from '@/lib/db/schema';
 import { eq, and, or, like, desc, sql, gte, lte } from 'drizzle-orm';
 import { SubscriptionWithCustomer, CustomerWithStats, WarrantyWithDetails } from '@/types';
 import { format, addMonths } from 'date-fns';
+
+// ==================== TEMPLATES ====================
+
+export async function getTemplates(): Promise<Template[]> {
+    return db.select().from(templates).orderBy(desc(templates.createdAt));
+}
+
+export async function createTemplate(data: NewTemplate): Promise<Template> {
+    const result = await db.insert(templates).values(data).returning();
+    return result[0];
+}
+
+export async function updateTemplate(id: number, data: Partial<Template>): Promise<void> {
+    await db.update(templates).set(data).where(eq(templates.id, id));
+}
+
+export async function deleteTemplate(id: number): Promise<void> {
+    await db.delete(templates).where(eq(templates.id, id));
+}
 
 // ==================== INVENTORY ====================
 
@@ -50,26 +69,32 @@ export async function getSubscriptions(): Promise<SubscriptionWithCustomer[]> {
 }
 
 export async function getCustomersWithStats(): Promise<CustomerWithStats[]> {
-    const allCustomers = await db.select().from(customers);
-    const allSubs = await db.select().from(subscriptions);
+    // Optimized: Use SQL JOIN and aggregation instead of fetching all and filtering in JS
+    const result = await db.select({
+        customer: customers,
+        totalOrders: sql<number>`COUNT(${subscriptions.id})`.as('totalOrders'),
+        totalRevenue: sql<number>`COALESCE(SUM(${subscriptions.revenue}), 0)`.as('totalRevenue'),
+        totalCost: sql<number>`COALESCE(SUM(${subscriptions.cost}), 0)`.as('totalCost'),
+    })
+        .from(customers)
+        .leftJoin(subscriptions, eq(customers.id, subscriptions.customerId))
+        .groupBy(customers.id)
+        .orderBy(desc(sql`totalRevenue`));
 
-    return allCustomers.map((cust: Customer) => {
-        const custSubs = allSubs.filter((s: Subscription) => s.customerId === cust.id);
-        const totalRevenue = custSubs.reduce((sum: number, s: Subscription) => sum + (s.revenue || 0), 0);
-        const totalOrders = custSubs.length;
-
-        let segment: any = 'new';
+    return result.map(({ customer, totalOrders, totalRevenue, totalCost }) => {
+        // Calculate segment (same logic as before)
+        let segment: 'new' | 'regular' | 'priority' | 'vip' = 'new';
         if (totalRevenue > 1000000) segment = 'vip';
         else if (totalOrders > 5) segment = 'priority';
         else if (totalOrders > 1) segment = 'regular';
 
         return {
-            ...cust,
-            totalOrders,
-            totalRevenue,
-            totalProfit: totalRevenue - custSubs.reduce((sum: number, s: Subscription) => sum + (s.cost || 0), 0),
+            ...customer,
+            totalOrders: totalOrders || 0,
+            totalRevenue: totalRevenue || 0,
+            totalProfit: (totalRevenue || 0) - (totalCost || 0),
             segment,
-            accountInfo: custSubs.length > 0 ? custSubs[0].accountInfo : null // Latest?
+            accountInfo: null, // Not available in aggregated query
         };
     });
 }
@@ -135,28 +160,40 @@ function calculateOverallStatus(
     reminderDate?: string | null
 ): any {
     if (renewal === 'not_renewing') return 'closed';
-    if (renewal === 'renewed') return 'completed';
+    if (renewal === 'renewed' && payment === 'paid') return 'completed';
+    if (payment === 'not_paying') return 'closed';
 
     const days = calculateDaysUntilEnd(endDateStr);
 
-    if (payment === 'unpaid') {
-        const now = new Date();
-        const today = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
-        if (days <= 0 || startDateStr === today) {
-            return 'awaiting_payment';
-        }
-        return 'active';
-    }
+    // 1. Overdue (Prioritized)
+    if (days < 0 && renewal === 'pending') return 'overdue';
 
-    if (days < 0) return 'overdue';
-    if (days === 0) return 'needs_reminder';
+    // 2. Needs Reminder (Prioritized)
+    // Logic: 0-3 days left & pending
+    if (days >= 0 && days <= 3 && renewal === 'pending') return 'needs_reminder';
 
+    // Explicit reminder date logic
     if (reminderDate) {
         const now = new Date();
         const today = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
         if (reminderDate <= today) {
             return 'needs_reminder';
         }
+    }
+
+    // 3. Awaiting Payment
+    if (payment === 'unpaid') {
+        const now = new Date();
+        const today = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+        // Strict: Only awaiting payment if explicitly renewed, contacted, or it is a fresh order (today/future)
+        if (renewal === 'renewed') return 'awaiting_payment';
+        if (contactCount > 0) return 'awaiting_payment';
+        // Note: New orders (startDate >= today) should be awaiting payment
+        if (startDateStr >= today) return 'awaiting_payment';
+
+        // Otherwise, if it's old and unpaid but not expiring (handled above), it's active-with-debt
+        return 'active';
     }
 
     return 'active';
@@ -203,6 +240,12 @@ export async function deleteCustomer(id: number) {
     await db.delete(customers).where(eq(customers.id, id));
 }
 
+export async function deleteSubscription(id: number) {
+    await db.delete(warranties).where(eq(warranties.subscriptionId, id));
+    await db.delete(deliveries).where(eq(deliveries.subscriptionId, id));
+    await db.delete(subscriptions).where(eq(subscriptions.id, id));
+}
+
 export async function createSubscription(data: any): Promise<Subscription> {
     const values: NewSubscription = {
         customerId: data.customerId,
@@ -216,6 +259,7 @@ export async function createSubscription(data: any): Promise<Subscription> {
         paymentStatus: data.paymentStatus || 'unpaid',
         note: data.note,
         accountInfo: data.accountInfo,
+        completedAt: data.completedAt, // Support immediate completion
         createdAt: new Date().toISOString()
     };
     const result = await db.insert(subscriptions).values(values).returning();
@@ -256,6 +300,7 @@ export async function createInventoryItem(data: any) {
         secretMasked: '***',
         status: 'available',
         cost: data.cost,
+        expiresAt: data.expiresAt || null,
         distribution: data.distribution,
         note: data.note,
         createdAt: new Date().toISOString()
@@ -264,6 +309,32 @@ export async function createInventoryItem(data: any) {
 
 export async function updateInventoryStatus(id: number, status: string) {
     await db.update(inventoryItems).set({ status: status as any }).where(eq(inventoryItems.id, id));
+}
+
+export async function updateInventoryItem(id: number, data: {
+    service?: string;
+    secretPayload?: string;
+    cost?: number;
+    expiresAt?: string | null;
+    note?: string;
+    distribution?: string;
+}) {
+    const updateData: any = {};
+    if (data.service !== undefined) updateData.service = data.service;
+    if (data.secretPayload !== undefined) {
+        updateData.secretPayload = data.secretPayload;
+        updateData.secretMasked = '***'; // Reset mask
+    }
+    if (data.cost !== undefined) updateData.cost = data.cost;
+    if (data.expiresAt !== undefined) updateData.expiresAt = data.expiresAt;
+    if (data.note !== undefined) updateData.note = data.note;
+    if (data.distribution !== undefined) updateData.distribution = data.distribution;
+
+    await db.update(inventoryItems).set(updateData).where(eq(inventoryItems.id, id));
+}
+
+export async function deleteInventoryItem(id: number) {
+    await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
 }
 
 export async function createWarranty(data: any) {
@@ -346,13 +417,15 @@ export async function quickRenew(id: number) {
 }
 
 export async function deliverItem(subscriptionId: number, service: string, note?: string, inventoryId?: number) {
-    const deliveryNote = inventoryId
+    const deliveryNote = inventoryId && inventoryId > 0
         ? `Delivered [Inventory #${inventoryId}]: ${note || ''}`
         : `Delivered: ${note || ''}`;
 
     await updateSubscription(subscriptionId, { note: deliveryNote });
 
-    if (inventoryId) {
+    // Only create delivery record for real inventory items (id > 0)
+    // Skip for manual entries (id = -1 or undefined)
+    if (inventoryId && inventoryId > 0) {
         await db.insert(deliveries).values({
             subscriptionId,
             inventoryId,
@@ -420,10 +493,15 @@ export async function getReportStats(start?: string, end?: string) {
 
 export async function getTodayCompletedSubscriptions() {
     const subs = await getSubscriptions();
-    const today = format(new Date(), 'yyyy-MM-dd');
+    // Use Vietnam timezone so "today" matches user's calendar day (fixes 30th vs 31st)
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-    // Created today AND paid today
-    const todaySubs = subs.filter(s => s.startDate === today && s.paymentStatus === 'paid');
+    // Created today AND paid today (or completedAt is today)
+    const todaySubs = subs.filter(s => {
+        const startedToday = s.startDate === today;
+        const completedToday = (s as any).completedAt && String((s as any).completedAt).startsWith(today);
+        return (startedToday || completedToday) && s.paymentStatus === 'paid';
+    });
 
     const todayRevenue = todaySubs.reduce((sum, s) => sum + (s.revenue || 0), 0);
     const todayProfit = todaySubs.reduce((sum, s) => sum + ((s.revenue || 0) - (s.cost || 0)), 0);
@@ -560,10 +638,10 @@ export async function getTodayDashboardData() {
     const now = new Date();
     const todayStr = now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
-    // Date cutoff: 3 months ago. Anything older than this and closed/expired is likely history.
+    // Date cutoff: 3 months ago (Vietnam timezone for consistency).
     const cutoffDate = new Date();
     cutoffDate.setMonth(cutoffDate.getMonth() - 3);
-    const cutoffStr = cutoffDate.toISOString().split('T')[0];
+    const cutoffStr = cutoffDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
 
     const subs = await db.select({
         sub: subscriptions,
@@ -581,17 +659,16 @@ export async function getTodayDashboardData() {
         .orderBy(desc(subscriptions.endDate));
 
     // 2. Aggregate Today's Stats via SQL (Fast)
-    // "Completed Today" = Started Today AND Paid
+    // "Completed Today" = completedAt starts with today's date
     const todayStatsResult = await db.select({
         revenue: sql<number>`sum(${subscriptions.revenue})`,
         cost: sql<number>`sum(${subscriptions.cost})`,
         count: sql<number>`count(*)`
     })
         .from(subscriptions)
-        .where(and(
-            eq(subscriptions.startDate, todayStr),
-            eq(subscriptions.paymentStatus, 'paid')
-        )).get();
+        .where(
+            sql`${subscriptions.completedAt} LIKE ${todayStr + '%'}`
+        ).get();
 
     const todayRevenue = todayStatsResult?.revenue || 0;
     const todayCost = todayStatsResult?.cost || 0;
