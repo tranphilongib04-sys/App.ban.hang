@@ -465,7 +465,12 @@ export function FamilyClient({ families }: FamilyClientProps) {
                                             {/* Members Table - Always show 5 slots */}
                                             {(() => {
                                                 const MAX_SLOTS = 5;
-                                                const filledCount = family.members.length;
+                                                // Fix: Count unique occupied slots within range 1-5
+                                                const filledCount = new Set(
+                                                    family.members
+                                                        .map(m => m.slotNumber)
+                                                        .filter(s => s >= 1 && s <= MAX_SLOTS)
+                                                ).size;
                                                 const emptySlots = MAX_SLOTS - filledCount;
 
                                                 // Create array of all 5 slots
