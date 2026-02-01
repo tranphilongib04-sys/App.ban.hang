@@ -556,10 +556,16 @@ export async function getGrowthStats(months = 12) {
 export async function getMonthlyServiceStats(months = 3) {
     const subs = await getSubscriptions();
     const result: any[] = [];
+
+    // Use VN timezone
     const now = new Date();
+    const vnYear = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' }));
+    const vnMonth = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' })); // 1-12
 
     for (let i = 0; i < months; i++) {
-        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        // Construct date for 1st of month (vnMonth is 1-based, Date takes 0-based)
+        // (vnMonth - 1) - i handles back-calculation correctly via Date constructor
+        const d = new Date(vnYear, (vnMonth - 1) - i, 1);
         const monthKey = format(d, 'yyyy-MM');
 
         const monthlySubs = subs.filter(s => s.startDate.startsWith(monthKey));
@@ -591,17 +597,28 @@ export async function getMonthlyServiceStats(months = 3) {
 
 export async function getProjectedRevenue() {
     const subs = await getSubscriptions();
-    const now = new Date();
-    // Forecast 1 month only as requested
-    const forecastDate = addMonths(now, 1);
+
+    // Match "Now" to VN Timezone date string YYYY-MM-DD for comparison
+    const nowUTC = new Date();
+    const todayStr = nowUTC.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh' });
+
+    // Construct "Next Month" date boundary
+    // If today is 2026-02-01, we want up to 2026-03-01
+    const vnYear = parseInt(nowUTC.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' }));
+    const vnMonth = parseInt(nowUTC.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' }));
+
+    // Forecast 1 month
+    const currentDate = new Date(vnYear, vnMonth - 1, parseInt(nowUTC.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', day: 'numeric' })));
+    const forecastDate = addMonths(currentDate, 1);
+    const forecastStr = format(forecastDate, 'yyyy-MM-dd');
 
     // Find active subs expiring in next 1 month (and not marked as "not_renewing")
     const expiringSubs = subs.filter(s => {
         if (!s.endDate) return false;
         if (s.renewalStatus === 'not_renewing') return false;
 
-        const endDate = new Date(s.endDate);
-        return endDate >= now && endDate <= forecastDate;
+        // Compare strings YYYY-MM-DD
+        return s.endDate >= todayStr && s.endDate <= forecastStr;
     });
 
     const projectedRevenue = expiringSubs.reduce((sum, s) => sum + (s.revenue || 0), 0);

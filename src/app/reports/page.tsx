@@ -17,10 +17,21 @@ const ReportsClient = dynamic(() => import('./reports-client').then(mod => mod.R
 
 
 export default async function ReportsPage() {
-    // Calculate current month range
+    // Calculate current month range (VN Timezone)
     const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0];
+    const vnYear = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric' }));
+    const vnMonth = parseInt(now.toLocaleDateString('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', month: 'numeric' }));
+
+    // Start of month: YYYY-MM-01
+    const startOfMonth = `${vnYear}-${String(vnMonth).padStart(2, '0')}-01`;
+
+    // End of month: Last day of the current month
+    // We create a date for the 0th day of the NEXT month to get the last day of THIS month
+    // Note: Date constructor uses 0-indexed months (0=Jan, 1=Feb...). vnMonth is 1-based.
+    // So new Date(vnYear, vnMonth, 0) gives last day of vnMonth.
+    // We need to avoid timezone shift, so we just use the day component.
+    const lastDay = new Date(vnYear, vnMonth, 0).getDate();
+    const endOfMonth = `${vnYear}-${String(vnMonth).padStart(2, '0')}-${lastDay}`;
 
     const stats = await getReportStatsAction(startOfMonth, endOfMonth);
     const growthStats = await getGrowthStatsAction(6); // Show last 6 months growth
