@@ -284,9 +284,9 @@ export async function renewSubscriptionAction(oldSubscriptionId: number, formDat
   const note = formData.get('note') as string;
   const accountInfo = formData.get('accountInfo') as string;
   const paymentStatus = (formData.get('paymentStatus') === 'on' ? 'paid' : 'unpaid') as 'paid' | 'unpaid';
+  const inventoryId = parseInt(formData.get('inventoryId') as string);
 
   // Get old subscription to get customerId and distribution
-  // We need to implement getSubscriptionById in queries
   const subs = await queries.getSubscriptions();
   const oldSub = subs.find(s => s.id === oldSubscriptionId);
 
@@ -294,6 +294,16 @@ export async function renewSubscriptionAction(oldSubscriptionId: number, formDat
 
   const customerId = oldSub.customerId;
   const distribution = (oldSub as any).distribution; // Type might be loose
+
+  // Validate Inventory if selected
+  let inventoryItem = null;
+  if (inventoryId && inventoryId > 0) {
+    const items = await queries.getInventoryItems();
+    inventoryItem = items.find(i => i.id === inventoryId);
+
+    if (!inventoryItem) throw new Error('Inventory item not found');
+    if (inventoryItem.status !== 'available') throw new Error(`Inventory item is ${inventoryItem.status}`);
+  }
 
   // Update customer name if it changed
   if (customerName && customerName !== oldSub.customerName) {
@@ -313,22 +323,38 @@ export async function renewSubscriptionAction(oldSubscriptionId: number, formDat
     cost,
     note,
     accountInfo,
+    paymentStatus,
   });
 
-  // Update new subscription payment status if paid
-  if (paymentStatus === 'paid') {
-    await queries.updateSubscription(result.id, { paymentStatus: 'paid' });
+  // Handle Inventory Consumption
+  if (inventoryId && inventoryId > 0 && inventoryItem) {
+    // 1. Mark inventory as delivered
+    await queries.updateInventoryStatus(inventoryId, 'delivered');
+
+    // 2. Create delivery record
+    await queries.deliverItem(result.id, service, 'Renewed with Inventory Item #' + inventoryId, inventoryId);
   }
 
-  // Mark old subscription as renewed AND paid (assuming debt is cleared/moved)
+  // Update new subscription payment status/completedAt if paid
+  if (paymentStatus === 'paid') {
+    const updatePayload: any = { paymentStatus: 'paid' };
+    // For renewals, if paid, it's considered completed today
+    updatePayload.completedAt = new Date().toISOString();
+    await queries.updateSubscription(result.id, updatePayload);
+  }
+
+  // Mark old subscription as renewed
+  // We do NOT mark old subscription as paid automatically unless it was already paid. 
+  // Usually renewal clears the 'pending' status.
   await queries.updateSubscription(oldSubscriptionId, {
-    renewalStatus: 'renewed',
-    paymentStatus: 'paid'
+    renewalStatus: 'renewed'
   });
 
   revalidatePath('/orders');
   revalidatePath('/today');
   revalidatePath('/customers');
+  revalidatePath('/inventory');
+
   return result;
 }
 

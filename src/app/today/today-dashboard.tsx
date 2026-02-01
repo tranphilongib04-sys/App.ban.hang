@@ -567,6 +567,7 @@ export function TodayDashboard({
                                     index={index}
                                     subscription={sub}
                                     onUpdate={handleUpdate}
+                                    inventoryItems={inventoryItems}
                                 />
                             ))}
                         </div>

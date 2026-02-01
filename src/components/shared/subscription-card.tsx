@@ -29,14 +29,17 @@ import {
 import { RenewDialog } from '@/components/orders/renew-dialog';
 import { RemindLaterDialog } from '@/components/orders/remind-later-dialog';
 
+import { InventoryItem } from '@/lib/db/schema';
+
 interface SubscriptionCardProps {
     subscription: SubscriptionWithCustomer;
     onUpdate?: () => void;
     showActions?: boolean;
     index?: number;
+    inventoryItems?: InventoryItem[];
 }
 
-export function SubscriptionCard({ subscription, onUpdate, showActions = true, index }: SubscriptionCardProps) {
+export function SubscriptionCard({ subscription, onUpdate, showActions = true, index, inventoryItems = [] }: SubscriptionCardProps) {
     const [loading, setLoading] = useState<string | null>(null);
 
     const handleCopyMessage = async () => {
@@ -272,7 +275,7 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                                         >
                                             <Copy className="h-4 w-4" />
                                         </Button>
-                                        <RenewDialog subscription={subscription} onSuccess={onUpdate}>
+                                        <RenewDialog subscription={subscription} onSuccess={onUpdate} inventoryItems={inventoryItems}>
                                             <Button
                                                 variant="outline"
                                                 size="sm"
@@ -329,7 +332,7 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             {/* Stage 4: Overdue (Similar to Contacted but urgent) */}
                             {subscription.overallStatus === 'overdue' && (
                                 <>
-                                    <RenewDialog subscription={subscription} onSuccess={onUpdate}>
+                                    <RenewDialog subscription={subscription} onSuccess={onUpdate} inventoryItems={inventoryItems}>
                                         <Button
                                             variant="outline"
                                             size="sm"

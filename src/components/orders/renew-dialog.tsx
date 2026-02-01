@@ -16,6 +16,9 @@ import { format, addMonths, addDays } from 'date-fns';
 import { toast } from 'sonner';
 import { renewSubscriptionAction } from '@/app/actions';
 import { Check, Loader2 } from 'lucide-react';
+import { InventoryItem } from '@/lib/db/schema';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { formatCurrency } from '@/lib/business';
 
 interface RenewDialogProps {
     subscription: SubscriptionWithCustomer;
@@ -23,14 +26,35 @@ interface RenewDialogProps {
     onSuccess?: () => void;
 }
 
-export function RenewDialog({ subscription, children, onSuccess }: RenewDialogProps) {
+export function RenewDialog({ subscription, children, onSuccess, inventoryItems = [] }: RenewDialogProps & { inventoryItems?: InventoryItem[] }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
 
+    // Form states for controlled inputs to allow auto-fill
+    const [service, setService] = useState(subscription.service);
+    const [accountInfo, setAccountInfo] = useState(subscription.accountInfo || '');
+    const [cost, setCost] = useState(subscription.cost || 0);
+
     // Calculate default dates
-    // Start date = Today (Renewal starts immediately)
     const defaultStartDate = format(new Date(), 'yyyy-MM-dd');
     const defaultEndDate = format(addMonths(new Date(), 1), 'yyyy-MM-dd');
+
+    const [selectedInventoryId, setSelectedInventoryId] = useState<string>('');
+
+    // Filter available items for the current service (Loose match)
+    const matchingInventory = inventoryItems.filter(
+        i => i.status === 'available' && i.service.toLowerCase().includes(service.toLowerCase())
+    );
+
+    const handleInventorySelect = (itemId: string) => {
+        const item = inventoryItems.find(i => i.id === parseInt(itemId));
+        if (item) {
+            setAccountInfo(item.secretPayload);
+            setCost(item.cost || 0);
+            setSelectedInventoryId(itemId);
+            toast.success(`Đã lấy thông tin từ kho: ${item.service}`);
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
@@ -59,6 +83,26 @@ export function RenewDialog({ subscription, children, onSuccess }: RenewDialogPr
                 <DialogHeader>
                     <DialogTitle>Gia hạn: {subscription.customerName}</DialogTitle>
                 </DialogHeader>
+
+                {/* Quick inventory pick */}
+                {matchingInventory.length > 0 && (
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
+                        <Label className="text-blue-700 mb-1.5 block">Có {matchingInventory.length} tài khoản trong kho:</Label>
+                        <Select onValueChange={handleInventorySelect}>
+                            <SelectTrigger className="bg-white">
+                                <SelectValue placeholder="Chọn tài khoản từ kho..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {matchingInventory.map(item => (
+                                    <SelectItem key={item.id} value={item.id.toString()}>
+                                        #{item.id} - {item.secretPayload.substring(0, 30)}... ({formatCurrency(item.cost)})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+
                 <form onSubmit={handleSubmit} className="space-y-4 pt-2">
                     <div>
                         <Label htmlFor="customerName">Tên khách hàng</Label>
@@ -74,7 +118,8 @@ export function RenewDialog({ subscription, children, onSuccess }: RenewDialogPr
                         <Label htmlFor="service">Dịch vụ</Label>
                         <Input
                             name="service"
-                            defaultValue={subscription.service}
+                            value={service}
+                            onChange={(e) => setService(e.target.value)}
                             placeholder="VD: ChatGPT Plus"
                             required
                         />
@@ -116,7 +161,8 @@ export function RenewDialog({ subscription, children, onSuccess }: RenewDialogPr
                             <Input
                                 name="cost"
                                 type="number"
-                                defaultValue={subscription.cost || 0}
+                                value={cost}
+                                onChange={(e) => setCost(parseFloat(e.target.value) || 0)}
                                 required
                             />
                         </div>
@@ -124,11 +170,18 @@ export function RenewDialog({ subscription, children, onSuccess }: RenewDialogPr
 
                     <div>
                         <Label htmlFor="accountInfo">Tên tài khoản</Label>
-                        <Input
-                            name="accountInfo"
-                            defaultValue={subscription.accountInfo || ''}
-                            placeholder="VD: email@gmail.com | pass"
-                        />
+                        <div className="relative">
+                            <Input
+                                name="accountInfo"
+                                value={accountInfo}
+                                onChange={(e) => setAccountInfo(e.target.value)}
+                                placeholder="VD: email@gmail.com | pass"
+                            />
+                            <input type="hidden" name="inventoryId" value={selectedInventoryId} />
+                            {/* Hidden input to pass inventory ID if we want to track it later, 
+                                but current action doesn't support linking inventory on renew yet. 
+                                For now just using data is enough. */}
+                        </div>
                     </div>
 
                     <div>
