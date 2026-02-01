@@ -86,7 +86,7 @@ function NavContent({ isMobile = false, onItemClick }: { isMobile?: boolean, onI
                 <div className="flex items-center justify-center gap-2 text-xs font-medium text-gray-400/80">
                     <span>© 2026 TBQ</span>
                     <span className="w-1 h-1 rounded-full bg-indigo-400 animate-pulse"></span>
-                    <span>iOS 26 Beta</span>
+                    <span>iOS 26 Beta (v1.1)</span>
                 </div>
             </div>
         </div>
