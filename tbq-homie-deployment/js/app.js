@@ -5,7 +5,7 @@ const products = {
         name: 'ChatGPT',
         category: 'ChatGPT',
         description: 'Trợ lý AI thông minh nhất hiện nay, hỗ trợ viết lách, code, và nhiều tác vụ khác',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/04/ChatGPT_logo.svg/1024px-ChatGPT_logo.svg.png',
+        image: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
         featured: true,
         variants: [
             { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '' },
@@ -67,7 +67,7 @@ const products = {
         name: 'Netflix',
         category: 'Netflix',
         description: 'Xem phim và chương trình truyền hình không giới hạn với chất lượng HD/4K',
-        image: 'https://images.ctfassets.net/y2ske730sjqp/1aONibCke6niZhgPxuiilC/2c401b05a07288746ddf3bd3943fbc76/BrandAssets_Logos_01-Wordmark.jpg',
+        image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
         variants: [
             { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị' }
@@ -116,7 +116,7 @@ const products = {
         name: 'Spotify Premium',
         category: 'Spotify',
         description: 'Nghe nhạc không giới hạn với chất lượng cao, không quảng cáo',
-        image: 'https://storage.googleapis.com/pr-newsroom-wp/1/2018/11/Spotify_Logo_RGB_Green.png',
+        image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
         variants: [
             { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '' },
@@ -361,7 +361,7 @@ const products = {
         name: 'CapCut Pro',
         category: 'CapCut',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/CapCut_logo.svg/1024px-CapCut_logo.svg.png',
+        image: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/CapCut_logo.svg',
         featured: true,
         variants: [
             { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Nâng cấp chính chủ' },
