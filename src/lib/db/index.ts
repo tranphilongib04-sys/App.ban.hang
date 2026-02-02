@@ -26,9 +26,9 @@ function getLocalDbPath() {
 
 // Check configuration
 const hasTursoCredentials = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
-// Disable sync on Vercel (read-only filesystem) - always use cloud-only mode
+// Vercel: always cloud-only (read-only filesystem). Local: when Turso is set, use embedded replicas (sync) by default so local + Vercel share the same DB.
 const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-const syncEnabled = !isVercel && process.env.TURSO_SYNC_ENABLED === 'true';
+const syncEnabled = !isVercel && !!hasTursoCredentials && (process.env.TURSO_SYNC_ENABLED !== 'false');
 
 let client: Client;
 let db: ReturnType<typeof drizzle>;
@@ -51,9 +51,15 @@ if (hasTursoCredentials && syncEnabled) {
   db = drizzle(client, { schema });
 
   // Initial sync from cloud to local
-  syncDatabase().catch(err => {
+  syncDatabase({ logSuccess: true }).catch(err => {
     console.error('Initial sync failed:', err.message);
   });
+
+  // Periodic sync so local changes are pushed to Turso and Vercel sees them
+  const SYNC_INTERVAL_MS = 5000;
+  setInterval(() => {
+    syncDatabase({ logSuccess: false }).catch(() => {});
+  }, SYNC_INTERVAL_MS);
 
 } else if (hasTursoCredentials) {
   // CLOUD ONLY MODE: Direct connection to Turso
@@ -83,15 +89,17 @@ if (hasTursoCredentials && syncEnabled) {
 // Export database instance
 export { db, client };
 
-// Sync function for embedded replicas
-export async function syncDatabase() {
+// Sync function for embedded replicas (local → Turso). Pass logSuccess=true to log on success (e.g. initial sync).
+export async function syncDatabase(options?: { logSuccess?: boolean }) {
   if (!hasTursoCredentials || !syncEnabled) {
     return { success: true, message: 'Sync not enabled' };
   }
 
   try {
     await client.sync();
-    console.log('✓ Database synced with cloud');
+    if (options?.logSuccess) {
+      console.log('✓ Database synced with cloud');
+    }
     return { success: true, message: 'Synced successfully' };
   } catch (error: any) {
     console.error('✗ Sync failed:', error.message);
@@ -208,6 +216,6 @@ export async function initializeDatabase() {
 
   // Sync after initialization if in embedded replicas mode
   if (hasTursoCredentials && syncEnabled) {
-    await syncDatabase();
+    await syncDatabase({ logSuccess: true });
   }
 }

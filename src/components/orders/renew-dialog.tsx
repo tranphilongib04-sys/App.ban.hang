@@ -12,10 +12,10 @@ import {
     DialogTrigger,
 } from '@/components/ui/dialog';
 import { SubscriptionWithCustomer } from '@/types';
-import { format, addMonths, addDays } from 'date-fns';
+import { format, addMonths } from 'date-fns';
 import { toast } from 'sonner';
 import { renewSubscriptionAction } from '@/app/actions';
-import { Check, Loader2 } from 'lucide-react';
+import { Check, Loader2, Package } from 'lucide-react';
 import { InventoryItem } from '@/lib/db/schema';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { formatCurrency } from '@/lib/business';
@@ -41,18 +41,30 @@ export function RenewDialog({ subscription, children, onSuccess, inventoryItems 
 
     const [selectedInventoryId, setSelectedInventoryId] = useState<string>('');
 
-    // Filter available items for the current service (Loose match)
-    const matchingInventory = inventoryItems.filter(
-        i => i.status === 'available' && i.service.toLowerCase().includes(service.toLowerCase())
+    // All available inventory; matching = same service (loose match)
+    const availableItems = inventoryItems.filter(i => i.status === 'available');
+    const matchingInventory = availableItems.filter(
+        i => i.service.toLowerCase().includes(service.toLowerCase())
+    );
+    const otherInventory = availableItems.filter(
+        i => !service || !i.service.toLowerCase().includes(service.toLowerCase())
     );
 
     const handleInventorySelect = (itemId: string) => {
+        if (!itemId || itemId === '__none__') {
+            setSelectedInventoryId('');
+            setAccountInfo(subscription.accountInfo || '');
+            setCost(subscription.cost || 0);
+            setService(subscription.service);
+            return;
+        }
         const item = inventoryItems.find(i => i.id === parseInt(itemId));
         if (item) {
+            setService(item.service);
             setAccountInfo(item.secretPayload);
             setCost(item.cost || 0);
             setSelectedInventoryId(itemId);
-            toast.success(`Đã lấy thông tin từ kho: ${item.service}`);
+            toast.success(`Đã lấy hàng từ kho: ${item.service} #${item.id}`);
         }
     };
 
@@ -84,22 +96,51 @@ export function RenewDialog({ subscription, children, onSuccess, inventoryItems 
                     <DialogTitle>Gia hạn: {subscription.customerName}</DialogTitle>
                 </DialogHeader>
 
-                {/* Quick inventory pick */}
-                {matchingInventory.length > 0 && (
-                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-100 mb-2">
-                        <Label className="text-blue-700 mb-1.5 block">Có {matchingInventory.length} tài khoản trong kho:</Label>
-                        <Select onValueChange={handleInventorySelect}>
+                {/* Lấy hàng từ kho - luôn hiển thị khi có hàng available */}
+                {availableItems.length > 0 && (
+                    <div className="bg-blue-50 p-3 rounded-lg border border-blue-200 mb-4">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Package className="h-4 w-4 text-blue-600" />
+                            <Label className="text-blue-800 font-medium">Lấy hàng từ kho</Label>
+                        </div>
+                        <p className="text-sm text-blue-700 mb-2">
+                            Chọn 1 mã từ kho để điền sẵn Tài khoản, Dịch vụ, Chi phí và trừ tồn kho khi xác nhận.
+                        </p>
+                        <Select value={selectedInventoryId || '__none__'} onValueChange={handleInventorySelect}>
                             <SelectTrigger className="bg-white">
-                                <SelectValue placeholder="Chọn tài khoản từ kho..." />
+                                <SelectValue placeholder="Chọn mã hàng từ kho..." />
                             </SelectTrigger>
                             <SelectContent>
-                                {matchingInventory.map(item => (
-                                    <SelectItem key={item.id} value={item.id.toString()}>
-                                        #{item.id} - {item.secretPayload.substring(0, 30)}... ({formatCurrency(item.cost)})
-                                    </SelectItem>
-                                ))}
+                                <SelectItem value="__none__">— Không lấy từ kho —</SelectItem>
+                                {matchingInventory.length > 0 && (
+                                    <>
+                                        <SelectItem value="_label_match" disabled className="text-xs text-muted-foreground font-medium">
+                                            Cùng dịch vụ ({matchingInventory.length})
+                                        </SelectItem>
+                                        {matchingInventory.map(item => (
+                                            <SelectItem key={item.id} value={item.id.toString()}>
+                                                #{item.id} · {item.service} · {item.secretPayload.substring(0, 25)}... · {formatCurrency(item.cost)}
+                                            </SelectItem>
+                                        ))}
+                                    </>
+                                )}
+                                {otherInventory.length > 0 && (
+                                    <>
+                                        <SelectItem value="_label_other" disabled className="text-xs text-muted-foreground font-medium">
+                                            Khác dịch vụ ({otherInventory.length})
+                                        </SelectItem>
+                                        {otherInventory.map(item => (
+                                            <SelectItem key={item.id} value={item.id.toString()}>
+                                                #{item.id} · {item.service} · {item.secretPayload.substring(0, 25)}... · {formatCurrency(item.cost)}
+                                            </SelectItem>
+                                        ))}
+                                    </>
+                                )}
                             </SelectContent>
                         </Select>
+                        {selectedInventoryId && (
+                            <p className="text-xs text-blue-600 mt-2">Đã chọn mã #{selectedInventoryId} — sẽ trừ tồn kho khi bấm Xác nhận gia hạn.</p>
+                        )}
                     </div>
                 )}
 
@@ -177,10 +218,8 @@ export function RenewDialog({ subscription, children, onSuccess, inventoryItems 
                                 onChange={(e) => setAccountInfo(e.target.value)}
                                 placeholder="VD: email@gmail.com | pass"
                             />
-                            <input type="hidden" name="inventoryId" value={selectedInventoryId} />
-                            {/* Hidden input to pass inventory ID if we want to track it later, 
-                                but current action doesn't support linking inventory on renew yet. 
-                                For now just using data is enough. */}
+                            <input type="hidden" name="inventoryId" value={selectedInventoryId && selectedInventoryId !== '__none__' ? selectedInventoryId : ''} />
+                            {/* inventoryId được gửi lên server: đánh dấu item delivered và tạo bản ghi delivery */}
                         </div>
                     </div>
 

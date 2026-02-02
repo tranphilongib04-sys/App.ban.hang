@@ -47,10 +47,10 @@ Sau khi build xong, bạn sẽ có **TPB Manage.app** trên Desktop - đây là 
 
 ## 🗄️ Database
 
-- **Loại**: SQLite (Local)
-- **Development**: `./data/tpb-manage.db`
+- **Loại**: SQLite (libSQL/Turso hoặc file local)
+- **Local**: `./data/tpb-manage.db` (hoặc dùng Turso + sync — xem VERCEL-CLI.md)
 - **Production (Electron)**: `~/Library/Application Support/TPB Manage/data/tpb-manage.db`
-- Database tự động được tạo khi chạy app lần đầu
+- **Đồng bộ Local + Vercel**: Cấu hình `TURSO_DATABASE_URL` và `TURSO_AUTH_TOKEN` trên cả local và Vercel → local mặc định sync lên Turso, Vercel đọc Turso → hai bên cùng dữ liệu. Chi tiết: `VERCEL-CLI.md`
 
 ## 🛠️ Công nghệ
 

@@ -32,6 +32,21 @@ vercel project ls
 vercel ls
 ```
 
+## Đồng bộ Local + Vercel (cùng lúc)
+
+Để **local** và **Vercel** dùng chung một database và đồng bộ cùng lúc:
+
+1. **Trên Vercel** (Project → Settings → Environment Variables):
+   - `TURSO_DATABASE_URL` = URL database Turso
+   - `TURSO_AUTH_TOKEN` = token Turso
+
+2. **Trên máy local** (file `.env` hoặc `.env.local`):
+   - Cùng cấu hình: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN`
+   - Mặc định app sẽ dùng **embedded replicas**: đọc/ghi local, tự sync lên Turso mỗi vài giây. Vercel luôn đọc trực tiếp Turso → hai bên luôn thấy cùng dữ liệu.
+   - Nếu muốn local chỉ kết nối trực tiếp Turso (không lưu file local), đặt: `TURSO_SYNC_ENABLED=false`
+
+Kết quả: thao tác trên local hoặc trên Vercel đều cập nhật cùng một Turso; hai môi trường đồng bộ.
+
 ## Lưu ý
 - Trên Vercel cần cấu hình **Environment Variables**: `TURSO_DATABASE_URL`, `TURSO_AUTH_TOKEN` (nếu dùng Turso).
 - Repo này dùng **Next.js**; Vercel sẽ tự nhận và build.
