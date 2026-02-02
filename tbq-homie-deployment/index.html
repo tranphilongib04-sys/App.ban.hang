@@ -1796,6 +1796,35 @@
                     guide: `<h3>Hướng dẫn</h3><p>Cung cấp email Canva để nâng cấp</p>`,
                     faq: `<h3>FAQ</h3><p>Phù hợp cho mọi người, không cần kỹ năng thiết kế</p>`
                 }
+            },
+            capcut: {
+                id: 'capcut',
+                name: 'CapCut Pro',
+                category: 'CapCut',
+                description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
+                image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a0/CapCut_logo.svg/1024px-CapCut_logo.svg.png',
+                featured: true,
+                variants: [
+                    { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Nâng cấp chính chủ' },
+                    { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Nâng cấp chính chủ' },
+                    { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Nâng cấp chính chủ' }
+                ],
+                tabs: {
+                    description: `
+                        <h3>Về CapCut Pro</h3>
+                        <p>Trình chỉnh sửa video được yêu thích nhất hiện nay:</p>
+                        <ul>
+                            <li>Xóa nền video tự động</li>
+                            <li>Hàng ngàn hiệu ứng và transition Pro</li>
+                            <li>Kho nhạc bản quyền khổng lồ</li>
+                            <li>Xuất video 4K sắc nét</li>
+                            <li>Chỉnh sửa khuôn mặt, cơ thể</li>
+                        </ul>
+                    `,
+                    warranty: `<h3>Chính sách bảo hành</h3><p>Full bảo hành trong thời gian sử dụng</p>`,
+                    guide: `<h3>Hướng dẫn</h3><p>Cung cấp email/ID CapCut để nâng cấp</p>`,
+                    faq: `<h3>FAQ</h3><p>Dùng được trên cả điện thoại và máy tính</p>`
+                }
             }
         };
 
@@ -1850,7 +1879,10 @@
                 duolingo: '🦉',
                 ms365: '📊',
                 quizlet: '📚',
-                canva: '✨'
+                ms365: '📊',
+                quizlet: '📚',
+                canva: '✨',
+                capcut: '🎬'
             };
             return emojis[productId] || '📦';
         }
