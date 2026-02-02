@@ -60,8 +60,9 @@ exports.handler = async function (event, context) {
             const code = orderCode.toUpperCase();
             // Check if description contains order code
             const isContentMatch = content.includes(code);
-            // Optional: Check amount if provided (allow small deviation or exact match)
-            const isAmountMatch = amount ? parseFloat(t.amount_in) >= parseFloat(amount) : true;
+            // Optional: Check amount with 5% tolerance (some banks deduche fees or user error)
+            const tolerance = 0.95;
+            const isAmountMatch = amount ? parseFloat(t.amount_in) >= (parseFloat(amount) * tolerance) : true;
 
             return isContentMatch && isAmountMatch;
         });
