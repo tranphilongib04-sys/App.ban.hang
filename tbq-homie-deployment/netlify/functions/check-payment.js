@@ -59,12 +59,35 @@ exports.handler = async function (event, context) {
             const content = (t.transaction_content || '').toUpperCase();
             const code = orderCode.toUpperCase();
             // Check if description contains order code
+            // 1. Content Match (Original logic)
             const isContentMatch = content.includes(code);
-            // Optional: Check amount with 5% tolerance (some banks deduche fees or user error)
+
+            // 2. Fallback: Amount + Time Match (If content is empty/wrong)
+            let isTimeMatch = false;
+            try {
+                // SePay tx date string -> Date object might be tricky depending on server locale.
+                // But generally diffing new Date(tx_date) works for rough estimates.
+                const txTime = new Date(t.transaction_date);
+                const now = new Date();
+                const diffMins = (now - txTime) / 60000;
+                // Allow match if transaction is within last 60 mins
+                isTimeMatch = diffMins < 60 && diffMins > -10;
+            } catch (e) { isTimeMatch = true; }
+
             const tolerance = 0.95;
             const isAmountMatch = amount ? parseFloat(t.amount_in) >= (parseFloat(amount) * tolerance) : true;
 
-            return isContentMatch && isAmountMatch;
+            // Priority 1: Content + Amount
+            if (isContentMatch && isAmountMatch) return true;
+
+            // Priority 2: Amount Only (Relaxed mode fallback)
+            // If amount matches perfectly (99% strict) and is very recent
+            if (isAmountMatch && isTimeMatch) {
+                const strictAmount = parseFloat(t.amount_in) >= (parseFloat(amount) * 0.99);
+                if (strictAmount) return true;
+            }
+
+            return false;
         });
 
         if (paidTransaction) {
