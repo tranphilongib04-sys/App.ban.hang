@@ -657,7 +657,8 @@ function addToCart(productId) {
     cart.push(cartItem);
     updateCartUI();
     toggleCart();
-    // Optional: Show toast here in V2
+    // V2: Show success toast
+    showToast(`Đã thêm ${product.name} vào giỏ`, 'success');
 }
 
 // UPDATE CART UI
@@ -748,12 +749,31 @@ function placeOrder() {
     const phone = document.getElementById('customerPhone').value;
 
     if (!name || !email || !phone) {
-        alert('Vui lòng điền đầy đủ thông tin!');
+        showToast('Vui lòng điền đầy đủ thông tin!', 'error');
+        // Trigger validation on all fields
+        validateInput(document.getElementById('customerName'));
+        validateInput(document.getElementById('customerEmail'));
+        validateInput(document.getElementById('customerPhone'));
+        return;
+    }
+
+    // Check for any remaining errors
+    if (document.querySelectorAll('.error').length > 0) {
+        showToast('Vui lòng kiểm tra lại thông tin!', 'error');
         return;
     }
 
     const orderCode = 'TBQ' + Date.now().toString().slice(-8);
     const total = cart.reduce((sum, item) => sum + item.price, 0);
+
+    // V2: Store order for invoice
+    lastOrder = {
+        code: orderCode,
+        date: new Date().toLocaleString('vi-VN'),
+        customer: { name, email, phone },
+        items: [...cart],
+        total: total
+    };
 
     document.getElementById('orderCode').textContent = orderCode;
     document.getElementById('transferContent').textContent = orderCode;
@@ -858,4 +878,133 @@ function generateTPBankQR(orderCode, amount) {
 // FORMAT PRICE
 function formatPrice(price) {
     return price.toLocaleString('vi-VN') + '₫';
+}
+
+/* V2 FUNCTIONS */
+
+let lastOrder = null;
+
+// TOAST NOTIFICATION
+function showToast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+
+    let icon = 'ℹ️';
+    if (type === 'success') icon = '✅';
+    if (type === 'error') icon = '❌';
+
+    toast.innerHTML = `
+        <span class="toast-icon">${icon}</span>
+        <span class="toast-message">${message}</span>
+    `;
+
+    container.appendChild(toast);
+
+    // Sound effect (Optional)
+    // if(type === 'success') new Audio('success.mp3').play().catch(() => {});
+
+    // Remove after 3 seconds
+    setTimeout(() => {
+        toast.style.animation = 'toastFadeOut 0.3s forwards';
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+}
+
+// VALIDATION
+function validateInput(input) {
+    const value = input.value.trim();
+    const errorDiv = input.parentElement.querySelector('.error-feedback');
+    let isValid = true;
+    let errorMsg = '';
+
+    if (input.hasAttribute('required') && !value) {
+        isValid = false;
+        errorMsg = 'Không được để trống';
+    } else if (input.type === 'email' && value) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(value)) {
+            isValid = false;
+            errorMsg = 'Email không hợp lệ';
+        }
+    } else if (input.type === 'tel' && value) {
+        const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+        if (!phoneRegex.test(value)) {
+            isValid = false;
+            errorMsg = 'Số điện thoại không hợp lệ';
+        }
+    }
+
+    if (!isValid) {
+        input.classList.add('error');
+        if (errorDiv) {
+            errorDiv.innerHTML = `<div class="error-message">⚠️ ${errorMsg}</div>`;
+        }
+    } else {
+        input.classList.remove('error');
+        if (errorDiv) {
+            errorDiv.innerHTML = '';
+        }
+    }
+    return isValid;
+}
+
+// COPY TO CLIPBOARD
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Đã sao chép vào bộ nhớ tạm', 'success');
+    }).catch(err => {
+        console.error('Failed to copy: ', err);
+        showToast('Không thể sao chép', 'error');
+    });
+}
+
+// GENERATE INVOICE
+function generateInvoice() {
+    if (!lastOrder) return;
+
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+
+    // Font support is limited in standard jsPDF without loading custom font.
+    // We will use standard font and keep it simple "TBQ HOMIE INVOICE".
+
+    doc.setFontSize(22);
+    doc.setTextColor(0, 102, 204);
+    doc.text("TBQ HOMIE - HOA DON", 105, 20, null, null, "center");
+
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`Ma don hang: ${lastOrder.code}`, 20, 40);
+    doc.text(`Ngay: ${lastOrder.date}`, 20, 50);
+
+    doc.text("KHACH HANG:", 20, 70);
+    doc.text(`Ten: ${lastOrder.customer.name}`, 30, 80);
+    doc.text(`Email: ${lastOrder.customer.email}`, 30, 90);
+    doc.text(`SĐT: ${lastOrder.customer.phone}`, 30, 100);
+
+    doc.text("CHI TIET DON HANG:", 20, 120);
+    let y = 130;
+
+    lastOrder.items.forEach(item => {
+        // Remove dong/vnd for safe rendering
+        const price = formatPrice(item.price).replace('₫', ' VND');
+        // Remove vietnamese accents for safety if font missing
+        const name = item.productName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const variant = item.variantName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+        doc.text(`- ${name} (${variant})`, 30, y);
+        doc.text(`${price}`, 150, y);
+        y += 10;
+    });
+
+    doc.line(20, y, 190, y);
+    y += 10;
+
+    doc.setFontSize(14);
+    doc.text(`TONG CONG: ${formatPrice(lastOrder.total).replace('₫', ' VND')}`, 120, y);
+
+    doc.save(`invoice-${lastOrder.code}.pdf`);
+
+    showToast('Đang tải xuống hóa đơn...', 'info');
 }
