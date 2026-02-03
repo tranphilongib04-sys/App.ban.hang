@@ -236,6 +236,13 @@
                         <strong>Ngân hàng:</strong> TP Bank
                     </p>
                     <p>
+                        <strong>Số tiền:</strong> <strong style="color: var(--accent); font-size: 16px;"><span
+                                id="transferAmount"></span></strong>
+                        <button class="copy-btn"
+                            onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g, ''))">Sao
+                            chép</button>
+                    </p>
+                    <p>
                         <strong>Số tài khoản:</strong> <span id="bankAccount">00000828511</span>
                         <button class="copy-btn" onclick="copyToClipboard('00000828511')">Sao chép</button>
                     </p>

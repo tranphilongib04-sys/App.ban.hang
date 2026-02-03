@@ -3,6 +3,23 @@
   publish = "."
   functions = "netlify/functions"
 
+[dev]
+  framework = "#static"
+  publish = "."
+
+# Disable NextJS plugin for static site
+# [[plugins]]
+#   package = "@netlify/plugin-nextjs"
+#   [plugins.inputs]
+#     ignore = true
+
+# Scheduled Functions Plugin (for release-expired cron)
+[[plugins]]
+  package = "@netlify/plugin-scheduled-functions"
+
+[functions.release-expired]
+  schedule = "*/5 * * * *"  # Every 5 minutes
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"

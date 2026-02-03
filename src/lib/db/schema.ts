@@ -54,14 +54,20 @@ export const subscriptions = sqliteTable('subscriptions', {
 export const inventoryItems = sqliteTable('inventory_items', {
     id: integer('id').primaryKey({ autoIncrement: true }),
     service: text('service').notNull(),
+    variant: text('variant'), // e.g., "ChatGPT Plus - Cấp TK mới", "Netflix Extra"
     distribution: text('distribution'),
 
     secretPayload: text('secret_payload').notNull(), // Full TK|MK or key
     secretMasked: text('secret_masked').notNull(), // Masked version for display
 
     status: text('status', {
-        enum: ['available', 'delivered', 'invalid']
+        enum: ['available', 'reserved', 'sold', 'delivered', 'warranty', 'invalid']
     }).notNull().default('available'),
+
+    // Reservation tracking for public orders
+    reservedBy: text('reserved_by'), // Order code that reserved this item
+    reservedAt: text('reserved_at'), // When it was reserved
+    reservationExpires: text('reservation_expires'), // When reservation expires (15 min)
 
     importBatch: text('import_batch'),
     cost: real('cost').default(0),
@@ -69,7 +75,49 @@ export const inventoryItems = sqliteTable('inventory_items', {
     note: text('note'),
     category: text('category'),
     createdAt: text('created_at').notNull().default(new Date().toISOString()),
+    soldAt: text('sold_at'), // When it was sold
 });
+
+// Public Orders table (for web storefront)
+export const publicOrders = sqliteTable('public_orders', {
+    id: integer('id').primaryKey({ autoIncrement: true }),
+    orderCode: text('order_code').notNull().unique(), // TBQ23091930
+
+    // Customer info
+    customerName: text('customer_name').notNull(),
+    customerEmail: text('customer_email').notNull(),
+    customerPhone: text('customer_phone').notNull(),
+    customerNote: text('customer_note'),
+
+    // Order details
+    service: text('service').notNull(), // chatgpt, netflix, etc.
+    variant: text('variant').notNull(), // "ChatGPT Plus - Cấp TK mới"
+    price: real('price').notNull(),
+
+    // Inventory linkage
+    inventoryId: integer('inventory_id').references(() => inventoryItems.id),
+
+    // Status tracking
+    status: text('status', {
+        enum: ['pending', 'paid', 'delivered', 'cancelled', 'expired', 'refunded']
+    }).notNull().default('pending'),
+
+    paymentMethod: text('payment_method').default('bank_transfer'),
+    paidAt: text('paid_at'),
+    deliveredAt: text('delivered_at'),
+    deliveryContent: text('delivery_content'), // Account info sent to customer
+
+    // Timestamps
+    createdAt: text('created_at').notNull().default(sql`CURRENT_TIMESTAMP`),
+    expiresAt: text('expires_at'), // When order expires if not paid (15 min)
+
+    // SePay transaction reference
+    transactionId: text('transaction_id'),
+    transactionContent: text('transaction_content'),
+});
+
+export type PublicOrder = typeof publicOrders.$inferSelect;
+export type NewPublicOrder = typeof publicOrders.$inferInsert;
 
 // Deliveries table (log of item deliveries)
 export const deliveries = sqliteTable('deliveries', {

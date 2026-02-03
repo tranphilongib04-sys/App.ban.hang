@@ -361,7 +361,7 @@ const products = {
         name: 'CapCut Pro',
         category: 'CapCut',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/a/a0/CapCut_logo.svg',
+        image: 'images/capcut-logo.webp',
         featured: true,
         variants: [
             { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Nâng cấp chính chủ' },
@@ -386,6 +386,23 @@ const products = {
         }
     }
 };
+
+// V2: Cart Persistence
+function saveCart() {
+    localStorage.setItem('tbq_cart', JSON.stringify(cart));
+}
+
+function loadCart() {
+    const saved = localStorage.getItem('tbq_cart');
+    if (saved) {
+        try {
+            cart = JSON.parse(saved);
+        } catch (e) {
+            console.error('Failed to load cart', e);
+            cart = [];
+        }
+    }
+}
 
 // CART
 let cart = [];
@@ -489,6 +506,16 @@ function handleRoute() {
         document.getElementById('productsPage').classList.add('active');
     } else if (page === 'confirmation') {
         document.getElementById('confirmationPage').classList.add('active');
+    } else if (page === 'contact') {
+        // FIX BUG #3: Scroll to contact/footer section
+        document.getElementById('homePage').classList.add('active');
+        setTimeout(() => {
+            const contactSection = document.getElementById('contact');
+            if (contactSection) {
+                contactSection.scrollIntoView({ behavior: 'smooth' });
+            }
+        }, 500);
+        return; // Don't scroll to top
     } else {
         // Default to home
         document.getElementById('homePage').classList.add('active');
@@ -637,7 +664,7 @@ function switchTab(btn, index) {
     });
 }
 
-// ADD TO CART
+// ADD TO CART (V2 - with quantity support)
 function addToCart(productId) {
     const product = products[productId];
     const selectedOptions = document.querySelector('input[name="variant"]:checked');
@@ -646,40 +673,81 @@ function addToCart(productId) {
     const selectedVariantIndex = selectedOptions.value;
     const variant = product.variants[selectedVariantIndex];
 
-    const cartItem = {
-        productId: productId,
-        productName: product.name,
-        variantName: variant.name,
-        price: variant.price,
-        image: product.image
-    };
+    // Check if item already in cart
+    const existingIndex = cart.findIndex(item =>
+        item.productId === productId && item.variantName === variant.name
+    );
 
-    cart.push(cartItem);
+    if (existingIndex >= 0) {
+        // Increase quantity
+        cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+        cart[existingIndex].price = variant.price * cart[existingIndex].quantity;
+    } else {
+        // Add new item
+        const cartItem = {
+            productId: productId,
+            productName: product.name,
+            variantName: variant.name,
+            variantIndex: selectedVariantIndex,
+            price: variant.price,
+            unitPrice: variant.price,
+            quantity: 1,
+            image: product.image
+        };
+        cart.push(cartItem);
+    }
+
     updateCartUI();
     toggleCart();
-    // V2: Show success toast
+    saveCart(); // Save state
     showToast(`Đã thêm ${product.name} vào giỏ`, 'success');
 }
 
-// UPDATE CART UI
+// Generate productCode from productId and variant
+function getProductCode(productId, variantName) {
+    // Map productId to code prefix
+    const codeMap = {
+        'chatgpt': 'chatgpt',
+        'netflix': 'netflix',
+        'spotify': 'spotify',
+        'adobe': 'adobe',
+        'youtube': 'youtube',
+        'duolingo': 'duolingo',
+        'ms365': 'ms365',
+        'quizlet': 'quizlet',
+        'canva': 'canva',
+        'capcut': 'capcut'
+    };
+
+    const prefix = codeMap[productId] || productId;
+    const variantCode = variantName.toLowerCase()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '');
+
+    return `${prefix}_${variantCode}`;
+}
+
+// UPDATE CART UI (V2 - with quantity controls)
 function updateCartUI() {
     const cartCount = document.querySelector('.cart-count');
     const cartItems = document.getElementById('cartItems');
     const cartFooter = document.getElementById('cartFooter');
     const cartTotal = document.getElementById('cartTotal');
 
-    cartCount.textContent = cart.length;
+    const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
+    cartCount.textContent = totalItems;
 
     if (cart.length === 0) {
         cartItems.innerHTML = '<div class="cart-empty"><p>Giỏ hàng trống</p></div>';
         cartFooter.style.display = 'none';
-
-        // Hide red dot if 0
         cartCount.style.display = 'none';
     } else {
         cartCount.style.display = 'flex';
 
-        cartItems.innerHTML = cart.map((item, index) => `
+        cartItems.innerHTML = cart.map((item, index) => {
+            const qty = item.quantity || 1;
+            const unitPrice = item.unitPrice || item.price;
+            return `
             <div class="cart-item">
                 <div class="cart-item-image">
                     <img src="${item.image}" alt="${item.productName}">
@@ -687,21 +755,44 @@ function updateCartUI() {
                 <div class="cart-item-info">
                     <div class="cart-item-name">${item.productName}</div>
                     <div class="cart-item-variant">${item.variantName}</div>
-                    <div class="cart-item-price">${formatPrice(item.price)}</div>
+                    <div class="cart-item-quantity" style="display: flex; align-items: center; gap: 8px; margin-top: 8px;">
+                        <button onclick="updateCartQuantity(${index}, -1)" style="width: 28px; height: 28px; border: 1px solid #d2d2d7; border-radius: 4px; background: white; cursor: pointer;">-</button>
+                        <span style="min-width: 30px; text-align: center;">${qty}</span>
+                        <button onclick="updateCartQuantity(${index}, 1)" style="width: 28px; height: 28px; border: 1px solid #d2d2d7; border-radius: 4px; background: white; cursor: pointer;">+</button>
+                    </div>
+                    <div class="cart-item-price" style="margin-top: 8px;">${formatPrice(unitPrice * qty)}</div>
                 </div>
                 <span class="remove-item" onclick="removeFromCart(${index})">×</span>
             </div>
-        `).join('');
+        `;
+        }).join('');
 
-        const total = cart.reduce((sum, item) => sum + item.price, 0);
+        const total = cart.reduce((sum, item) => {
+            const qty = item.quantity || 1;
+            const unitPrice = item.unitPrice || item.price;
+            return sum + (unitPrice * qty);
+        }, 0);
         cartTotal.textContent = formatPrice(total);
         cartFooter.style.display = 'block';
     }
 }
 
+// UPDATE CART QUANTITY
+function updateCartQuantity(index, delta) {
+    const item = cart[index];
+    if (!item) return;
+
+    const newQty = Math.max(1, (item.quantity || 1) + delta);
+    item.quantity = newQty;
+    item.price = (item.unitPrice || item.price) * newQty;
+
+    updateCartUI();
+}
+
 // REMOVE FROM CART
 function removeFromCart(index) {
     cart.splice(index, 1);
+    saveCart(); // Save state
     updateCartUI();
 }
 
@@ -717,28 +808,36 @@ function closeCart() {
     document.querySelector('.cart-overlay').classList.remove('active');
 }
 
-// RENDER CHECKOUT SUMMARY
+// RENDER CHECKOUT SUMMARY (V2 - with quantity)
 function renderCheckoutSummary() {
     const container = document.getElementById('checkoutSummary');
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    const total = cart.reduce((sum, item) => {
+        const qty = item.quantity || 1;
+        const unitPrice = item.unitPrice || item.price;
+        return sum + (unitPrice * qty);
+    }, 0);
 
     if (cart.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding: 20px;">Vui lòng thêm sản phẩm vào giỏ</div>';
         return;
     }
 
-    container.innerHTML = cart.map(item => `
+    container.innerHTML = cart.map(item => {
+        const qty = item.quantity || 1;
+        const unitPrice = item.unitPrice || item.price;
+        return `
         <div class="summary-item">
-            <span>${item.productName} - ${item.variantName}</span>
-            <span>${formatPrice(item.price)}</span>
+            <span>${item.productName} - ${item.variantName}${qty > 1 ? ` (x${qty})` : ''}</span>
+            <span>${formatPrice(unitPrice * qty)}</span>
         </div>
-    `).join('');
+    `;
+    }).join('');
 
     document.getElementById('checkoutTotal').textContent = formatPrice(total);
 }
 
-// PLACE ORDER
-function placeOrder() {
+// PLACE ORDER (V2 - calls new API with quantity support)
+async function placeOrder() {
     if (cart.length === 0) {
         alert('Giỏ hàng trống!');
         return;
@@ -747,65 +846,109 @@ function placeOrder() {
     const name = document.getElementById('customerName').value;
     const email = document.getElementById('customerEmail').value;
     const phone = document.getElementById('customerPhone').value;
+    const note = document.getElementById('customerNote')?.value || '';
 
     if (!name || !email || !phone) {
         showToast('Vui lòng điền đầy đủ thông tin!', 'error');
-        // Trigger validation on all fields
         validateInput(document.getElementById('customerName'));
         validateInput(document.getElementById('customerEmail'));
         validateInput(document.getElementById('customerPhone'));
         return;
     }
 
-    // Check for any remaining errors
     if (document.querySelectorAll('.error').length > 0) {
         showToast('Vui lòng kiểm tra lại thông tin!', 'error');
         return;
     }
 
-    const orderCode = 'TBQ' + Date.now().toString().slice(-8);
-    const total = cart.reduce((sum, item) => sum + item.price, 0);
+    // For now, support single item orders (can extend to multiple items later)
+    if (cart.length > 1) {
+        showToast('Vui lòng đặt từng sản phẩm một lần', 'error');
+        return;
+    }
 
-    // V2: Store order for invoice
-    lastOrder = {
-        code: orderCode,
-        date: new Date().toLocaleString('vi-VN'),
-        customer: { name, email, phone },
-        items: [...cart],
-        total: total
-    };
+    const cartItem = cart[0];
+    const productCode = getProductCode(cartItem.productId, cartItem.variantName);
+    const quantity = cartItem.quantity || 1;
+    const unitPrice = cartItem.unitPrice || cartItem.price;
+    const total = unitPrice * quantity;
 
-    document.getElementById('orderCode').textContent = orderCode;
-    document.getElementById('transferContent').textContent = orderCode;
-    document.getElementById('transferAmount').textContent = formatPrice(total);
+    // Show loading
+    showToast('Đang tạo đơn hàng...', 'info');
 
-    // Generate QR Code for TP Bank
-    const qrCodeUrl = generateTPBankQR(orderCode, total);
-    const qrContainer = document.getElementById('qrCodeContainer');
-    qrContainer.innerHTML = `
-        <h4 style="font-size: 18px; margin-bottom: 16px; color: var(--accent);">
-            📱 Quét mã QR để thanh toán nhanh
-        </h4>
-        <div style="background: white; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-            <img src="${qrCodeUrl}" alt="QR Code" style="width: 280px; height: 280px; border-radius: 12px;">
-        </div>
-        <p style="font-size: 14px; color: var(--text-secondary); margin-top: 12px; max-width: 320px; margin-left: auto; margin-right: auto;">
-            Mở app ngân hàng → Quét mã QR → Xác nhận thanh toán
-        </p>
-        <div id="paymentStatus" style="margin-top: 20px; font-weight: 600; color: var(--warning);">
-            ⏳ Đang chờ thanh toán...
-        </div>
-    `;
+    try {
+        // Call create-order API
+        const response = await fetch('/.netlify/functions/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                customerNote: note,
+                productCode: productCode,
+                quantity: quantity,
+                price: unitPrice
+            })
+        });
 
-    // Clear cart (but keep logic independent of UI navigation for a moment)
-    cart = [];
-    updateCartUI();
+        const data = await response.json();
 
-    // Navigate to confirmation page
-    window.location.hash = 'confirmation';
+        if (!data.success) {
+            showToast(data.error === 'INSUFFICIENT_STOCK'
+                ? `Hết hàng! Chỉ còn ${data.available || 0} sản phẩm`
+                : data.message || 'Có lỗi xảy ra', 'error');
+            return;
+        }
 
-    // Start polling for payment status
-    startPaymentPolling(orderCode, total);
+        const orderCode = data.orderCode;
+        const paymentInfo = data.paymentInfo;
+
+        // Store order for invoice
+        lastOrder = {
+            code: orderCode,
+            date: new Date().toLocaleString('vi-VN'),
+            customer: { name, email, phone },
+            items: [...cart],
+            total: total
+        };
+
+        document.getElementById('orderCode').textContent = orderCode;
+        document.getElementById('transferContent').textContent = orderCode;
+        document.getElementById('transferAmount').textContent = formatPrice(total);
+
+        // Generate QR Code
+        const qrCodeUrl = generateTPBankQR(orderCode, total);
+        const qrContainer = document.getElementById('qrCodeContainer');
+        qrContainer.innerHTML = `
+            <h4 style="font-size: 18px; margin-bottom: 16px; color: var(--accent);">
+                📱 Quét mã QR để thanh toán nhanh
+            </h4>
+            <div style="background: white; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
+                <img src="${qrCodeUrl}" alt="QR Code" style="width: 280px; height: 280px; border-radius: 12px;">
+            </div>
+            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 12px; max-width: 320px; margin-left: auto; margin-right: auto;">
+                Mở app ngân hàng → Quét mã QR → Xác nhận thanh toán
+            </p>
+            <div id="paymentStatus" style="margin-top: 20px; font-weight: 600; color: var(--warning);">
+                ⏳ Đang chờ thanh toán...
+            </div>
+        `;
+
+        // Clear cart
+        cart = [];
+        updateCartUI();
+
+        // Navigate to confirmation page
+        window.location.hash = 'confirmation';
+
+        // Start polling for payment status
+        startPaymentPolling(orderCode, total);
+
+    } catch (error) {
+        console.error('Place order error:', error);
+        showToast('Có lỗi xảy ra khi tạo đơn hàng', 'error');
+    }
 }
 
 // POLL PAYMENT STATUS
@@ -833,24 +976,26 @@ function startPaymentPolling(orderCode, amount) {
             if (data.status === 'paid') {
                 clearInterval(pollingInterval);
 
-                // AUTO-DELIVERY UI
-                const deliveryMsg = data.delivery ?
-                    `<div style="margin-top:16px; padding:16px; background:#f0fdf4; border:1px solid #4ade80; border-radius:8px; text-align:left;">
-                        <strong style="color:#15803d; display:block; margin-bottom:8px;">📦 Đơn hàng của bạn:</strong>
-                        <code style="display:block; background:white; padding:8px; border-radius:4px; border:1px solid #ddd; font-family:monospace;">${data.delivery}</code>
-                        <p style="font-size:12px; color:#15803d; margin-top:8px;">*Hãy lưu lại thông tin này ngay.</p>
-                     </div>`
-                    : '';
-
                 const statusEl = document.getElementById('paymentStatus');
                 if (statusEl) {
                     statusEl.innerHTML = `
-                        <span style="color: var(--success); font-size: 18px; display:block; margin-bottom:8px;">
+                        <span style="color: var(--success); font-size: 18px; display:block; margin-bottom:16px;">
                             ✅ Thanh toán thành công!
                         </span>
-                        ${deliveryMsg}
+                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                            Đơn hàng đã được giao tự động. Đang chuyển hướng...
+                        </p>
                     `;
                 }
+
+                // Redirect to delivery page after 2 seconds
+                setTimeout(() => {
+                    if (data.redirectUrl) {
+                        window.location.href = data.redirectUrl;
+                    } else if (data.deliveryToken) {
+                        window.location.href = `/.netlify/functions/delivery?token=${data.deliveryToken}&order=${orderCode}`;
+                    }
+                }, 2000);
             }
         } catch (error) {
             console.error("Error checking payment:", error);
@@ -928,7 +1073,7 @@ function validateInput(input) {
             errorMsg = 'Email không hợp lệ';
         }
     } else if (input.type === 'tel' && value) {
-        const phoneRegex = /(84|0[3|5|7|8|9])+([0-9]{8})\b/;
+        const phoneRegex = /(84|0[35789])([0-9]{8})\b/;
         if (!phoneRegex.test(value)) {
             isValid = false;
             errorMsg = 'Số điện thoại không hợp lệ';
@@ -948,6 +1093,16 @@ function validateInput(input) {
     }
     return isValid;
 }
+
+// FIX BUG #5: Clear validation errors on input
+document.addEventListener('DOMContentLoaded', function () {
+    // Add input event listeners to clear errors while typing
+    document.addEventListener('input', function (e) {
+        if (e.target.matches('#customerName, #customerEmail, #customerPhone')) {
+            validateInput(e.target);
+        }
+    });
+});
 
 // COPY TO CLIPBOARD
 function copyToClipboard(text) {

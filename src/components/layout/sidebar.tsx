@@ -14,6 +14,7 @@ import {
     MessageSquareText,
     Users2,
     Menu,
+    Globe,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription } from '@/components/ui/sheet';
@@ -26,6 +27,7 @@ const navItems = [
     { href: '/inventory', label: 'Inventory', icon: Package },
     { href: '/family', label: 'Family', icon: Users2 },
     { href: '/warranty', label: 'Warranty', icon: Shield },
+    { href: '/web-admin', label: 'Web Admin', icon: Globe },
     { href: '/templates', label: 'Templates', icon: MessageSquareText },
     { href: '/reports', label: 'Reports', icon: BarChart3 },
     { href: '/settings', label: 'Settings', icon: Settings },

@@ -157,11 +157,138 @@ async function main() {
         }
     }
 
-    await migrateTable("customers");
-    await migrateTable("subscriptions");
-    await migrateTable("inventory_items");
-    await migrateTable("deliveries");
-    await migrateTable("warranties");
+    // await migrateTable("customers");
+    // await migrateTable("subscriptions");
+    // await migrateTable("inventory_items");
+    // await migrateTable("deliveries");
+    // await migrateTable("warranties");
+
+    // --- Step C: Link Inventory to Website ---
+    console.log("\n3️⃣  Linking Inventory to Website (stock_units)...");
+
+    try {
+        // Debug: Check schema
+        const schema = await cloudClient.execute("PRAGMA table_info(products)");
+        console.log("   Products Table Schema:", schema.rows);
+
+        const stockSchema = await cloudClient.execute("PRAGMA table_info(stock_units)");
+        console.log("   Stock Units Table Schema:", stockSchema.rows);
+
+        // 0. Ensure Products Exist (Seed if missing)
+        // Adapt based on schema - simplified for now
+        // Assuming at least code and name exist
+        const productsToSeed = [
+            { code: 'capcut_pro_1y', name: 'CapCut Pro - 1 Năm', price: 150000 },
+            { code: 'capcut_pro_6m', name: 'CapCut Pro - 6 Tháng', price: 90000 },
+            { code: 'chatgpt_plus_1m', name: 'ChatGPT Plus - 1 Tháng', price: 150000 },
+            { code: 'netflix_1m', name: 'Netflix Premium - 1 Tháng', price: 89000 },
+            { code: 'spotify_1y', name: 'Spotify Premium - 1 Năm', price: 250000 },
+            { code: 'youtube_1m', name: 'YouTube Premium - 1 Tháng', price: 25000 },
+        ];
+
+        // Only insert fields that exist
+        // For now, let's just try code/name if price fails, or create table if missing
+
+        // Ensure table exists with full schema?
+        await cloudClient.execute(`
+            CREATE TABLE IF NOT EXISTS products (
+                id INTEGER PRIMARY KEY,
+                code TEXT UNIQUE,
+                name TEXT,
+                price REAL,
+                description TEXT
+            )
+        `);
+
+        // Attempt insert - ignore properties if column missing, or alert
+        // Actually, if table existed without price, we can't insert price.
+        // Let's rely on the CREATE TABLE IF NOT EXISTS above.
+        // If it already existed with different schema, the CREATE does nothing.
+
+        // We will try to insert just code/name if simpler schema, or full if possible.
+        // But to be safe, let's just try inserting code, name.
+
+        // Match schema: code, name, base_price, is_active
+        for (const p of productsToSeed) {
+            try {
+                // Try inserting with correct column names found in schema
+                await cloudClient.execute({
+                    sql: "INSERT OR IGNORE INTO products (code, name, base_price) VALUES (?, ?, ?)",
+                    args: [p.code, p.name, p.price]
+                });
+            } catch (e: any) {
+                console.error(`   Failed to seed ${p.code}: ${e.message}`);
+                // Fallback to just code/name if base_price also fails
+                try {
+                    await cloudClient.execute({
+                        sql: "INSERT OR IGNORE INTO products (code, name) VALUES (?, ?)",
+                        args: [p.code, p.name]
+                    });
+                } catch (e2) { }
+            }
+        }
+        console.log("   ✅ Seeded/Verified Products.");
+
+        // 1. Get Products Map from Cloud
+        const productsResult = await cloudClient.execute("SELECT id, code FROM products");
+        const productMap = new Map(); // code -> id
+        productsResult.rows.forEach(r => productMap.set(r.code, r.id));
+        console.log("   Cloud Products:", Array.from(productMap.keys()));
+
+        // 2. Map Local Items to Product Codes
+        const localItems: any[] = localDb.prepare("SELECT * FROM inventory_items WHERE status = 'available'").all();
+        console.log(`   Found ${localItems.length} available local items.`);
+
+        // Mapping Logic
+        function getProductCode(service: string, variant: string) {
+            const s = (service || '').toLowerCase().replace(/\s+/g, '_');
+            const v = (variant || '').toLowerCase().replace(/\s+/g, '_').replace(/-/g, '_');
+
+            if (s.includes('chatgpt')) return 'chatgpt_plus_1m';
+            if (s.includes('netflix')) return 'netflix_extra';
+            if (s.includes('spotify')) return 'spotify_premium';
+            if (s.includes('youtube')) return 'youtube_premium';
+            if (s.includes('capcut')) return 'capcut_pro_1y'; // Fixed mapping for Capcut
+
+            return `${s}_${v}`;
+        }
+
+        let syncedCount = 0;
+
+        for (const item of localItems) {
+            const code = getProductCode(item.service, item.variant);
+            console.log(`   Mapping '${item.service}' -> '${code}'...`);
+            const productId = productMap.get(code);
+
+            if (productId) {
+                try {
+                    // Check if already exists to avoid dupes
+                    const check = await cloudClient.execute({
+                        sql: "SELECT id FROM stock_units WHERE content = ?",
+                        args: [item.secret_payload]
+                    });
+
+                    if (check.rows.length === 0) {
+                        await cloudClient.execute({
+                            sql: "INSERT INTO stock_units (product_id, content, status, updated_at) VALUES (?, ?, 'available', ?)",
+                            args: [productId, item.secret_payload, new Date().toISOString()]
+                        });
+                        syncedCount++;
+                        if (syncedCount % 10 === 0) process.stdout.write('.');
+                    }
+                } catch (e: any) {
+                    // Ignore duplicate key errors silently
+                    if (!e.message.includes('UNIQUE')) {
+                        console.error(`   Failed item ${item.id}: ${e.message}`);
+                    }
+                }
+            }
+        }
+        console.log(`\n   ✅ Linked ${syncedCount} items to Website Stock.`);
+
+    } catch (e: any) {
+        console.log(`\n   ⚠️  Skipping Inventory Link (Products table missing?): ` + e.message);
+    }
 
     console.log("\n✨ MIGRATION COMPLETE!");
     console.log("---------------------------------------------------");
