@@ -1,4 +1,7 @@
 /**
+ * @deprecated Use admin-web /api/admin/orders instead.
+ * Kept alive for backward compat until PR 10 cleanup.
+ *
  * ADMIN ORDERS API - Netlify Function
  *
  * GET /admin-orders - Get all public orders (requires auth)
