@@ -9,5 +9,6 @@
   status = 200
 
 # Scheduled function for payment reconciliation (fallback for missed webhooks)
+# Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
 [functions."reconcile-payments"]
-  schedule = "@every 5m"
+  schedule = "*/5 * * * *"
