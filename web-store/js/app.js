@@ -1063,15 +1063,16 @@ async function placeOrder() {
     }
 }
 
-// POLL PAYMENT STATUS
+// POLL PAYMENT STATUS – uses lightweight order-status endpoint (read-only).
+// check-payment is still the server-side fallback that *triggers* fulfillment;
+// order-status just reads the current state so the UI stays in sync even if
+// the webhook already fulfilled the order while the tab was open.
 let pollingInterval;
 function startPaymentPolling(orderCode, amount) {
     if (pollingInterval) clearInterval(pollingInterval);
 
     let attempts = 0;
-    const maxAttempts = 100; // Stop after ~5 minutes (3s * 100)
-
-    // Simulate caching/localstorage to persist order if refresh? (Future V2 improvement)
+    const maxAttempts = 100; // ~5 min at 3 s interval
 
     pollingInterval = setInterval(async () => {
         attempts++;
@@ -1081,31 +1082,21 @@ function startPaymentPolling(orderCode, amount) {
         }
 
         try {
-            // Call Netlify Function
-            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${orderCode}&amount=${amount}`);
+            const response = await fetch(`/.netlify/functions/order-status?code=${orderCode}`);
             const data = await response.json();
 
-            if (data.status === 'paid') {
+            if (data.status === 'fulfilled' || data.status === 'paid') {
                 clearInterval(pollingInterval);
 
-                // Update confirmation page heading to success state
+                // Update confirmation page UI
                 const confirmationContainer = document.querySelector('.confirmation-container');
                 if (confirmationContainer) {
                     const successIcon = confirmationContainer.querySelector('.success-icon');
                     const heading = confirmationContainer.querySelector('h1');
                     const pendingText = confirmationContainer.querySelector('p[style*="warning"]');
-
-                    if (successIcon) {
-                        successIcon.style.background = 'var(--success)';
-                        successIcon.textContent = '✓';
-                    }
-                    if (heading) {
-                        heading.textContent = 'Thanh toán thành công!';
-                        heading.style.color = 'var(--success)';
-                    }
-                    if (pendingText) {
-                        pendingText.remove(); // Remove "Vui lòng thanh toán" text
-                    }
+                    if (successIcon) { successIcon.style.background = 'var(--success)'; successIcon.textContent = '✓'; }
+                    if (heading)     { heading.textContent = 'Thanh toán thành công!'; heading.style.color = 'var(--success)'; }
+                    if (pendingText) { pendingText.remove(); }
                 }
 
                 const statusEl = document.getElementById('paymentStatus');
@@ -1115,34 +1106,32 @@ function startPaymentPolling(orderCode, amount) {
                             ✅ Đã xác nhận thanh toán!
                         </span>
                         <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                            Đơn hàng đã được xác nhận và giao tự động. Đang chuyển hướng...
+                            Đơn hàng đã được xác nhận và giao tự động. Đang chuyển hướng…
                         </p>
                     `;
                 }
 
-                // Store invoice number and show invoice button after payment confirmation
                 if (data.invoiceNumber && lastOrder) {
                     lastOrder.invoiceNumber = data.invoiceNumber;
-                    // Show invoice download button now that payment is confirmed
                     const invoiceBtn = document.getElementById('invoiceBtn');
-                    if (invoiceBtn) {
-                        invoiceBtn.style.display = 'inline-block';
-                    }
+                    if (invoiceBtn) invoiceBtn.style.display = 'inline-block';
                 }
 
-                // Redirect to delivery page after 2 seconds
-                setTimeout(() => {
-                    if (data.redirectUrl) {
-                        window.location.href = data.redirectUrl;
-                    } else if (data.deliveryToken) {
-                        window.location.href = `/.netlify/functions/delivery?token=${data.deliveryToken}&order=${orderCode}`;
-                    }
-                }, 2000);
+                // If fulfilled and we have a delivery URL, redirect after 2 s
+                if (data.status === 'fulfilled' && data.deliveryUrl) {
+                    setTimeout(() => { window.location.href = data.deliveryUrl; }, 2000);
+                }
+                // If only paid (not yet fulfilled), keep polling a few more times
+                // then fall back to check-payment which will trigger fulfillment
+                else if (data.status === 'paid') {
+                    // Reset counter – give a few more cycles for webhook to finish
+                    attempts = maxAttempts - 5;
+                }
             }
         } catch (error) {
-            console.error("Error checking payment:", error);
+            console.error('[poll] order-status error:', error);
         }
-    }, 3000); // Check every 3 seconds
+    }, 3000);
 }
 
 // Generate QR Code for TP Bank using VietQR API

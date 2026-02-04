@@ -6,7 +6,7 @@
  */
 
 const { createClient } = require('@libsql/client/web');
-const { fulfillOrder } = require('./utils/fulfillment');
+const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -15,139 +15,189 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
+// ---------------------------------------------------------------------------
+// Extract order-code (TBQ…) from any field SePay might use.
+// Handles: "IBFT TBQ20824761", "MBVCB.xxx.TBQ20824761", plain "TBQ20824761"
+// ---------------------------------------------------------------------------
+function extractOrderCode(body) {
+    const candidates = [
+        body.content,
+        body.transaction_content,
+        body.transactionContent,
+        body.description,
+        body.Description,
+        body.Content,
+        body.Transaction_content,
+        body.TransactionContent
+    ];
+    for (const raw of candidates) {
+        if (!raw) continue;
+        const m = String(raw).match(/TBQ\d+/i);
+        if (m) return m[0].toUpperCase();
+    }
+    return null;
+}
+
+// ---------------------------------------------------------------------------
+// Extract the canonical transaction-id that SePay sends.
+// Falls back to a stable synthetic key so idempotency index still works.
+// ---------------------------------------------------------------------------
+function extractTransactionId(body) {
+    return body.id
+        || body.transaction_id
+        || body.transactionId
+        || body.referenceCode
+        || body.reference_number
+        || body.referenceNumber
+        || null;                       // will be synthesised below if still null
+}
+
 exports.handler = async function (event, context) {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
+    let body;
     try {
-        const body = JSON.parse(event.body);
+        body = JSON.parse(event.body);
+    } catch (e) {
+        console.error('[Webhook] Malformed JSON body:', e.message);
+        return { statusCode: 400, body: JSON.stringify({ success: false, message: 'Bad JSON' }) };
+    }
 
-        // Log incoming webhook for debugging
-        console.log('[Webhook] Received payload:', JSON.stringify(body, null, 2));
-        console.log('[Webhook] Headers:', JSON.stringify(event.headers, null, 2));
+    // ------------------------------------------------------------------
+    // 1. Log raw header format so you can see exactly what SePay sends.
+    //    (sanitised: only first 8 chars of any token value are logged)
+    // ------------------------------------------------------------------
+    const authHeader = event.headers['authorization'] || event.headers['Authorization'] || '';
+    const authScheme = authHeader.split(' ')[0] || 'NONE';   // Bearer | Apikey | raw | NONE
+    console.log('[Webhook] Auth header scheme:', authScheme,
+        '| raw prefix:', authHeader ? `"${authHeader.substring(0, 20)}…"` : 'MISSING');
+    console.log('[Webhook] Payload keys:', Object.keys(body).join(', '));
 
-        // SePay Payloads vary, but usually contain:
-        // { id, transactionDate, amountIn, transactionContent, referenceCode, ... }
-        // CRITICAL: Verify API Token if possible, or Order Code match
+    // ------------------------------------------------------------------
+    // 2. Token verification
+    //    - Dedicated SEPAY_WEBHOOK_TOKEN preferred (set this in Netlify env).
+    //    - Falls back to SEPAY_API_TOKEN for backwards compatibility.
+    //    - If NO token arrives at all  → 200 + log warning, do NOT fulfill
+    //      (fail-safe: SePay retries on non-2xx, so 401 would stop retries).
+    // ------------------------------------------------------------------
+    const expectedToken = process.env.SEPAY_WEBHOOK_TOKEN || process.env.SEPAY_API_TOKEN;
 
-        // 1. Validate SePay Token
-        // SePay sends "Authorization: Apikey <key>" (NOT Bearer!)
-        const authHeader = event.headers['authorization'] || event.headers['Authorization'];
-        let incomingToken = null;
+    if (!expectedToken) {
+        console.error('[Webhook] Neither SEPAY_WEBHOOK_TOKEN nor SEPAY_API_TOKEN configured');
+        return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server configuration error' }) };
+    }
 
-        if (authHeader) {
-            // Support both "Bearer <token>" and "Apikey <key>"
-            if (authHeader.startsWith('Bearer ')) {
-                incomingToken = authHeader.replace('Bearer ', '');
-            } else if (authHeader.startsWith('Apikey ')) {
-                incomingToken = authHeader.replace('Apikey ', '');
-            } else {
-                // Fallback: treat entire header as token
-                incomingToken = authHeader;
-            }
-        } else if (body.api_token) {
-            incomingToken = body.api_token;
-        }
+    // Extract token from header (Bearer / Apikey / raw) or body.api_token
+    let incomingToken = null;
+    if (authHeader) {
+        const parts = authHeader.split(' ');
+        incomingToken = parts.length >= 2 ? parts.slice(1).join(' ') : parts[0];
+    } else if (body.api_token) {
+        incomingToken = body.api_token;
+    }
 
-        const expectedToken = process.env.SEPAY_API_TOKEN;
+    if (!incomingToken) {
+        // No token at all – fail-safe: acknowledge but skip fulfillment
+        console.warn('[Webhook] WARNING: No token received (header or body). Returning 200 without fulfillment.');
+        return { statusCode: 200, body: JSON.stringify({ success: false, message: 'No token provided – skipped' }) };
+    }
 
-        console.log('[Webhook] Incoming Token:', incomingToken ? `${incomingToken.substring(0, 10)}...` : 'MISSING');
-        console.log('[Webhook] Expected Token:', expectedToken ? 'SET' : 'NOT SET');
-        console.log('[Webhook] Token Match:', incomingToken === expectedToken);
+    console.log('[Webhook] Token match:', incomingToken === expectedToken,
+        '| incoming prefix:', incomingToken.substring(0, 8) + '…');
 
-        if (!expectedToken) {
-            console.error('[Webhook] SEPAY_API_TOKEN not configured on server');
-            // Fail open or closed? Closed is safer, but if config missing, system is broken.
-            return { statusCode: 500, body: JSON.stringify({ success: false, message: 'Server configuration error' }) };
-        }
+    if (incomingToken !== expectedToken) {
+        console.warn('[Webhook] Token mismatch – rejected');
+        return { statusCode: 401, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
+    }
 
-        if (incomingToken !== expectedToken) {
-            console.warn('[Webhook] Invalid Token - Authentication Failed');
-            return { statusCode: 401, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
-        }
+    console.log('[Webhook] Auth OK');
 
-        console.log('[Webhook] Authentication successful ✓');
+    // ------------------------------------------------------------------
+    // 3. Parse order code from every possible content field
+    // ------------------------------------------------------------------
+    const orderCode = extractOrderCode(body);
+    if (!orderCode) {
+        console.log('[Webhook] No TBQ order code found. Payload content fields:',
+            JSON.stringify({
+                content: body.content,
+                transaction_content: body.transaction_content,
+                transactionContent: body.transactionContent,
+                description: body.description
+            }));
+        return { statusCode: 200, body: JSON.stringify({ success: false, message: 'No order code found' }) };
+    }
 
+    const amountIn = parseFloat(body.amountIn || body.amount_in || body.amount || 0);
+    console.log('[Webhook] orderCode:', orderCode, '| amountIn:', amountIn);
 
-        const transactionContent = body.content || body.transaction_content || '';
-        const orderCodeMatch = transactionContent.match(/TBQ\d+/);
+    // ------------------------------------------------------------------
+    // 4. DB: find order, amount-check, idempotency guard
+    // ------------------------------------------------------------------
+    const db = getDbClient();
 
-        if (!orderCodeMatch) {
-            console.log('[Webhook] Ignored: No order code found in content:', transactionContent);
-            return { statusCode: 200, body: JSON.stringify({ success: false, message: 'No order code found' }) };
-        }
+    // ensurePaymentSchema MUST run before any BEGIN (DDL auto-commits)
+    await ensurePaymentSchema(db);
 
-        const orderCode = orderCodeMatch[0];
-        const amountIn = parseFloat(body.amountIn || body.amount_in || 0);
+    const orderResult = await db.execute({
+        sql: `SELECT * FROM orders WHERE order_code = ? LIMIT 1`,
+        args: [orderCode]
+    });
 
-        console.log('[Webhook] Processing order:', orderCode, 'Amount:', amountIn);
+    if (orderResult.rows.length === 0) {
+        console.log('[Webhook] Order not found:', orderCode);
+        return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Order not found' }) };
+    }
 
-        const db = getDbClient();
+    const order = orderResult.rows[0];
+    console.log('[Webhook] Order ID:', order.id, '| status:', order.status, '| amount_total:', order.amount_total);
 
-        // 2. Find Order
-        const orderResult = await db.execute({
-            sql: `SELECT * FROM orders WHERE order_code = ? LIMIT 1`,
-            args: [orderCode]
-        });
+    if (amountIn < order.amount_total * 0.95) {
+        console.log('[Webhook] Insufficient amount –', amountIn, 'vs', order.amount_total);
+        return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Insufficient amount' }) };
+    }
 
-        if (orderResult.rows.length === 0) {
-            console.log('[Webhook] Order not found:', orderCode);
-            return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Order not found' }) };
-        }
+    if (order.status === 'fulfilled') {
+        console.log('[Webhook] Already fulfilled – idempotent 200');
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Already fulfilled' }) };
+    }
 
-        const order = orderResult.rows[0];
-        console.log('[Webhook] Order found - ID:', order.id, 'Status:', order.status, 'Amount:', order.amount_total);
+    // Stable transaction id for idempotency index (payments.transaction_id UNIQUE)
+    const rawTxId = extractTransactionId(body);
+    const txId = rawTxId || `SEPAY-${orderCode}-${amountIn}`;   // deterministic fallback
+    console.log('[Webhook] txId:', txId, rawTxId ? '(from payload)' : '(synthesised)');
 
-        // 3. Check Amount (Tolerance 95%)
-        if (amountIn < order.amount_total * 0.95) {
-            console.log(`[Webhook] Insufficient amount for ${orderCode}: Received ${amountIn}, Needed ${order.amount_total}`);
-            return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Insufficient amount' }) };
-        }
+    // Double-check: if this exact txId already recorded → idempotent skip
+    const existingPayment = await db.execute({
+        sql: `SELECT id FROM payments WHERE provider = 'sepay' AND transaction_id = ? LIMIT 1`,
+        args: [txId]
+    });
+    if (existingPayment.rows.length > 0) {
+        console.log('[Webhook] Payment already recorded for txId', txId, '– idempotent 200');
+        return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Already processed' }) };
+    }
 
-        if (order.status === 'fulfilled') {
-            console.log(`[Webhook] Order ${orderCode} already fulfilled. Idempotent return.`);
-            return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Already fulfilled' }) };
-        }
-
-        // 4. Fulfill Order
-        // CRITICAL FIX: Ensure schema BEFORE transaction (DDL cannot run in active transaction)
-        const { ensurePaymentSchema } = require('./utils/fulfillment');
-        await ensurePaymentSchema(db);
-
-        await db.execute('BEGIN IMMEDIATE');
-        try {
-            // Mock transaction object from Webhook body
-            const transaction = {
-                id: body.id || body.transaction_id || `SEPAY-${Date.now()}`,
-                reference_number: body.referenceCode || body.reference_number
-            };
-
-            // Pass skipSchemaCheck=true since we already called ensurePaymentSchema above
-            await fulfillOrder(db, order, transaction, true);
-
-            await db.execute('COMMIT');
-            console.log(`✅ [Webhook] Order ${orderCode} fulfilled successfully.`);
-
-            return { statusCode: 200, body: JSON.stringify({ success: true }) };
-
-        } catch (err) {
-            console.error(`❌ [Webhook] Fulfillment failed for ${orderCode}:`, err);
-            await db.execute('ROLLBACK');
-            throw err;
-        }
-
-    } catch (error) {
-        console.error('❌ [Webhook] CRITICAL ERROR:', {
-            orderCode: error.orderCode || 'UNKNOWN',
-            message: error.message,
-            stack: error.stack
-        });
-        return {
-            statusCode: 500, body: JSON.stringify({
-                error: error.message,
-                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-            })
+    // ------------------------------------------------------------------
+    // 5. Fulfill inside IMMEDIATE transaction
+    // ------------------------------------------------------------------
+    await db.execute('BEGIN IMMEDIATE');
+    try {
+        const transaction = {
+            id: txId,
+            reference_number: body.referenceCode || body.reference_number || body.referenceNumber || txId
         };
+
+        await finalizeOrder(db, order, transaction, 'webhook');
+
+        await db.execute('COMMIT');
+        console.log('[Webhook] Order', orderCode, 'fulfilled OK');
+
+        return { statusCode: 200, body: JSON.stringify({ success: true }) };
+
+    } catch (err) {
+        console.error('[Webhook] Fulfillment error for', orderCode, ':', err.message);
+        try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+        throw err;
     }
 };

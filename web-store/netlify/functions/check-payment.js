@@ -240,16 +240,12 @@ exports.handler = async function (event, context) {
 
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
-            // Ensure schema BEFORE starting transaction (DDL can auto-commit/conflict)
-            const { fulfillOrder, ensurePaymentSchema } = require('./utils/fulfillment');
-            await ensurePaymentSchema(db);
+            const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
+            await ensurePaymentSchema(db);  // DDL must run BEFORE BEGIN
 
             await db.execute('BEGIN IMMEDIATE');
-
             try {
-                // USE SHARED FULFILLMENT LOGIC (without calling ensurePaymentSchema again inside)
-                const result = await fulfillOrder(db, order, paidTransaction, true); // skipSchemaCheck flag
-
+                const result = await finalizeOrder(db, order, paidTransaction, 'check-payment');
                 await db.execute('COMMIT');
 
                 return {
@@ -268,14 +264,9 @@ exports.handler = async function (event, context) {
                         redirectUrl: `/delivery?token=${result.deliveryToken}&order=${orderCode}`
                     })
                 };
-
             } catch (error) {
                 console.error('[CheckPayment] Fulfillment error:', error);
-                try {
-                    await db.execute('ROLLBACK');
-                } catch (rollbackError) {
-                    console.error('[CheckPayment] Rollback failed (transaction may not be active):', rollbackError);
-                }
+                try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
                 throw error;
             }
         }

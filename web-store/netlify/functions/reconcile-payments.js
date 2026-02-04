@@ -7,7 +7,7 @@
  */
 
 const { createClient } = require('@libsql/client/web');
-const { fulfillOrder } = require('./utils/fulfillment');
+const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
 
 // Config
 // Keep this aligned with `check-payment.js` to avoid mismatched APIs.
@@ -87,60 +87,47 @@ exports.handler = async function (event, context) {
             }
         }
 
+        // ensurePaymentSchema once per job run – DDL cannot run inside BEGIN
+        await ensurePaymentSchema(db);
+
         let reconCount = 0;
 
         for (const order of pendingOrders) {
             const orderCode = order.order_code;
             const orderAmount = order.amount_total;
 
-            // Find matching transaction
-            // Condition: 
-            // 1. Content contains orderCode (case insensitive)
-            // 2. Amount >= orderAmount * tolerance
-            // 3. Status handled by webhook usually, but here we cover missed ones.
-
             const match = transactions.find(t => {
                 const content = (t.transaction_content || t.content || t.description || '').toUpperCase();
                 const amount = parseFloat(t.amount_in || t.amount || t.amountIn || 0);
                 const dateOk = isTxWithinLookback(t.transaction_date || t.transactionDate || t.date || t.created_at);
                 const code = orderCode.toUpperCase();
-                // Match nhiều format: "IBFT TBQ20824761", "MBVCB.xxx.TBQ20824761", hoặc chỉ số
                 const contentMatch = content.includes(code) || content.includes(code.replace('TBQ', ''));
                 const amountMatch = amount >= (orderAmount * AMOUNT_TOLERANCE);
-
                 return dateOk && contentMatch && amountMatch;
             });
 
             if (match) {
-                console.log(`[Reconcile] MATCH FOUND for ${orderCode}. Transaction: ${match.id}`);
-
-                // Fulfill Order - wrap per order in BEGIN/COMMIT (same pattern as webhook/check-payment)
+                console.log(`[Reconcile] MATCH for ${orderCode} → tx ${match.id}`);
                 try {
                     await db.execute('BEGIN IMMEDIATE');
-                    const currentOrderCheck = await db.execute({
-                        sql: 'SELECT status FROM orders WHERE id = ?',
-                        args: [order.id]
-                    });
-
-                    if (currentOrderCheck.rows[0]?.status !== 'pending_payment') {
-                        console.log(`[Reconcile] Order ${orderCode} was already updated. Skipping.`);
-                        await db.execute('ROLLBACK');
-                        continue;
-                    }
 
                     const transactionData = {
-                        id: match.id,
-                        reference_number: match.reference_number || match.referenceCode || match.reference_number
+                        id: match.id || match.transaction_id,
+                        reference_number: match.reference_number || match.referenceCode || match.id
                     };
 
-                    await fulfillOrder(db, order, transactionData);
+                    const result = await finalizeOrder(db, order, transactionData, 'reconcile');
                     await db.execute('COMMIT');
-                    console.log(`[Reconcile] Successfully reconciled ${orderCode}`);
-                    reconCount++;
 
+                    if (result.alreadyFulfilled) {
+                        console.log(`[Reconcile] ${orderCode} already fulfilled – skipped`);
+                    } else {
+                        console.log(`[Reconcile] ${orderCode} reconciled OK`);
+                        reconCount++;
+                    }
                 } catch (err) {
-                    console.error(`[Reconcile] Failed to reconcile ${orderCode}:`, err);
-                    try { await db.execute('ROLLBACK'); } catch (e) { }
+                    console.error(`[Reconcile] Failed ${orderCode}:`, err.message);
+                    try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
                 }
             }
         }
