@@ -1,13 +1,9 @@
 [build]
+  base = "tbq-homie-deployment"
+  publish = "tbq-homie-deployment"
   command = "# no build needed"
-  publish = "."
 
-[functions]
-  directory = "netlify/functions"
-  node_bundler = "esbuild"
-  external_node_modules = ["@libsql/client"]
-
-# Scheduled functions (Netlify native scheduler).
-# Note: the scheduled function name must match the JS file in `netlify/functions/`.
-[functions.reconcile-payments]
-  schedule = "*/5 * * * *"
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
