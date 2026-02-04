@@ -17,7 +17,7 @@ import type { SyncEntityType, ReadonlyEntity } from './types';
 
 const SYNC_INTERVAL_MS = 30_000; // 30 seconds
 
-const TWO_WAY_ENTITIES: SyncEntityType[] = ['subscription', 'customer', 'family', 'family_member', 'warranty'];
+const TWO_WAY_ENTITIES: SyncEntityType[] = ['subscription', 'customer', 'family', 'family_member', 'warranty', 'inventory'];
 const READONLY_ENTITIES: ReadonlyEntity[] = ['orders', 'stock_units', 'payments', 'order_lines', 'order_allocations', 'deliveries', 'invoices', 'products'];
 
 let intervalId: ReturnType<typeof setInterval> | null = null;

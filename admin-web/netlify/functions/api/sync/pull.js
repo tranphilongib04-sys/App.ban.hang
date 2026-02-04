@@ -11,7 +11,7 @@
 const { getDb } = require('../../utils/db');
 const { CORS } = require('../../utils/rbac');
 
-const SYNCABLE_ENTITIES = ['subscription', 'customer', 'family', 'family_member', 'warranty'];
+const SYNCABLE_ENTITIES = ['subscription', 'customer', 'family', 'family_member', 'warranty', 'inventory'];
 
 exports.handler = async function (event) {
     if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers: CORS, body: '' };

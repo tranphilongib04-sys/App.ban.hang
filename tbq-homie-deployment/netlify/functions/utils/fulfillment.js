@@ -65,10 +65,13 @@ function generateDeliveryToken(orderId, email) {
 }
 
 // PROCESS FULFILLMENT (Shared Logic)
-async function fulfillOrder(db, order, transaction) {
+async function fulfillOrder(db, order, transaction, skipSchemaCheck = false) {
     const now = new Date().toISOString();
 
-    await ensurePaymentSchema(db);
+    // Only ensure schema if not already done by caller
+    if (!skipSchemaCheck) {
+        await ensurePaymentSchema(db);
+    }
 
     // 1. Create/Update payment record
     await db.execute({
@@ -220,4 +223,4 @@ async function fulfillOrder(db, order, transaction) {
     };
 }
 
-module.exports = { fulfillOrder, generateDeliveryToken };
+module.exports = { fulfillOrder, ensurePaymentSchema, generateDeliveryToken };

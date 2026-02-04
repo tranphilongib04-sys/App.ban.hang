@@ -37,7 +37,8 @@ export async function pull2Way(entityTypes: SyncEntityType[], since: string): Pr
     customer:       'customers',
     family:         'families',
     family_member:  'family_members',
-    warranty:       'warranties'
+    warranty:       'warranties',
+    inventory:      'inventory_items'
   };
 
   let applied = 0;

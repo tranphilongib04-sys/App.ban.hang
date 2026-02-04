@@ -4,6 +4,7 @@ import { customers, subscriptions, inventoryItems, warranties, deliveries, syste
 import { eq, and, or, like, desc, sql, gte, lte } from 'drizzle-orm';
 import { SubscriptionWithCustomer, CustomerWithStats, WarrantyWithDetails } from '@/types';
 import { format, addMonths } from 'date-fns';
+import { enqueuePush } from '@/lib/sync/push';
 
 // ==================== TEMPLATES ====================
 
@@ -299,8 +300,8 @@ export async function updateSubscription(id: number, data: any) {
     await db.update(subscriptions).set(updateData).where(eq(subscriptions.id, id));
 }
 
-export async function createInventoryItem(data: any) {
-    await db.insert(inventoryItems).values({
+export async function createInventoryItem(data: any): Promise<InventoryItem> {
+    const result = await db.insert(inventoryItems).values({
         service: data.service,
         secretPayload: data.secretPayload,
         secretMasked: '***',
@@ -310,11 +311,71 @@ export async function createInventoryItem(data: any) {
         distribution: data.distribution,
         note: data.note,
         createdAt: new Date().toISOString()
-    });
+    }).returning();
+    
+    const item = result[0];
+    
+    // Enqueue for sync
+    try {
+        await enqueuePush('inventory', item.id, 'upsert', {
+            id: item.id,
+            service: item.service,
+            variant: item.variant || null,
+            distribution: item.distribution || null,
+            secret_payload: item.secretPayload,
+            secret_masked: item.secretMasked,
+            status: item.status,
+            reserved_by: item.reservedBy || null,
+            reserved_at: item.reservedAt || null,
+            reservation_expires: item.reservationExpires || null,
+            import_batch: item.importBatch || null,
+            cost: item.cost || 0,
+            expires_at: item.expiresAt || null,
+            note: item.note || null,
+            category: item.category || null,
+            created_at: item.createdAt,
+            sold_at: item.soldAt || null,
+            updated_at: item.createdAt
+        });
+    } catch (error) {
+        console.error('[Sync] Failed to enqueue inventory create:', error);
+        // Don't fail the create if sync fails
+    }
+    
+    return item;
 }
 
 export async function updateInventoryStatus(id: number, status: string) {
     await db.update(inventoryItems).set({ status: status as any }).where(eq(inventoryItems.id, id));
+    
+    // Fetch updated item and enqueue for sync
+    try {
+        const item = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id)).get();
+        if (item) {
+            await enqueuePush('inventory', item.id, 'upsert', {
+                id: item.id,
+                service: item.service,
+                variant: item.variant || null,
+                distribution: item.distribution || null,
+                secret_payload: item.secretPayload,
+                secret_masked: item.secretMasked,
+                status: item.status,
+                reserved_by: item.reservedBy || null,
+                reserved_at: item.reservedAt || null,
+                reservation_expires: item.reservationExpires || null,
+                import_batch: item.importBatch || null,
+                cost: item.cost || 0,
+                expires_at: item.expiresAt || null,
+                note: item.note || null,
+                category: item.category || null,
+                created_at: item.createdAt,
+                sold_at: item.soldAt || null,
+                updated_at: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        console.error('[Sync] Failed to enqueue inventory status update:', error);
+    }
 }
 
 export async function updateInventoryItem(id: number, data: {
@@ -337,9 +398,45 @@ export async function updateInventoryItem(id: number, data: {
     if (data.distribution !== undefined) updateData.distribution = data.distribution;
 
     await db.update(inventoryItems).set(updateData).where(eq(inventoryItems.id, id));
+    
+    // Fetch updated item and enqueue for sync
+    try {
+        const item = await db.select().from(inventoryItems).where(eq(inventoryItems.id, id)).get();
+        if (item) {
+            await enqueuePush('inventory', item.id, 'upsert', {
+                id: item.id,
+                service: item.service,
+                variant: item.variant || null,
+                distribution: item.distribution || null,
+                secret_payload: item.secretPayload,
+                secret_masked: item.secretMasked,
+                status: item.status,
+                reserved_by: item.reservedBy || null,
+                reserved_at: item.reservedAt || null,
+                reservation_expires: item.reservationExpires || null,
+                import_batch: item.importBatch || null,
+                cost: item.cost || 0,
+                expires_at: item.expiresAt || null,
+                note: item.note || null,
+                category: item.category || null,
+                created_at: item.createdAt,
+                sold_at: item.soldAt || null,
+                updated_at: new Date().toISOString()
+            });
+        }
+    } catch (error) {
+        console.error('[Sync] Failed to enqueue inventory update:', error);
+    }
 }
 
 export async function deleteInventoryItem(id: number) {
+    // Enqueue delete before actually deleting
+    try {
+        await enqueuePush('inventory', id, 'delete', { id });
+    } catch (error) {
+        console.error('[Sync] Failed to enqueue inventory delete:', error);
+    }
+    
     await db.delete(inventoryItems).where(eq(inventoryItems.id, id));
 }
 

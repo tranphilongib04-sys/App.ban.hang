@@ -234,12 +234,15 @@ exports.handler = async function (event, context) {
 
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
+            // Ensure schema BEFORE starting transaction (DDL can auto-commit/conflict)
+            const { fulfillOrder, ensurePaymentSchema } = require('./utils/fulfillment');
+            await ensurePaymentSchema(db);
+
             await db.execute('BEGIN IMMEDIATE');
 
             try {
-                // USE SHARED FULFILLMENT LOGIC
-                const { fulfillOrder } = require('./utils/fulfillment');
-                const result = await fulfillOrder(db, order, paidTransaction);
+                // USE SHARED FULFILLMENT LOGIC (without calling ensurePaymentSchema again inside)
+                const result = await fulfillOrder(db, order, paidTransaction, true); // skipSchemaCheck flag
 
                 await db.execute('COMMIT');
 

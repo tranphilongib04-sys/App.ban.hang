@@ -4,7 +4,8 @@ export type SyncEntityType =
   | 'customer'
   | 'family'
   | 'family_member'
-  | 'warranty';
+  | 'warranty'
+  | 'inventory';
 
 export type SyncAction = 'upsert' | 'delete';
 

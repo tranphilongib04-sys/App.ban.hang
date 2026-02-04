@@ -31,7 +31,8 @@ const ALLOWED_TABLES = {
     customer:       'customers',
     family:         'families',
     family_member:  'family_members',
-    warranty:       'warranties'
+    warranty:       'warranties',
+    inventory:      'inventory_items'
 };
 
 // Columns allowed for upsert (whitelist — prevents injection of arbitrary columns)
@@ -42,7 +43,8 @@ const ALLOWED_COLUMNS = {
     customers:     ['id','name','source','contact','tags','note','created_at','updated_at'],
     families:      ['id','name','service','owner_account','start_date','end_date','payment_card','payment_day','note','created_at','updated_at'],
     family_members:['id','family_id','slot_number','member_name','member_account','start_date','end_date','note','created_at','updated_at'],
-    warranties:    ['id','subscription_id','issue_date','issue_description','replacement_inventory_id','resolved_date','cost','warranty_status','note','created_at','updated_at']
+    warranties:    ['id','subscription_id','issue_date','issue_description','replacement_inventory_id','resolved_date','cost','warranty_status','note','created_at','updated_at'],
+    inventory_items: ['id','service','variant','distribution','secret_payload','secret_masked','status','reserved_by','reserved_at','reservation_expires','import_batch','cost','expires_at','note','category','created_at','sold_at','updated_at']
 };
 
 exports.handler = async function (event) {
@@ -70,6 +72,9 @@ exports.handler = async function (event) {
     let accepted = 0;
     let skipped  = 0;
     const errors = [];
+    
+    // Ensure inventory_items table exists (create if not exists)
+    await ensureInventoryTable(db);
 
     for (const evt of events) {
         const { entity_type, entity_id, action, payload, idempotency_key } = evt;
@@ -147,4 +152,34 @@ function authDesktopToken(event) {
     const authHeader = event.headers?.authorization || event.headers?.Authorization || '';
     const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : null;
     return token === expected;
+}
+
+async function ensureInventoryTable(db) {
+    try {
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS inventory_items (
+                id INTEGER PRIMARY KEY,
+                service TEXT NOT NULL,
+                variant TEXT,
+                distribution TEXT,
+                secret_payload TEXT NOT NULL,
+                secret_masked TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'available',
+                reserved_by TEXT,
+                reserved_at TEXT,
+                reservation_expires TEXT,
+                import_batch TEXT,
+                cost REAL DEFAULT 0,
+                expires_at TEXT,
+                note TEXT,
+                category TEXT,
+                created_at TEXT NOT NULL,
+                sold_at TEXT,
+                updated_at TEXT
+            )
+        `);
+    } catch (err) {
+        // Table might already exist, ignore error
+        console.log('[Sync] Inventory table check:', err.message);
+    }
 }
