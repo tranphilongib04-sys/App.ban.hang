@@ -139,32 +139,38 @@ exports.handler = async function (event, context) {
         // Get order with lines and allocations
         let order = null;
         if (db) {
-            const orderResult = await db.execute({
-                sql: `
-                    SELECT o.*, 
-                           GROUP_CONCAT(ol.id) as line_ids,
-                           GROUP_CONCAT(ol.quantity) as quantities
-                    FROM orders o
-                    LEFT JOIN order_lines ol ON o.id = ol.order_id
-                    WHERE o.order_code = ?
-                    GROUP BY o.id
-                `,
-                args: [orderCode]
-            });
-            order = orderResult.rows[0];
+            try {
+                const orderResult = await db.execute({
+                    sql: `
+                        SELECT o.*, 
+                               GROUP_CONCAT(ol.id) as line_ids,
+                               GROUP_CONCAT(ol.quantity) as quantities
+                        FROM orders o
+                        LEFT JOIN order_lines ol ON o.id = ol.order_id
+                        WHERE o.order_code = ?
+                        GROUP BY o.id
+                    `,
+                    args: [orderCode]
+                });
+                order = orderResult.rows[0];
 
-            // If already fulfilled, return immediately
-            if (order && order.status === 'fulfilled') {
-                return {
-                    statusCode: 200,
-                    headers,
-                    body: JSON.stringify({
-                        status: 'paid',
-                        alreadyProcessed: true,
-                        deliveryToken: generateDeliveryToken(order.id, order.customer_email),
-                        message: 'Đơn hàng đã được xử lý. Vui lòng kiểm tra email hoặc liên hệ hỗ trợ.'
-                    })
-                };
+                // If already fulfilled, return immediately
+                if (order && order.status === 'fulfilled') {
+                    return {
+                        statusCode: 200,
+                        headers,
+                        body: JSON.stringify({
+                            status: 'paid',
+                            alreadyProcessed: true,
+                            deliveryToken: generateDeliveryToken(order.id, order.customer_email),
+                            message: 'Đơn hàng đã được xử lý. Vui lòng kiểm tra email hoặc liên hệ hỗ trợ.'
+                        })
+                    };
+                }
+            } catch (dbError) {
+                console.error('[CheckPayment] Database query error:', dbError);
+                // Don't fail completely - continue without order data
+                order = null;
             }
         }
 
@@ -264,7 +270,12 @@ exports.handler = async function (event, context) {
                 };
 
             } catch (error) {
-                await db.execute('ROLLBACK');
+                console.error('[CheckPayment] Fulfillment error:', error);
+                try {
+                    await db.execute('ROLLBACK');
+                } catch (rollbackError) {
+                    console.error('[CheckPayment] Rollback failed (transaction may not be active):', rollbackError);
+                }
                 throw error;
             }
         }
