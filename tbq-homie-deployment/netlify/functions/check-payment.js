@@ -48,7 +48,7 @@ function generateDeliveryToken(orderId, email) {
 
 // Rate Limiting Config for Check Payment (higher limit)
 const RATE_LIMIT_CHECK_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_CHECK_MAX_REQUESTS = 60; // 60 checks per minute per IP
+const RATE_LIMIT_CHECK_MAX_REQUESTS = 300; // 300 checks per minute per IP
 
 async function checkRateLimit(db, ip) {
     // Ensure table exists (quick check)
