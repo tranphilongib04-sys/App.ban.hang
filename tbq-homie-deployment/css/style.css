@@ -54,6 +54,58 @@ header {
     backdrop-filter: saturate(180%) blur(20px);
     z-index: 1000;
     border-bottom: 1px solid var(--border);
+    transition: transform 0.3s ease-in-out;
+    /* Smooth slide */
+}
+
+/* Header hidden state */
+.header-hidden {
+    transform: translateY(-100%);
+}
+
+
+
+/* New Mobile Contact Bar */
+.mobile-contact-bar {
+    display: none;
+    /* Hidden on desktop */
+}
+
+@media (max-width: 768px) {
+    .mobile-contact-bar {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: var(--bg-gray);
+        padding: 8px 16px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .contact-item {
+        color: var(--text-secondary);
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-weight: 500;
+    }
+
+    .contact-icon-img {
+        height: 16px;
+        width: auto;
+        display: block;
+    }
+
+    .contact-item:hover {
+        color: var(--accent);
+    }
+
+    .contact-divider {
+        color: #ddd;
+    }
 }
 
 nav {
@@ -66,11 +118,10 @@ nav {
 }
 
 .logo {
-    font-size: 22px;
-    font-weight: 600;
-    color: var(--primary);
+    display: flex;
+    align-items: center;
+    gap: 12px;
     text-decoration: none;
-    letter-spacing: -0.5px;
 }
 
 .nav-links {
@@ -2110,6 +2161,7 @@ section .section-title::after {
         transform: translateY(0);
     }
 }
+
 /* FLOATING CONTACT - gọn, sát góc, không che nội dung */
 .contact-floating {
     position: fixed;
@@ -2123,7 +2175,7 @@ section .section-title::after {
     pointer-events: none;
 }
 
-.contact-floating > * {
+.contact-floating>* {
     pointer-events: auto;
 }
 
@@ -2220,56 +2272,21 @@ section .section-title::after {
     object-fit: contain;
 }
 
-@media (max-width: 768px) {
-    .contact-floating {
-        bottom: 12px;
-        right: 12px;
-        gap: 6px;
-    }
-    .contact-floating-hotline {
-        padding: 5px 8px 5px 5px;
-        gap: 6px;
-    }
-    .contact-floating-hotline-icon {
-        width: 26px;
-        height: 26px;
-    }
-    .contact-floating-hotline-icon svg {
-        width: 12px;
-        height: 12px;
-    }
-    .contact-floating-hotline-label {
-        font-size: 9px;
-    }
-    .contact-floating-hotline-number {
-        font-size: 12px;
-    }
-    .contact-floating-social {
-        width: 42px;
-        height: 42px;
-        border-radius: 10px;
-    }
-    .contact-floating-social img {
-        width: 22px;
-        height: 22px;
-    }
-    .contact-floating-social-zalo img {
-        height: 18px;
-        max-width: 36px;
-    }
+
+
+/* HIDE FLOATING BUTTONS ON MOBILE (Moved to top bar) */
+.contact-floating {
+    display: none !important;
+}
 }
 
 /* LOGO UPDATE V2 */
-.logo {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
 .logo-img {
     height: 70px;
     width: auto;
     object-fit: contain;
+    display: block;
+    flex-shrink: 0;
 }
 
 .logo-text {
@@ -2277,6 +2294,9 @@ section .section-title::after {
     font-weight: 700;
     color: var(--primary);
     letter-spacing: -0.5px;
+    line-height: 1;
+    display: flex;
+    align-items: center;
 }
 
 /* HERO SLOGAN UPDATE */
@@ -2307,32 +2327,41 @@ section .section-title::after {
     .slogan-main {
         font-size: 48px;
     }
+
     .slogan-sub {
         font-size: 32px;
+    }
+
+    .logo {
+        gap: 10px;
     }
     .logo-img {
         height: 50px;
     }
     .logo-text {
         font-size: 20px;
+        line-height: 1;
     }
 }
 
 /* MOBILE FIX FOR PRODUCT GALLERY */
 @media (max-width: 768px) {
     .product-gallery {
-        position: static; /* Disable sticky on mobile */
+        position: static;
+        /* Disable sticky on mobile */
         margin-bottom: 24px;
-        z-index: 1; /* Reset stack context */
+        z-index: 1;
+        /* Reset stack context */
     }
-    
+
     .product-layout {
         display: flex;
         flex-direction: column;
         gap: 24px;
     }
-    
+
     .main-image {
-        height: 300px; /* Reduce height on mobile */
+        height: 300px;
+        /* Reduce height on mobile */
     }
 }

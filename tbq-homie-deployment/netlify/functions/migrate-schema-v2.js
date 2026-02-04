@@ -63,9 +63,9 @@ async function migrate() {
         )
     `, 'audit_logs table');
 
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_audit_event_type  ON audit_logs(event_type)`,           'idx_audit_event_type');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_audit_event_type  ON audit_logs(event_type)`, 'idx_audit_event_type');
     await run(db, `CREATE INDEX IF NOT EXISTS idx_audit_entity      ON audit_logs(entity_type, entity_id)`, 'idx_audit_entity');
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_audit_created     ON audit_logs(created_at)`,            'idx_audit_created');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_audit_created     ON audit_logs(created_at)`, 'idx_audit_created');
 
     // ──────────────────────────────────────────────
     // 2. users  (RBAC)
@@ -122,7 +122,7 @@ async function migrate() {
     // If table existed from v1 without idempotency_key, add column
     await run(db, `ALTER TABLE sync_events ADD COLUMN idempotency_key TEXT`, 'sync_events.idempotency_key column');
 
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_sync_created       ON sync_events(created_at)`,            'idx_sync_created');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_sync_created       ON sync_events(created_at)`, 'idx_sync_created');
     await run(db, `CREATE INDEX IF NOT EXISTS idx_sync_entity        ON sync_events(entity_type, entity_id)`, 'idx_sync_entity');
     await run(db, `CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_idempotency ON sync_events(idempotency_key) WHERE idempotency_key IS NOT NULL`, 'idx_sync_idempotency');
 
@@ -139,24 +139,36 @@ async function migrate() {
     await run(db, `CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_order ON invoices(order_id)`, 'idx_invoices_order');
 
     // orders — status + email lookups
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`,            'idx_orders_status');
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_orders_email  ON orders(customer_email)`,    'idx_orders_email');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_orders_status ON orders(status)`, 'idx_orders_status');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_orders_email  ON orders(customer_email)`, 'idx_orders_email');
 
     // order_allocations — unit lookup (for "is this unit allocated anywhere?")
-    await run(db, `CREATE INDEX IF NOT EXISTS idx_alloc_unit ON order_allocations(unit_id)`,   'idx_alloc_unit');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_alloc_unit ON order_allocations(unit_id)`, 'idx_alloc_unit');
+
+    // stock_units — username MUST be unique (CRITICAL: prevents duplicate accounts)
+    await run(db, `CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_units_username_unique ON stock_units(username) WHERE username IS NOT NULL`, 'idx_stock_units_username_unique');
+
+    // stock_units — username MUST be unique (CRITICAL: prevents duplicate accounts)
+    await run(db, `CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_units_username_unique ON stock_units(username) WHERE username IS NOT NULL`, 'idx_stock_units_username_unique');
 
     // ──────────────────────────────────────────────
-    // 6. Add updated_at to sync-target tables (ALTER if missing)
+    // 6. Add delivery_nonce to orders (security: unpredictable delivery tokens)
+    // ──────────────────────────────────────────────
+    await run(db, `ALTER TABLE orders ADD COLUMN delivery_nonce TEXT`, 'orders.delivery_nonce column');
+    await run(db, `CREATE INDEX IF NOT EXISTS idx_orders_delivery_nonce ON orders(delivery_nonce) WHERE delivery_nonce IS NOT NULL`, 'idx_orders_delivery_nonce');
+
+    // ──────────────────────────────────────────────
+    // 7. Add updated_at to sync-target tables (ALTER if missing)
     //    These columns are the cursor for 2-way desktop sync.
     // ──────────────────────────────────────────────
     const syncTables = ['subscriptions', 'customers', 'families', 'family_members', 'warranties'];
     for (const tbl of syncTables) {
-        await run(db, `ALTER TABLE ${tbl} ADD COLUMN updated_at TEXT DEFAULT (datetime('now'))`, `${tbl}.updated_at column`);
+        await run(db, `ALTER TABLE ${tbl} ADD COLUMN updated_at TEXT`, `${tbl}.updated_at column`);
         await run(db, `CREATE INDEX IF NOT EXISTS idx_${tbl}_updated ON ${tbl}(updated_at)`, `idx_${tbl}_updated`);
     }
 
     // ──────────────────────────────────────────────
-    // 7. Backfill: set updated_at = created_at where NULL (one-time)
+    // 8. Backfill: set updated_at = created_at where NULL (one-time)
     // ──────────────────────────────────────────────
     for (const tbl of syncTables) {
         await run(db, `UPDATE ${tbl} SET updated_at = created_at WHERE updated_at IS NULL`, `backfill ${tbl}.updated_at`);

@@ -1,5 +1,5 @@
 const fetch = require('node-fetch');
-const BASE_URL = process.env.BASE_URL || 'http://localhost:8888/.netlify/functions';
+const BASE_URL = process.env.BASE_URL || 'https://tbq-homie-1770017860.netlify.app/.netlify/functions';
 
 async function run() {
     console.log('Testing Rate Limit...');

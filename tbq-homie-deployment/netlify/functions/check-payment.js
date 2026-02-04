@@ -43,12 +43,16 @@ function decryptPassword(encrypted, iv) {
     }
 }
 
-// Generate delivery token (for secure access) — must match delivery.js verifyDeliveryToken (day-based, 7-day window)
-function generateDeliveryToken(orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+// Generate delivery token (for secure access) — must match delivery.js verify function
+function generateDeliveryToken(orderId, email, nonce) {
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) {
+        throw new Error('DELIVERY_SECRET must be configured in environment variables');
+    }
+
     const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    const data = `${orderId}|${email}|${day}`;
-    return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
+    const data = `${orderId}|${email}|${nonce}|${day}`;
+    return crypto.createHmac('sha256', secret).update(data).digest('hex').substring(0, 32);
 }
 
 // Rate Limiting Config for Check Payment (higher limit)
@@ -161,7 +165,7 @@ exports.handler = async function (event, context) {
                     body: JSON.stringify({
                         status: 'paid',
                         alreadyProcessed: true,
-                        deliveryToken: generateDeliveryToken(order.id, order.customer_email),
+                        deliveryToken: generateDeliveryToken(order.id, order.customer_email, order.delivery_nonce),
                         message: 'Đơn hàng đã được xử lý. Vui lòng kiểm tra email hoặc liên hệ hỗ trợ.'
                     })
                 };

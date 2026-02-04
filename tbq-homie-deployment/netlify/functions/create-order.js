@@ -154,6 +154,10 @@ exports.handler = async function (event, context) {
         const deliveryToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
         const deliveryTokenExpiresAt = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72 hours
 
+        // Generate unpredictable nonce for secure delivery tokens
+        const crypto = require('crypto');
+        const deliveryNonce = crypto.randomBytes(32).toString('hex');
+
         // Cleanup first
         await cleanupExpired(db, now.toISOString());
 
@@ -181,40 +185,48 @@ exports.handler = async function (event, context) {
             const product = productResult.rows[0];
             const productId = product.id;
 
-            // Check Stock
-            const stockCheck = await tx.execute({
-                sql: `SELECT COUNT(*) as available_count FROM stock_units WHERE product_id = ? AND status = 'available' AND (reserved_until IS NULL OR reserved_until <= ?)`,
-                args: [productId, now.toISOString()]
+            // ATOMIC Stock Reservation with CTE + RETURNING
+            // This prevents race conditions by making check-and-reserve a single atomic operation
+            const reserveResult = await tx.execute({
+                sql: `
+                    WITH available_units AS (
+                        SELECT id FROM stock_units 
+                        WHERE product_id = ? 
+                          AND status = 'available'
+                          AND (reserved_until IS NULL OR reserved_until <= ?)
+                        ORDER BY id ASC
+                        LIMIT ?
+                    )
+                    UPDATE stock_units
+                    SET status = 'reserved',
+                        reserved_until = ?,
+                        reserved_order_id = NULL,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE id IN (SELECT id FROM available_units)
+                      AND status = 'available'
+                    RETURNING id
+                `,
+                args: [productId, now.toISOString(), quantity, expiresAt.toISOString()]
             });
-            const availableCount = stockCheck.rows[0]?.available_count || 0;
 
-            if (availableCount < quantity) {
+            const unitIds = reserveResult.rows.map(r => r.id);
+
+            // Check if we got enough units (handles concurrency)
+            if (unitIds.length < quantity) {
                 tx.close();
                 return {
                     statusCode: 409,
                     headers,
-                    body: JSON.stringify({ success: false, error: 'INSUFFICIENT_STOCK', product: product.name, available: availableCount, requested: quantity })
+                    body: JSON.stringify({
+                        success: false,
+                        error: 'INSUFFICIENT_STOCK',
+                        product: product.name,
+                        available: unitIds.length,
+                        requested: quantity,
+                        message: `Chỉ còn ${unitIds.length} ${product.name}, bạn yêu cầu ${quantity}`
+                    })
                 };
             }
-
-            // Reserve Stock
-            const reserveResult = await tx.execute({
-                sql: `UPDATE stock_units SET status = 'reserved', reserved_until = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM stock_units WHERE product_id = ? AND status = 'available' AND (reserved_until IS NULL OR reserved_until <= ?) ORDER BY id ASC LIMIT ?) AND status = 'available'`,
-                args: [expiresAt.toISOString(), productId, now.toISOString(), quantity]
-            });
-
-            const rowsAffected = reserveResult.rowsAffected ?? 0;
-            if (rowsAffected < quantity) {
-                tx.close();
-                return { statusCode: 409, headers, body: JSON.stringify({ success: false, error: 'RESERVE_FAILED', message: `Concurrency error for ${product.name}` }) };
-            }
-
-            // Get reserved IDs
-            const reservedUnits = await tx.execute({
-                sql: `SELECT id FROM stock_units WHERE product_id = ? AND status = 'reserved' AND reserved_until = ? ORDER BY id ASC LIMIT ?`,
-                args: [productId, expiresAt.toISOString(), quantity]
-            });
-            const unitIds = reservedUnits.rows.map(r => r.id);
 
             processedItems.push({
                 productId,
@@ -230,8 +242,8 @@ exports.handler = async function (event, context) {
 
         // 2. Create Order
         const orderResult = await tx.execute({
-            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, reserved_until, delivery_token, delivery_token_expires_at, ip_address, user_agent, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, 'sepay', ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, expiresAt.toISOString(), deliveryToken, deliveryTokenExpiresAt.toISOString(), ipAddress, userAgent, now.toISOString(), now.toISOString()]
+            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, reserved_until, delivery_token, delivery_token_expires_at, delivery_nonce, ip_address, user_agent, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, 'sepay', ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, expiresAt.toISOString(), deliveryToken, deliveryTokenExpiresAt.toISOString(), deliveryNonce, ipAddress, userAgent, now.toISOString(), now.toISOString()]
         });
         const orderId = orderResult.rows[0]?.id || orderResult.lastInsertRowid;
 

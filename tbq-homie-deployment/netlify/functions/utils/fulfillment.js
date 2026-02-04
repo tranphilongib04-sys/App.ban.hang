@@ -57,11 +57,15 @@ async function ensurePaymentSchema(db) {
 }
 
 // Generate delivery token
-function generateDeliveryToken(orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+function generateDeliveryToken(orderId, email, nonce) {
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) {
+        throw new Error('DELIVERY_SECRET must be configured in environment variables');
+    }
+
     const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
-    const data = `${orderId}|${email}|${day}`;
-    return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
+    const data = `${orderId}|${email}|${nonce}|${day}`;
+    return crypto.createHmac('sha256', secret).update(data).digest('hex').substring(0, 32);
 }
 
 // PROCESS FULFILLMENT (Shared Logic)
@@ -154,7 +158,8 @@ async function fulfillOrder(db, order, transaction) {
     });
 
     // 6. Generate Delivery Token (before logging, so we can store it)
-    const deliveryToken = generateDeliveryToken(order.id, order.customer_email);
+    // Use the order's nonce for security
+    const deliveryToken = generateDeliveryToken(order.id, order.customer_email, order.delivery_nonce);
 
     // 7. Per-unit delivery log (idempotent via UNIQUE on order_id, unit_id)
     for (const alloc of allocationsResult.rows) {
