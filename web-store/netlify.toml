@@ -7,6 +7,12 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# SPA fallback - redirect all non-file requests to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 # Scheduled function for payment reconciliation (fallback for missed webhooks)
 # Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
 [functions."reconcile-payments"]
