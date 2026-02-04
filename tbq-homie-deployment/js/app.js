@@ -1088,11 +1088,31 @@ function startPaymentPolling(orderCode, amount) {
             if (data.status === 'paid') {
                 clearInterval(pollingInterval);
 
+                // Update confirmation page heading to success state
+                const confirmationContainer = document.querySelector('.confirmation-container');
+                if (confirmationContainer) {
+                    const successIcon = confirmationContainer.querySelector('.success-icon');
+                    const heading = confirmationContainer.querySelector('h1');
+                    const pendingText = confirmationContainer.querySelector('p[style*="warning"]');
+
+                    if (successIcon) {
+                        successIcon.style.background = 'var(--success)';
+                        successIcon.textContent = '✓';
+                    }
+                    if (heading) {
+                        heading.textContent = 'Thanh toán thành công!';
+                        heading.style.color = 'var(--success)';
+                    }
+                    if (pendingText) {
+                        pendingText.remove(); // Remove "Vui lòng thanh toán" text
+                    }
+                }
+
                 const statusEl = document.getElementById('paymentStatus');
                 if (statusEl) {
                     statusEl.innerHTML = `
                         <span style="color: var(--success); font-size: 18px; display:block; margin-bottom:16px;">
-                            ✅ Thanh toán thành công!
+                            ✅ Đã xác nhận thanh toán!
                         </span>
                         <p style="color: var(--text-secondary); margin-bottom: 16px;">
                             Đơn hàng đã được xác nhận và giao tự động. Đang chuyển hướng...

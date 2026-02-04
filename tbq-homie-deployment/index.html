@@ -222,15 +222,18 @@
     <!-- CONFIRMATION PAGE -->
     <div id="confirmationPage" class="page">
         <div class="confirmation-container">
-            <div class="success-icon">✓</div>
-            <h1>Đặt hàng thành công!</h1>
+            <div class="success-icon" style="background: var(--warning); color: white;">⏳</div>
+            <h1 style="color: var(--text-primary);">Đơn hàng đã được tạo</h1>
+            <p style="color: var(--warning); font-weight: 600; margin: 12px 0;">⏳ Vui lòng thanh toán để hoàn tất đơn
+                hàng</p>
             <p class="order-code">
                 Mã đơn hàng: <strong id="orderCode"></strong>
                 <button class="copy-btn" onclick="copyToClipboard(document.getElementById('orderCode').textContent)">Sao
                     chép</button>
             </p>
 
-            <button onclick="generateInvoice()" id="invoiceBtn" class="invoice-btn" style="margin-bottom: 20px; display: none;">🖨️ Tải xuống hóa
+            <button onclick="generateInvoice()" id="invoiceBtn" class="invoice-btn"
+                style="margin-bottom: 20px; display: none;">🖨️ Tải xuống hóa
                 đơn</button>
 
             <div class="payment-info">
@@ -248,7 +251,9 @@
                             <span class="payment-label">Số tiền</span>
                             <div class="payment-value-wrap">
                                 <span class="payment-value payment-value-amount" id="transferAmount">0₫</span>
-                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g,''))" title="Sao chép số tiền">
+                                <button type="button" class="copy-btn-primary"
+                                    onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g,''))"
+                                    title="Sao chép số tiền">
                                     <span class="copy-icon">📋</span> Sao chép
                                 </button>
                             </div>
@@ -257,7 +262,8 @@
                             <span class="payment-label">Số tài khoản</span>
                             <div class="payment-value-wrap">
                                 <span class="payment-value payment-value-mono" id="bankAccount">00000828511</span>
-                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard('00000828511')" title="Sao chép số tài khoản">
+                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard('00000828511')"
+                                    title="Sao chép số tài khoản">
                                     <span class="copy-icon">📋</span> Sao chép
                                 </button>
                             </div>
@@ -270,7 +276,9 @@
                             <span class="payment-label">Nội dung chuyển khoản</span>
                             <div class="payment-value-wrap">
                                 <span class="payment-value payment-value-content" id="transferContent">—</span>
-                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard(document.getElementById('transferContent').textContent)" title="Sao chép nội dung">
+                                <button type="button" class="copy-btn-primary"
+                                    onclick="copyToClipboard(document.getElementById('transferContent').textContent)"
+                                    title="Sao chép nội dung">
                                     <span class="copy-icon">📋</span> Sao chép
                                 </button>
                             </div>
@@ -284,8 +292,10 @@
                         <strong class="payment-note-title">Lưu ý quan trọng</strong>
                         <ul class="payment-note-list">
                             <li>Ghi <strong>chính xác</strong> nội dung chuyển khoản để hệ thống tự động xác nhận.</li>
-                            <li>Sau khi chuyển khoản, gửi ảnh bill qua <strong>Zalo: 0988428496</strong> nếu cần hỗ trợ.</li>
-                            <li>Bạn sẽ nhận tài khoản trong vòng <strong>5–15 phút</strong> (hoặc ngay lập tức nếu hệ thống tự xác nhận).</li>
+                            <li>Sau khi chuyển khoản, gửi ảnh bill qua <strong>Zalo: 0988428496</strong> nếu cần hỗ trợ.
+                            </li>
+                            <li>Bạn sẽ nhận tài khoản trong vòng <strong>5–15 phút</strong> (hoặc ngay lập tức nếu hệ
+                                thống tự xác nhận).</li>
                         </ul>
                     </div>
                 </div>
