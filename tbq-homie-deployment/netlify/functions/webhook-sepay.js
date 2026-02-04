@@ -23,16 +23,38 @@ exports.handler = async function (event, context) {
     try {
         const body = JSON.parse(event.body);
 
+        // Log incoming webhook for debugging
+        console.log('[Webhook] Received payload:', JSON.stringify(body, null, 2));
+        console.log('[Webhook] Headers:', JSON.stringify(event.headers, null, 2));
+
         // SePay Payloads vary, but usually contain:
         // { id, transactionDate, amountIn, transactionContent, referenceCode, ... }
         // CRITICAL: Verify API Token if possible, or Order Code match
 
         // 1. Validate SePay Token
-        // SePay sends "Authorization: Bearer <token>"
+        // SePay sends "Authorization: Apikey <key>" (NOT Bearer!)
         const authHeader = event.headers['authorization'] || event.headers['Authorization'];
-        const incomingToken = authHeader ? authHeader.replace('Bearer ', '') : body.api_token;
+        let incomingToken = null;
+
+        if (authHeader) {
+            // Support both "Bearer <token>" and "Apikey <key>"
+            if (authHeader.startsWith('Bearer ')) {
+                incomingToken = authHeader.replace('Bearer ', '');
+            } else if (authHeader.startsWith('Apikey ')) {
+                incomingToken = authHeader.replace('Apikey ', '');
+            } else {
+                // Fallback: treat entire header as token
+                incomingToken = authHeader;
+            }
+        } else if (body.api_token) {
+            incomingToken = body.api_token;
+        }
 
         const expectedToken = process.env.SEPAY_API_TOKEN;
+
+        console.log('[Webhook] Incoming Token:', incomingToken ? `${incomingToken.substring(0, 10)}...` : 'MISSING');
+        console.log('[Webhook] Expected Token:', expectedToken ? 'SET' : 'NOT SET');
+        console.log('[Webhook] Token Match:', incomingToken === expectedToken);
 
         if (!expectedToken) {
             console.error('[Webhook] SEPAY_API_TOKEN not configured on server');
@@ -41,20 +63,25 @@ exports.handler = async function (event, context) {
         }
 
         if (incomingToken !== expectedToken) {
-            console.warn('[Webhook] Invalid Token:', incomingToken);
+            console.warn('[Webhook] Invalid Token - Authentication Failed');
             return { statusCode: 401, body: JSON.stringify({ success: false, message: 'Unauthorized' }) };
         }
+
+        console.log('[Webhook] Authentication successful ✓');
+
 
         const transactionContent = body.content || body.transaction_content || '';
         const orderCodeMatch = transactionContent.match(/TBQ\d+/);
 
         if (!orderCodeMatch) {
-            console.log('Webhook ignored: No order code found in content', transactionContent);
+            console.log('[Webhook] Ignored: No order code found in content:', transactionContent);
             return { statusCode: 200, body: JSON.stringify({ success: false, message: 'No order code found' }) };
         }
 
         const orderCode = orderCodeMatch[0];
         const amountIn = parseFloat(body.amountIn || body.amount_in || 0);
+
+        console.log('[Webhook] Processing order:', orderCode, 'Amount:', amountIn);
 
         const db = getDbClient();
 
@@ -65,14 +92,16 @@ exports.handler = async function (event, context) {
         });
 
         if (orderResult.rows.length === 0) {
+            console.log('[Webhook] Order not found:', orderCode);
             return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Order not found' }) };
         }
 
         const order = orderResult.rows[0];
+        console.log('[Webhook] Order found - ID:', order.id, 'Status:', order.status, 'Amount:', order.amount_total);
 
         // 3. Check Amount (Tolerance 95%)
         if (amountIn < order.amount_total * 0.95) {
-            console.log(`Insufficient amount for ${orderCode}: Received ${amountIn}, Needed ${order.amount_total}`);
+            console.log(`[Webhook] Insufficient amount for ${orderCode}: Received ${amountIn}, Needed ${order.amount_total}`);
             return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Insufficient amount' }) };
         }
 

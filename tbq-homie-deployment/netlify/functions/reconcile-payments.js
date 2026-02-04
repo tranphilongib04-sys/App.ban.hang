@@ -100,11 +100,15 @@ exports.handler = async function (event, context) {
             // 3. Status handled by webhook usually, but here we cover missed ones.
 
             const match = transactions.find(t => {
-                const content = (t.transaction_content || t.content || '').toUpperCase();
-                const amount = parseFloat(t.amount_in || t.amount || 0);
-                const dateOk = isTxWithinLookback(t.transaction_date || t.transactionDate || t.date);
+                const content = (t.transaction_content || t.content || t.description || '').toUpperCase();
+                const amount = parseFloat(t.amount_in || t.amount || t.amountIn || 0);
+                const dateOk = isTxWithinLookback(t.transaction_date || t.transactionDate || t.date || t.created_at);
+                const code = orderCode.toUpperCase();
+                // Match nhiều format: "IBFT TBQ20824761", "MBVCB.xxx.TBQ20824761", hoặc chỉ số
+                const contentMatch = content.includes(code) || content.includes(code.replace('TBQ', ''));
+                const amountMatch = amount >= (orderAmount * AMOUNT_TOLERANCE);
 
-                return dateOk && content.includes(orderCode.toUpperCase()) && amount >= (orderAmount * AMOUNT_TOLERANCE);
+                return dateOk && contentMatch && amountMatch;
             });
 
             if (match) {

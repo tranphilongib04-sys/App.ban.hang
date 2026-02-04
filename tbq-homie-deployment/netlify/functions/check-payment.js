@@ -171,6 +171,10 @@ exports.handler = async function (event, context) {
         // Check SePay for payment
         let paidTransaction = null;
 
+        if (!SEPAY_API_TOKEN) {
+            console.warn(`[CheckPayment] SEPAY_API_TOKEN not configured for order ${orderCode}`);
+        }
+
         if (SEPAY_API_TOKEN && order) {
             try {
                 const response = await fetch(`https://my.sepay.vn/userapi/transactions/list?limit=${SEPAY_LIST_LIMIT}`, {
@@ -180,33 +184,51 @@ exports.handler = async function (event, context) {
                     }
                 });
 
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error(`[CheckPayment] SePay API error ${response.status}: ${errorText}`);
+                }
+
                 if (response.ok) {
                     const data = await response.json();
                     const transactions = data.transactions || [];
+                    console.log(`[CheckPayment] SePay returned ${transactions.length} transactions for order ${orderCode}`);
 
-                    // Find matching transaction
+                    // Find matching transaction - cải thiện match nhiều format Sepay
                     paidTransaction = transactions.find(t => {
-                        const content = (t.transaction_content || '').toUpperCase();
+                        const content = (t.transaction_content || t.content || t.description || '').toUpperCase();
                         const code = orderCode.toUpperCase();
-                        const isContentMatch = content.includes(code);
-                        const txAmount = parseFloat(t.amount_in) || 0;
+                        // Match: "IBFT TBQ20824761", "MBVCB.xxx.TBQ20824761", hoặc chỉ có TBQ20824761
+                        const isContentMatch = content.includes(code) || content.includes(code.replace('TBQ', ''));
+                        const txAmount = parseFloat(t.amount_in || t.amount || t.amountIn || 0);
                         const expectedAmount = parseFloat(amount) || parseFloat(order.amount_total);
                         const isAmountMatch = txAmount >= expectedAmount * AMOUNT_TOLERANCE;
 
                         let isRecentTx = true;
                         try {
-                            const txTime = new Date(t.transaction_date);
+                            const txTime = new Date(t.transaction_date || t.transactionDate || t.date || t.created_at);
                             const diffMins = (Date.now() - txTime.getTime()) / 60000;
                             isRecentTx = diffMins < LOOKBACK_MINUTES && diffMins > -10;
                         } catch (e) { }
 
-                        if (isContentMatch && isAmountMatch) return true;
-                        if (isAmountMatch && isRecentTx && txAmount >= expectedAmount * 0.99) return true;
-                        return false;
+                        const matched = (isContentMatch && isAmountMatch) || (isAmountMatch && isRecentTx && txAmount >= expectedAmount * 0.99);
+                        if (matched) {
+                            console.log(`[CheckPayment] Match found: Order ${orderCode}, TX: ${t.id || t.transaction_id}, Content: ${content}, Amount: ${txAmount}, Expected: ${expectedAmount}`);
+                        }
+                        return matched;
                     });
+
+                    if (!paidTransaction && transactions.length > 0) {
+                        console.log(`[CheckPayment] No match found for ${orderCode}. Checking transactions...`);
+                        transactions.slice(0, 5).forEach((t, idx) => {
+                            const content = (t.transaction_content || t.content || t.description || '').toUpperCase();
+                            const txAmount = parseFloat(t.amount_in || t.amount || t.amountIn || 0);
+                            console.log(`  TX ${idx + 1}: Content="${content}", Amount=${txAmount}, Expected=${parseFloat(amount) || parseFloat(order.amount_total)}`);
+                        });
+                    }
                 }
             } catch (sepayError) {
-                console.error('SePay API error:', sepayError);
+                console.error('[CheckPayment] SePay API exception:', sepayError);
             }
         }
 
