@@ -1,12 +1,7 @@
 [build]
   base = "tbq-homie-deployment"
-  publish = "tbq-homie-deployment"
+  publish = "."
   command = "# no build needed"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
-  [plugins.inputs]
-    disabled = true
 
 [[redirects]]
   from = "/api/*"
