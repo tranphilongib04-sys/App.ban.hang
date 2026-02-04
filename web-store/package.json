@@ -1,0 +1,23 @@
+{
+  "name": "tbq-homie-deployment",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "migrate": "node scripts/fix_db_schema.js",
+    "generate-secret": "node scripts/setup-helper.js generate-secret",
+    "test-api": "node test-api.js",
+    "test-webhook": "node scripts/test-webhook.js",
+    "quick-test": "./scripts/quick-test.sh",
+    "serve": "npx serve ."
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@libsql/client": "^0.17.0",
+    "node-fetch": "^2.7.0"
+  }
+}

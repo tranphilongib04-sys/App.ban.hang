@@ -1,110 +1,129 @@
-# TPB Manage - Desktop Application
+# TBQ Homie System
 
-Ứng dụng desktop quản lý subscription và khách hàng cho macOS.
+Hệ thống bán hàng tự động với quản lý offline-first và auto-delivery.
 
-## 🚀 Cách sử dụng nhanh
+## Projects
 
-### Tạo shortcut trên Desktop (Lần đầu)
+### 🖥️ Desktop App
+**Path:** `desktop-app/`
 
-```bash
-cd /Users/tranphilong/Desktop/dark-observatory
-./create-shortcut.sh
-```
-
-Sau đó double-click vào **TPB Manage.app** trên Desktop để mở app.
-
-### Build Production App (Khuyến nghị)
-
-Để tạo desktop application thực sự (không phải web local):
+Admin desktop application (Electron + Next.js) cho quản lý offline với cloud sync.
 
 ```bash
-cd /Users/tranphilong/Desktop/dark-observatory
-./build-and-create-shortcut.sh
+cd desktop-app
+npm install
+npm run electron:dev
 ```
 
-Hoặc:
+[📖 Desktop App README](desktop-app/README.md)
+
+---
+
+### 🌐 Web Store
+**Path:** `web-store/`
+
+Public e-commerce website với SePay integration và auto-delivery (deployed on Netlify).
 
 ```bash
-./create-desktop-app.sh
+cd web-store
+npm install
+netlify dev
 ```
 
-Script sẽ:
-1. Build Next.js app
-2. Build Electron app thành .app file
-3. Copy app lên Desktop
+[📖 Web Store README](web-store/README.md)
 
-Sau khi build xong, bạn sẽ có **TPB Manage.app** trên Desktop - đây là desktop application thực sự!
+---
 
-## 📋 Tính năng
+### 📊 Admin Panel *(Coming Soon)*
+**Path:** `admin-panel/`
 
-- ✅ Quản lý khách hàng & subscription
-- ✅ Nhắc nhở gia hạn tự động (0-3 ngày)
-- ✅ Gia hạn nhanh 1-click
-- ✅ Quản lý inventory (TK/MK/Keys)
-- ✅ Giao hàng FIFO + Copy tin nhắn
-- ✅ Bảo hành: cấp tài khoản mới
-- ✅ Báo cáo doanh thu & lợi nhuận
+Web-based admin panel for remote management.
 
-## 🗄️ Database
+---
 
-- **Loại**: SQLite (libSQL/Turso hoặc file local)
-- **Local**: `./data/tpb-manage.db` (hoặc dùng Turso + sync — xem VERCEL-CLI.md)
-- **Production (Electron)**: `~/Library/Application Support/TPB Manage/data/tpb-manage.db`
-- **Đồng bộ Local + Vercel**: Cấu hình `TURSO_DATABASE_URL` và `TURSO_AUTH_TOKEN` trên cả local và Vercel → local mặc định sync lên Turso, Vercel đọc Turso → hai bên cùng dữ liệu. Chi tiết: `VERCEL-CLI.md`
+## Quick Start
 
-## 🛠️ Công nghệ
+### Desktop App (Local Admin)
+```bash
+cd desktop-app && npm run electron:dev
+```
 
-- **Frontend**: Next.js 16 + React 19
+### Web Store (Public Site)
+```bash
+cd web-store && netlify dev
+```
+
+## Architecture
+
+```
+┌─────────────────┐
+│  Desktop App    │ ◄── Offline-first admin
+│  (Electron)     │     with local SQLite
+└────────┬────────┘
+         │ Sync
+         ▼
+  ┌──────────────┐
+  │    Turso     │ ◄── Cloud database
+  │   (libSQL)   │
+  └──────┬───────┘
+         │
+         ▼
+┌─────────────────┐
+│   Web Store     │ ◄── Public Netlify site
+│  (Netlify Fns)  │     with SePay payment
+└─────────────────┘
+```
+
+## Tech Stack
+
+- **Frontend**: HTML/CSS/JS (Web), React/Next.js (Desktop)
+- **Backend**: Netlify Functions (Serverless)
+- **Database**: SQLite (local), Turso/libSQL (cloud)
 - **Desktop**: Electron
-- **Database**: SQLite (better-sqlite3)
-- **ORM**: Drizzle ORM
-- **UI**: Tailwind CSS + Radix UI
+- **Payment**: SePay
+- **Deployment**: Netlify (web), Electron Builder (desktop)
 
-## 📝 Scripts có sẵn
+## Development Workflow
 
-### Development
-- `npm run dev` - Chạy Next.js development server
-- `npm run electron:dev` - Chạy cả Next.js dev server và Electron (hot reload)
+1. **Local dev:** Desktop app với SQLite local
+2. **Sync:** Desktop app sync to Turso cloud
+3. **Web store:** Reads from Turso, processes payments
+4. **Auto-delivery:** Webhook triggers delivery after payment
 
-### Production
-- `npm run build` - Build Next.js production
-- `npm run electron:pack` - Build Electron app vào thư mục dist/
-- `npm run electron:build` - Build và tạo installer
+## Documentation
 
-### Utilities
-- `./create-shortcut.sh` - Tạo shortcut development mode trên Desktop
-- `./build-and-create-shortcut.sh` - Build production app và tạo shortcut
-- `./create-desktop-app.sh` - Build production app và copy lên Desktop
+- `desktop-app/docs/` - Desktop app docs
+- `web-store/docs/` - Web store & deployment docs
+- `shared/docs/` - Shared documentation
 
-## 📌 Lưu ý quan trọng
+## Testing
 
-- ✅ App là **desktop application** thực sự, không phải web app
-- ✅ Chạy độc lập, không cần trình duyệt
-- ✅ Database được lưu local
-- ✅ Chỉ dành cho macOS
+```bash
+# Desktop app
+cd desktop-app && npm run dev
 
-## 🐛 Troubleshooting
+# Web store
+cd web-store && netlify dev
 
-### Shortcut không hoạt động
+# Critical tests
+cd web-store/tests && node critical-tests.js all
+```
 
-1. Kiểm tra xem đã chạy script tạo shortcut chưa:
-   ```bash
-   ./create-shortcut.sh
-   ```
+## Deployment
 
-2. Nếu muốn production app, chạy:
-   ```bash
-   ./build-and-create-shortcut.sh
-   ```
+### Web Store
+Auto-deploys to Netlify on push to `main` branch.
 
-### App không chạy được
+### Desktop App
+```bash
+cd desktop-app
+npm run electron:build
+```
 
-1. Đảm bảo đã cài đặt Node.js (v18+)
-2. Chạy `npm install` để cài dependencies
-3. Build lại app: `./build-and-create-shortcut.sh`
+## Contributing
 
-### Database không tìm thấy
+Each project has its own `package.json` and dependencies. Always run commands from the project folder.
 
-- Database được tạo tự động khi chạy app lần đầu
-- Development: `./data/tpb-manage.db`
-- Production: `~/Library/Application Support/TPB Manage/data/tpb-manage.db`
+## License
+
+Private - TBQ Homie Internal Use Only

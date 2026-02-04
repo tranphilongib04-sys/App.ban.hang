@@ -1,0 +1,14 @@
+[build]
+  base = "tbq-homie-deployment"
+  publish = "."
+  command = "# no build needed"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+# Scheduled function for payment reconciliation (fallback for missed webhooks)
+# Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
+[functions."reconcile-payments"]
+  schedule = "*/5 * * * *"
