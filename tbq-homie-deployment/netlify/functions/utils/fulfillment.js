@@ -10,18 +10,8 @@ function decryptPassword(encrypted, iv) {
 }
 
 async function ensurePaymentSchema(db) {
-    // These guards prevent webhook/polling from failing if migrations weren't run yet.
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS order_status_history (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id INTEGER NOT NULL,
-            old_status TEXT,
-            new_status TEXT NOT NULL,
-            actor TEXT DEFAULT 'system',
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(order_id) REFERENCES orders(id)
-        )
-    `);
+    // Safety net: create tables that migrate-schema-v2 should have already created.
+    // Each is IF NOT EXISTS so this is a no-op on a healthy DB.
 
     await db.execute(`
         CREATE TABLE IF NOT EXISTS invoices (
@@ -34,17 +24,36 @@ async function ensurePaymentSchema(db) {
         )
     `);
 
-    // Idempotency for payments (webhook retries / polling race)
-    try {
-        await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_provider_txn ON payments(provider, transaction_id)`);
-    } catch {
-        // ignore (e.g. duplicates already exist)
-    }
-    try {
-        await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id)`);
-    } catch {
-        // ignore
-    }
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS audit_logs (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type  TEXT    NOT NULL,
+            entity_type TEXT    NOT NULL,
+            entity_id   INTEGER,
+            actor       TEXT    NOT NULL DEFAULT 'system',
+            source      TEXT    NOT NULL DEFAULT 'system',
+            payload     TEXT,
+            created_at  DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+        )
+    `);
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS deliveries (
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id        INTEGER NOT NULL,
+            unit_id         INTEGER NOT NULL,
+            delivery_token  TEXT    NOT NULL,
+            delivered_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            delivery_note   TEXT,
+            FOREIGN KEY (order_id) REFERENCES orders(id),
+            FOREIGN KEY (unit_id)  REFERENCES stock_units(id)
+        )
+    `);
+
+    // Idempotency indexes — ignore if already present
+    try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_provider_txn ON payments(provider, transaction_id)`); } catch { /* ok */ }
+    try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id)`); } catch { /* ok */ }
+    try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_deliveries_order_unit ON deliveries(order_id, unit_id)`); } catch { /* ok */ }
 }
 
 // Generate delivery token
@@ -132,40 +141,81 @@ async function fulfillOrder(db, order, transaction) {
         args: [order.id, now, order.id]
     });
 
-    // 5. Update order: fulfilled
+    // 5. Update order: fulfilled (CAS on status — safe against concurrent race)
     await db.execute({
         sql: `
             UPDATE orders
             SET status = 'fulfilled',
                 reserved_until = NULL,
                 updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
+            WHERE id = ? AND status = 'pending_payment'
         `,
         args: [order.id]
     });
 
-    // 5b. Audit Log: Order Status Change
-    await db.execute({
-        sql: `INSERT INTO order_status_history (order_id, old_status, new_status, actor) VALUES (?, ?, 'fulfilled', 'system')`,
-        args: [order.id, order.status]
-    });
+    // 6. Generate Delivery Token (before logging, so we can store it)
+    const deliveryToken = generateDeliveryToken(order.id, order.customer_email);
 
-    // 6. Create invoice
-    const invoiceNumber = `TBQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
+    // 7. Per-unit delivery log (idempotent via UNIQUE on order_id, unit_id)
+    for (const alloc of allocationsResult.rows) {
+        await db.execute({
+            sql: `
+                INSERT INTO deliveries (order_id, unit_id, delivery_token, delivered_at)
+                VALUES (?, ?, ?, ?)
+                ON CONFLICT(order_id, unit_id) DO NOTHING
+            `,
+            args: [order.id, alloc.unit_id, deliveryToken, now]
+        });
+    }
+
+    // 8. Invoice (idempotent: ON CONFLICT on order_id does nothing)
+    const invoiceNumber = `TBQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Date.now() % 100000).padStart(5, '0')}`;
     await db.execute({
         sql: `
             INSERT INTO invoices (order_id, invoice_number, issued_at, status)
             VALUES (?, ?, ?, 'issued')
+            ON CONFLICT(order_id) DO NOTHING
         `,
         args: [order.id, invoiceNumber, now]
     });
+    // Read back the actual invoice number (in case a previous run already inserted one)
+    const invoiceRow = await db.execute({
+        sql: `SELECT invoice_number FROM invoices WHERE order_id = ?`,
+        args: [order.id]
+    });
+    const finalInvoiceNumber = invoiceRow.rows[0]?.invoice_number || invoiceNumber;
 
-    // 7. Generate Delivery Token
-    const deliveryToken = generateDeliveryToken(order.id, order.customer_email);
+    // 9. Audit logs (replaces order_status_history)
+    await db.execute({
+        sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [
+            'PAYMENT_CONFIRMED',
+            'payment',
+            order.id,
+            'system',
+            'fulfillment',
+            JSON.stringify({ transaction_id: transaction.id || transaction.reference_number, amount: order.amount_total })
+        ]
+    });
+    await db.execute({
+        sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?, ?, ?, ?, ?, ?)`,
+        args: [
+            'ORDER_FULFILLED',
+            'order',
+            order.id,
+            'system',
+            'fulfillment',
+            JSON.stringify({
+                invoice_number: finalInvoiceNumber,
+                units_delivered: allocationsResult.rows.map(a => a.unit_id),
+                delivery_token: deliveryToken
+            })
+        ]
+    });
 
     return {
         deliveryToken,
-        invoiceNumber,
+        invoiceNumber: finalInvoiceNumber,
         credentials
     };
 }

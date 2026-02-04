@@ -1,0 +1,30 @@
+[build]
+  command = "npm install"
+  publish = "."
+  base = "admin-web"
+
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+  external_node_modules = ["@libsql/client", "bcryptjs", "jsonwebtoken"]
+
+# Rewrite: /api/* → serverless functions
+[[redirects]]
+  from = "/api/auth/*"
+  to = "/.netlify/functions/api/auth/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/admin/*"
+  to = "/.netlify/functions/api/admin/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/ops/*"
+  to = "/.netlify/functions/api/ops/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/api/sync/*"
+  to = "/.netlify/functions/api/sync/:splat"
+  status = 200
