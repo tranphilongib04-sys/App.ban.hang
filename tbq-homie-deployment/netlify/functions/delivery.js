@@ -145,9 +145,9 @@ exports.handler = async function (event, context) {
         }
 
         // Get credentials
-        const credentialsResult = await db.execute({
+        const allocationsResult = await db.execute({
             sql: `
-                SELECT su.username, su.password_encrypted, su.password_iv, su.extra_info
+                SELECT su.content, su.password_encrypted, su.password_iv
                 FROM order_allocations oa
                 JOIN stock_units su ON oa.unit_id = su.id
                 JOIN order_lines ol ON oa.order_line_id = ol.id
@@ -157,11 +157,27 @@ exports.handler = async function (event, context) {
             args: [orderData.id]
         });
 
-        const credentials = credentialsResult.rows.map(row => ({
-            username: row.username,
-            password: decryptPassword(row.password_encrypted, row.password_iv),
-            extraInfo: row.extra_info || ''
-        }));
+        const credentials = [];
+        for (const alloc of allocationsResult.rows) {
+            const password = Buffer.from(alloc.password_encrypted || '', 'base64').toString('utf8');
+            // Parse content as JSON if it contains credentials
+            let username = '';
+            let extraInfo = '';
+            try {
+                const contentObj = JSON.parse(alloc.content || '{}');
+                username = contentObj.username || contentObj.email || alloc.content;
+                extraInfo = contentObj.note || '';
+            } catch {
+                // If not JSON, treat as plain text username
+                username = alloc.content || '';
+            }
+
+            credentials.push({
+                username: username,
+                password: password,
+                extraInfo: extraInfo
+            });
+        }
 
         // Generate HTML
         const html = `

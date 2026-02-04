@@ -811,7 +811,7 @@
                     <p>Quản lý đơn hàng</p>
                 </div>
                 <div class="content">
-                    <div class="input-row">
+                    <div class="input-row" style="margin-bottom:16px;">
                         <div class="input-group" style="max-width:200px;">
                             <label>Status</label>
                             <select id="order-filter-status" onchange="loadOrders()">
@@ -825,6 +825,10 @@
                         <div class="input-group">
                             <label>Search</label>
                             <input type="text" id="order-search" placeholder="TBQ... or email" onkeyup="loadOrders()">
+                        </div>
+                        <div class="input-group" style="margin-left:auto;">
+                            <button class="btn btn-primary" onclick="showCreateOrderModal()">+ Create Order</button>
+                            <button class="btn btn-ghost" onclick="exportOrders()" style="margin-left:8px;">Export</button>
                         </div>
                     </div>
                     <div class="card">
@@ -1202,8 +1206,8 @@
                     <td class="text-muted">${o.invoice_number || '—'}</td>
                     <td class="text-muted">${o.created_at?.slice(0, 16) || '—'}</td>
                     <td>
-                        <button class="btn btn-ghost btn-sm" onclick="viewOrderDetail('${o.order_code}')">Detail</button>
-                        ${o.status === 'pending_payment' ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.order_code}')">Cancel</button>` : ''}
+                        <button class="btn btn-ghost btn-sm" onclick="viewOrderDetail('${o.order_code}')" style="cursor:pointer;">Detail</button>
+                        ${o.status === 'pending_payment' ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${o.order_code}')" style="cursor:pointer;">Cancel</button>` : ''}
                     </td>
                 </tr>
             `).join('')}</tbody>
@@ -1211,39 +1215,59 @@
         }
 
         async function viewOrderDetail(orderCode) {
-            const data = await apiGet(`${API}/admin/orders/${orderCode}`);
-            if (!data) return;
+            try {
+                const data = await apiGet(`${API}/admin/orders/${orderCode}`);
+                if (!data) {
+                    toast('Failed to load order details', true);
+                    return;
+                }
 
-            const { order, lines, allocations, payment, invoice, audit } = data;
-            document.getElementById('modal-content').innerHTML = `
+                if (data.error) {
+                    toast(`Error: ${data.error}`, true);
+                    return;
+                }
+
+                const { order, lines, allocations, payment, invoice, audit } = data;
+                document.getElementById('modal-content').innerHTML = `
         <h2>Order: ${order.order_code}</h2>
         <p class="text-muted" style="margin-bottom:16px;">${order.customer_name} — ${order.customer_email} — ${order.customer_phone || '—'}</p>
-        <div style="display:flex;gap:10px;margin-bottom:16px;">
+        <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
             ${badgeForOrderStatus(order.status)}
             <span class="text-muted" style="font-size:13px;">${order.amount_total?.toLocaleString()} VND</span>
+            <span class="text-muted" style="font-size:13px;">Created: ${order.created_at?.slice(0, 16) || '—'}</span>
         </div>
 
-        <strong style="font-size:13px;">Lines</strong>
+        <div style="display:flex;gap:8px;margin-bottom:16px;">
+            <button class="btn btn-primary btn-sm" onclick="showEditOrderModal('${order.order_code}')">Edit</button>
+            ${order.status === 'pending_payment' ? `<button class="btn btn-danger btn-sm" onclick="cancelOrder('${order.order_code}')">Cancel</button>` : ''}
+            ${order.status !== 'cancelled' ? `<button class="btn btn-danger btn-sm" onclick="deleteOrder('${order.order_code}')">Delete</button>` : ''}
+        </div>
+
+        <strong style="font-size:13px;">Order Lines</strong>
         <table style="margin:8px 0 16px;">
             <thead><tr><th>Product</th><th>Qty</th><th>Unit Price</th><th>Subtotal</th></tr></thead>
-            <tbody>${(lines || []).map(l => `<tr><td>${l.product_name}</td><td>${l.quantity}</td><td>${l.unit_price?.toLocaleString()}</td><td>${l.subtotal?.toLocaleString()}</td></tr>`).join('')}</tbody>
+            <tbody>${(lines || []).length > 0 ? (lines || []).map(l => `<tr><td>${l.product_name}</td><td>${l.quantity}</td><td>${l.unit_price?.toLocaleString()} VND</td><td>${l.subtotal?.toLocaleString()} VND</td></tr>`).join('') : '<tr><td colspan="4" class="text-muted">No lines</td></tr>'}</tbody>
         </table>
 
-        <strong style="font-size:13px;">Allocations</strong>
+        <strong style="font-size:13px;">Stock Allocations</strong>
         <table style="margin:8px 0 16px;">
             <thead><tr><th>Unit ID</th><th>Username</th><th>Alloc Status</th><th>Unit Status</th></tr></thead>
-            <tbody>${(allocations || []).map(a => `<tr><td>${a.unit_id}</td><td>${a.username}</td><td>${badgeForAllocStatus(a.status)}</td><td>${badgeForStockStatus(a.unit_status)}</td></tr>`).join('')}</tbody>
+            <tbody>${(allocations || []).length > 0 ? (allocations || []).map(a => `<tr><td>${a.unit_id}</td><td>${a.username || '—'}</td><td>${badgeForAllocStatus(a.status)}</td><td>${badgeForStockStatus(a.unit_status)}</td></tr>`).join('') : '<tr><td colspan="4" class="text-muted">No allocations</td></tr>'}</tbody>
         </table>
 
-        ${payment ? `<strong style="font-size:13px;">Payment</strong><p style="font-size:13px;margin:4px 0 16px;">${badgeForPaymentStatus(payment.status)} — Txn: ${payment.transaction_id || '—'}</p>` : ''}
-        ${invoice ? `<strong style="font-size:13px;">Invoice</strong><p style="font-size:13px;margin:4px 0 16px;">${invoice.invoice_number}</p>` : ''}
+        ${payment ? `<strong style="font-size:13px;">Payment</strong><p style="font-size:13px;margin:4px 0 16px;">${badgeForPaymentStatus(payment.status)} — Txn: ${payment.transaction_id || '—'}</p>` : '<p class="text-muted" style="font-size:13px;margin-bottom:16px;">No payment record</p>'}
+        ${invoice ? `<strong style="font-size:13px;">Invoice</strong><p style="font-size:13px;margin:4px 0 16px;">${invoice.invoice_number}</p>` : '<p class="text-muted" style="font-size:13px;margin-bottom:16px;">No invoice</p>'}
 
         <strong style="font-size:13px;">Audit Trail</strong>
         <div style="margin-top:8px; max-height:120px; overflow-y:auto;">
-            ${(audit || []).map(a => `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;border-bottom:1px solid var(--border);">${a.created_at?.slice(0, 16)} — <strong>${a.event_type}</strong> by ${a.actor}</div>`).join('')}
+            ${(audit || []).length > 0 ? (audit || []).map(a => `<div style="font-size:12px;color:var(--text-muted);padding:4px 0;border-bottom:1px solid var(--border);">${a.created_at?.slice(0, 16)} — <strong>${a.event_type}</strong> by ${a.actor}</div>`).join('') : '<div class="text-muted" style="font-size:12px;">No audit logs</div>'}
         </div>
         <div class="modal-actions"><button class="btn btn-ghost btn-sm" onclick="closeModal()">Close</button></div>`;
-            openModal();
+                openModal();
+            } catch (error) {
+                console.error('Error loading order detail:', error);
+                toast('Failed to load order details', true);
+            }
         }
 
         async function cancelOrder(orderCode) {
@@ -1251,6 +1275,182 @@
             const res = await apiPost(`${API}/admin/orders/${orderCode}/cancel`, { reason: 'Manual cancel via admin' });
             if (res && res.ok) { toast('Order cancelled'); closeModal(); loadOrders(); }
             else { toast(`Error: ${res?.data?.error}`, true); }
+        }
+
+        async function deleteOrder(orderCode) {
+            if (!confirm(`Delete order ${orderCode}? This action cannot be undone.`)) return;
+            const res = await apiPost(`${API}/admin/orders/${orderCode}/delete`, {});
+            if (res && res.ok) { toast('Order deleted'); closeModal(); loadOrders(); }
+            else { toast(`Error: ${res?.data?.error}`, true); }
+        }
+
+        function showCreateOrderModal() {
+            document.getElementById('modal-content').innerHTML = `
+        <h2>Create New Order</h2>
+        <form onsubmit="createOrder(event)">
+            <div class="input-group">
+                <label>Customer Name *</label>
+                <input type="text" id="create-order-name" required>
+            </div>
+            <div class="input-group">
+                <label>Customer Email *</label>
+                <input type="email" id="create-order-email" required>
+            </div>
+            <div class="input-group">
+                <label>Customer Phone</label>
+                <input type="text" id="create-order-phone">
+            </div>
+            <div class="input-group">
+                <label>Product *</label>
+                <select id="create-order-product" required>
+                    <option value="">Select product...</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Quantity *</label>
+                <input type="number" id="create-order-qty" value="1" min="1" required>
+            </div>
+            <div class="input-group">
+                <label>Amount (VND) *</label>
+                <input type="number" id="create-order-amount" required>
+            </div>
+            <div class="input-group">
+                <label>Note</label>
+                <textarea id="create-order-note" rows="3"></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Create</button>
+            </div>
+        </form>`;
+            openModal();
+            loadProductsForCreate();
+        }
+
+        async function loadProductsForCreate() {
+            try {
+                const products = await apiGet(`${API}/admin/products`);
+                const select = document.getElementById('create-order-product');
+                if (products && products.data) {
+                    select.innerHTML = '<option value="">Select product...</option>' + 
+                        products.data.map(p => `<option value="${p.id}" data-price="${p.price}">${p.name} - ${p.price?.toLocaleString()} VND</option>`).join('');
+                    select.onchange = function() {
+                        const selected = select.options[select.selectedIndex];
+                        if (selected.value) {
+                            document.getElementById('create-order-amount').value = selected.dataset.price || '';
+                        }
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to load products:', error);
+            }
+        }
+
+        async function createOrder(event) {
+            event.preventDefault();
+            const data = {
+                customer_name: document.getElementById('create-order-name').value,
+                customer_email: document.getElementById('create-order-email').value,
+                customer_phone: document.getElementById('create-order-phone').value || null,
+                product_id: parseInt(document.getElementById('create-order-product').value),
+                quantity: parseInt(document.getElementById('create-order-qty').value),
+                amount_total: parseFloat(document.getElementById('create-order-amount').value),
+                customer_note: document.getElementById('create-order-note').value || null
+            };
+            const res = await apiPost(`${API}/admin/orders`, data);
+            if (res && res.ok) {
+                toast('Order created successfully');
+                closeModal();
+                loadOrders();
+            } else {
+                toast(`Error: ${res?.data?.error || 'Failed to create order'}`, true);
+            }
+        }
+
+        async function showEditOrderModal(orderCode) {
+            try {
+                const data = await apiGet(`${API}/admin/orders/${orderCode}`);
+                if (!data || data.error) {
+                    toast('Failed to load order', true);
+                    return;
+                }
+                const { order } = data;
+                document.getElementById('modal-content').innerHTML = `
+        <h2>Edit Order: ${order.order_code}</h2>
+        <form onsubmit="updateOrder(event, '${orderCode}')">
+            <div class="input-group">
+                <label>Customer Name *</label>
+                <input type="text" id="edit-order-name" value="${order.customer_name || ''}" required>
+            </div>
+            <div class="input-group">
+                <label>Customer Email *</label>
+                <input type="email" id="edit-order-email" value="${order.customer_email || ''}" required>
+            </div>
+            <div class="input-group">
+                <label>Customer Phone</label>
+                <input type="text" id="edit-order-phone" value="${order.customer_phone || ''}">
+            </div>
+            <div class="input-group">
+                <label>Status *</label>
+                <select id="edit-order-status" required>
+                    <option value="pending_payment" ${order.status === 'pending_payment' ? 'selected' : ''}>Pending Payment</option>
+                    <option value="fulfilled" ${order.status === 'fulfilled' ? 'selected' : ''}>Fulfilled</option>
+                    <option value="expired" ${order.status === 'expired' ? 'selected' : ''}>Expired</option>
+                    <option value="cancelled" ${order.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>Amount (VND) *</label>
+                <input type="number" id="edit-order-amount" value="${order.amount_total || 0}" required>
+            </div>
+            <div class="input-group">
+                <label>Note</label>
+                <textarea id="edit-order-note" rows="3">${order.customer_note || ''}</textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+                <button type="submit" class="btn btn-primary btn-sm">Update</button>
+            </div>
+        </form>`;
+                openModal();
+            } catch (error) {
+                console.error('Error loading order for edit:', error);
+                toast('Failed to load order', true);
+            }
+        }
+
+        async function updateOrder(event, orderCode) {
+            event.preventDefault();
+            const data = {
+                customer_name: document.getElementById('edit-order-name').value,
+                customer_email: document.getElementById('edit-order-email').value,
+                customer_phone: document.getElementById('edit-order-phone').value || null,
+                status: document.getElementById('edit-order-status').value,
+                amount_total: parseFloat(document.getElementById('edit-order-amount').value),
+                customer_note: document.getElementById('edit-order-note').value || null
+            };
+            const res = await apiPatch(`${API}/admin/orders/${orderCode}`, data);
+            if (res && res.ok) {
+                toast('Order updated successfully');
+                closeModal();
+                loadOrders();
+            } else {
+                toast(`Error: ${res?.data?.error || 'Failed to update order'}`, true);
+            }
+        }
+
+        async function exportOrders() {
+            const status = document.getElementById('order-filter-status').value;
+            const search = document.getElementById('order-search').value;
+            let url = `${API}/admin/export/orders?format=csv`;
+            const today = new Date();
+            const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            url += `&from=${lastMonth.toISOString().split('T')[0]}&to=${today.toISOString().split('T')[0]}`;
+            if (status) url += `&status=${status}`;
+            if (search) url += `&search=${encodeURIComponent(search)}`;
+            
+            window.open(url, '_blank');
+            toast('Export started');
         }
 
         // ════════════════════════════════════════════════════════════════

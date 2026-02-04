@@ -25,6 +25,34 @@ exports.handler = requireRole(['ADMIN', 'OPS', 'ACCOUNTANT'], async (event, cont
         return handleCancel(db, event, actor, orderCode);
     }
 
+    // POST .../delete
+    if (httpMethod === 'POST' && reqPath.endsWith('/delete')) {
+        if (actor.role !== 'ADMIN') {
+            return { statusCode: 403, body: JSON.stringify({ error: 'Only ADMIN can delete orders' }) };
+        }
+        const orderCode = extractOrderCode(reqPath);
+        if (!orderCode) return { statusCode: 400, body: JSON.stringify({ error: 'Missing order code' }) };
+        return handleDelete(db, event, actor, orderCode);
+    }
+
+    // POST /api/admin/orders (create)
+    if (httpMethod === 'POST' && !reqPath.includes('/')) {
+        if (actor.role !== 'ADMIN') {
+            return { statusCode: 403, body: JSON.stringify({ error: 'Only ADMIN can create orders' }) };
+        }
+        return handleCreate(db, event, actor);
+    }
+
+    // PATCH /api/admin/orders/:orderCode (update)
+    if (httpMethod === 'PATCH') {
+        if (actor.role !== 'ADMIN') {
+            return { statusCode: 403, body: JSON.stringify({ error: 'Only ADMIN can update orders' }) };
+        }
+        const orderCode = extractOrderCode(reqPath);
+        if (!orderCode) return { statusCode: 400, body: JSON.stringify({ error: 'Missing order code' }) };
+        return handleUpdate(db, event, actor, orderCode);
+    }
+
     if (httpMethod === 'GET') {
         // Check if it's a detail request (path has order code)
         const orderCode = extractOrderCode(reqPath);
@@ -191,6 +219,142 @@ async function handleCancel(db, event, actor, orderCode) {
 // ──────────────────────────────────
 // Helpers
 // ──────────────────────────────────
+// ──────────────────────────────────
+// POST /api/admin/orders
+// Create new order
+// ──────────────────────────────────
+async function handleCreate(db, event, actor) {
+    const body = parseBodySafe(event);
+    const { customer_name, customer_email, customer_phone, product_id, quantity, amount_total, customer_note } = body;
+
+    if (!customer_name || !customer_email || !product_id || !quantity || !amount_total) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields' }) };
+    }
+
+    // Verify product exists
+    const product = await db.execute({ sql: 'SELECT * FROM products WHERE id = ?', args: [product_id] });
+    if (!product.rows.length) {
+        return { statusCode: 404, body: JSON.stringify({ error: 'Product not found' }) };
+    }
+
+    // Generate order code
+    const orderCode = 'TBQ' + Date.now().toString().slice(-8);
+
+    await db.execute('BEGIN IMMEDIATE');
+    try {
+        // Create order
+        const orderResult = await db.execute({
+            sql: `INSERT INTO orders (order_code, customer_name, customer_email, customer_phone, customer_note, status, amount_total, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)`,
+            args: [orderCode, customer_name, customer_email, customer_phone || null, customer_note || null, amount_total]
+        });
+        const orderId = orderResult.lastInsertRowid;
+
+        // Create order line
+        await db.execute({
+            sql: `INSERT INTO order_lines (order_id, product_id, product_name, quantity, unit_price, subtotal, created_at)
+                  VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)`,
+            args: [orderId, product_id, product.rows[0].name, quantity, amount_total / quantity, amount_total]
+        });
+
+        // Audit
+        await db.execute({
+            sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?,?,?,?,?,?)`,
+            args: ['ORDER_CREATED', 'order', orderId, actor.email, 'admin-web',
+                   JSON.stringify({ order_code: orderCode, customer_name, product_id })]
+        });
+
+        await db.execute('COMMIT');
+
+        return { statusCode: 201, body: JSON.stringify({ order_code: orderCode, id: orderId }) };
+    } catch (err) {
+        await db.execute('ROLLBACK').catch(() => {});
+        return { statusCode: 500, body: JSON.stringify({ error: err.message }) };
+    }
+}
+
+// ──────────────────────────────────
+// PATCH /api/admin/orders/:orderCode
+// Update order
+// ──────────────────────────────────
+async function handleUpdate(db, event, actor, orderCode) {
+    const body = parseBodySafe(event);
+    const { customer_name, customer_email, customer_phone, status, amount_total, customer_note } = body;
+
+    const orderRow = await db.execute({
+        sql: 'SELECT * FROM orders WHERE order_code = ?',
+        args: [orderCode]
+    });
+
+    if (!orderRow.rows.length) {
+        return { statusCode: 404, body: JSON.stringify({ error: 'Order not found' }) };
+    }
+
+    const order = orderRow.rows[0];
+    const updates = [];
+    const args = [];
+
+    if (customer_name !== undefined) { updates.push('customer_name = ?'); args.push(customer_name); }
+    if (customer_email !== undefined) { updates.push('customer_email = ?'); args.push(customer_email); }
+    if (customer_phone !== undefined) { updates.push('customer_phone = ?'); args.push(customer_phone); }
+    if (status !== undefined) { updates.push('status = ?'); args.push(status); }
+    if (amount_total !== undefined) { updates.push('amount_total = ?'); args.push(amount_total); }
+    if (customer_note !== undefined) { updates.push('customer_note = ?'); args.push(customer_note); }
+
+    if (updates.length === 0) {
+        return { statusCode: 400, body: JSON.stringify({ error: 'No fields to update' }) };
+    }
+
+    updates.push('updated_at = CURRENT_TIMESTAMP');
+    args.push(order.id);
+
+    await db.execute({
+        sql: `UPDATE orders SET ${updates.join(', ')} WHERE id = ?`,
+        args
+    });
+
+    // Audit
+    await db.execute({
+        sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?,?,?,?,?,?)`,
+        args: ['ORDER_UPDATED', 'order', order.id, actor.email, 'admin-web',
+               JSON.stringify({ order_code: orderCode, changes: body })]
+    });
+
+    return { statusCode: 200, body: JSON.stringify({ order_code: orderCode, updated: true }) };
+}
+
+// ──────────────────────────────────
+// POST /api/admin/orders/:orderCode/delete
+// Soft delete order (mark as deleted)
+// ──────────────────────────────────
+async function handleDelete(db, event, actor, orderCode) {
+    const orderRow = await db.execute({
+        sql: 'SELECT * FROM orders WHERE order_code = ?',
+        args: [orderCode]
+    });
+
+    if (!orderRow.rows.length) {
+        return { statusCode: 404, body: JSON.stringify({ error: 'Order not found' }) };
+    }
+
+    const order = orderRow.rows[0];
+
+    // Soft delete: update status to cancelled and add note
+    await db.execute({
+        sql: `UPDATE orders SET status = 'cancelled', customer_note = COALESCE(customer_note || '\n', '') || '[DELETED]', updated_at = CURRENT_TIMESTAMP WHERE id = ?`,
+        args: [order.id]
+    });
+
+    // Audit
+    await db.execute({
+        sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?,?,?,?,?,?)`,
+        args: ['ORDER_DELETED', 'order', order.id, actor.email, 'admin-web',
+               JSON.stringify({ order_code: orderCode })]
+    });
+
+    return { statusCode: 200, body: JSON.stringify({ order_code: orderCode, deleted: true }) };
+}
+
 function extractOrderCode(path) {
     // path: /.netlify/functions/api/admin/orders/TBQ12345678
     // or:   /.netlify/functions/api/admin/orders/TBQ12345678/cancel

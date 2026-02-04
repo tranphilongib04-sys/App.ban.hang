@@ -72,6 +72,11 @@
   to = "/.netlify/functions/admin-export"
   status = 200
 
+[[redirects]]
+  from = "/api/admin/products"
+  to = "/.netlify/functions/admin-products"
+  status = 200
+
 # ── Ops ──
 [[redirects]]
   from = "/api/ops/renew/*"
