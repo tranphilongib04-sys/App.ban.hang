@@ -234,43 +234,61 @@
                 đơn</button>
 
             <div class="payment-info">
-                <h3>Hướng dẫn thanh toán</h3>
-                <div id="qrCodeContainer" style="text-align: center; margin: 20px 0;"></div>
-                <div style="border-top: 1px solid var(--border); padding-top: 16px; margin-top: 16px;">
-                    <p style="margin-bottom: 12px;"><strong>Hoặc chuyển khoản thủ công:</strong></p>
-                    <p>
-                        <strong>Ngân hàng:</strong> TP Bank
-                    </p>
-                    <p>
-                        <strong>Số tiền:</strong> <strong style="color: var(--accent); font-size: 16px;"><span
-                                id="transferAmount"></span></strong>
-                        <button class="copy-btn"
-                            onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g, ''))">Sao
-                            chép</button>
-                    </p>
-                    <p>
-                        <strong>Số tài khoản:</strong> <span id="bankAccount">00000828511</span>
-                        <button class="copy-btn" onclick="copyToClipboard('00000828511')">Sao chép</button>
-                    </p>
-                    <p>
-                        <strong>Chủ tài khoản:</strong> TRAN PHI LONG
-                    </p>
-                    <p>
-                        <strong>Nội dung:</strong> <strong style="color: var(--accent); font-size: 16px;"><span
-                                id="transferContent"></span></strong>
-                        <button class="copy-btn"
-                            onclick="copyToClipboard(document.getElementById('transferContent').textContent)">Sao
-                            chép</button>
-                    </p>
+                <h3 class="payment-info-title">Hướng dẫn thanh toán</h3>
+                <div id="qrCodeContainer" class="qr-code-wrapper"></div>
 
+                <div class="payment-manual-section">
+                    <p class="payment-manual-label">Hoặc chuyển khoản thủ công</p>
+                    <div class="payment-info-card">
+                        <div class="payment-row">
+                            <span class="payment-label">Ngân hàng</span>
+                            <span class="payment-value payment-value-bank">TP Bank</span>
+                        </div>
+                        <div class="payment-row payment-row-highlight">
+                            <span class="payment-label">Số tiền</span>
+                            <div class="payment-value-wrap">
+                                <span class="payment-value payment-value-amount" id="transferAmount">0₫</span>
+                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g,''))" title="Sao chép số tiền">
+                                    <span class="copy-icon">📋</span> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                        <div class="payment-row payment-row-highlight">
+                            <span class="payment-label">Số tài khoản</span>
+                            <div class="payment-value-wrap">
+                                <span class="payment-value payment-value-mono" id="bankAccount">00000828511</span>
+                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard('00000828511')" title="Sao chép số tài khoản">
+                                    <span class="copy-icon">📋</span> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                        <div class="payment-row">
+                            <span class="payment-label">Chủ tài khoản</span>
+                            <span class="payment-value payment-value-mono">TRAN PHI LONG</span>
+                        </div>
+                        <div class="payment-row payment-row-highlight">
+                            <span class="payment-label">Nội dung chuyển khoản</span>
+                            <div class="payment-value-wrap">
+                                <span class="payment-value payment-value-content" id="transferContent">—</span>
+                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard(document.getElementById('transferContent').textContent)" title="Sao chép nội dung">
+                                    <span class="copy-icon">📋</span> Sao chép
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p
-                    style="margin-top: 20px; padding: 16px; background: var(--accent-bg); border-radius: 12px; color: var(--text-primary); border-left: 4px solid var(--accent);">
-                    <strong>💡 Lưu ý quan trọng:</strong><br>
-                    - Vui lòng ghi CHÍNH XÁC nội dung chuyển khoản<br>
-                    - Sau khi chuyển khoản, chụp ảnh bill gửi qua Zalo: <strong>0988428496</strong><br>
-                    - Bạn sẽ nhận tài khoản trong vòng 5-15 phút
-                </p>
+
+                <div class="payment-note-box">
+                    <div class="payment-note-icon">💡</div>
+                    <div class="payment-note-content">
+                        <strong class="payment-note-title">Lưu ý quan trọng</strong>
+                        <ul class="payment-note-list">
+                            <li>Ghi <strong>chính xác</strong> nội dung chuyển khoản để hệ thống tự động xác nhận.</li>
+                            <li>Sau khi chuyển khoản, gửi ảnh bill qua <strong>Zalo: 0988428496</strong> nếu cần hỗ trợ.</li>
+                            <li>Bạn sẽ nhận tài khoản trong vòng <strong>5–15 phút</strong> (hoặc ngay lập tức nếu hệ thống tự xác nhận).</li>
+                        </ul>
+                    </div>
+                </div>
             </div>
 
             <a href="#home" class="back-home">Về trang chủ</a>

@@ -125,7 +125,7 @@ exports.handler = async function (event, context) {
             return new Intl.NumberFormat('vi-VN').format(price) + ' ₫';
         }
 
-        // Generate HTML invoice
+        // Generate HTML invoice (professional typography, Vietnamese-friendly font)
         const html = `
 <!DOCTYPE html>
 <html lang="vi">
@@ -133,136 +133,178 @@ exports.handler = async function (event, context) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Hóa đơn ${orderData.invoice_number || order}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         @media print {
-            body { margin: 0; }
-            .no-print { display: none; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .no-print { display: none !important; }
+            .invoice-container { box-shadow: none; }
         }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
-            color: #1d1d1f;
-            padding: 40px;
+            font-family: 'Be Vietnam Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #1a1a1a;
+            padding: 40px 20px;
             background: #f5f5f7;
+            font-size: 15px;
+            line-height: 1.5;
+            -webkit-font-smoothing: antialiased;
         }
         .invoice-container {
-            max-width: 800px;
+            max-width: 720px;
             margin: 0 auto;
-            background: white;
-            padding: 60px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            background: #fff;
+            padding: 48px 56px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.06);
         }
         .header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 40px;
-            padding-bottom: 30px;
-            border-bottom: 2px solid #d2d2d7;
+            align-items: flex-start;
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 2px solid #e8e8e8;
         }
         .company-info h1 {
-            font-size: 32px;
+            font-size: 28px;
+            font-weight: 700;
             color: #0066cc;
-            margin-bottom: 10px;
+            margin-bottom: 6px;
+            letter-spacing: -0.02em;
+        }
+        .company-info .tagline {
+            font-size: 13px;
+            color: #6b7280;
+            margin-bottom: 12px;
         }
         .company-info p {
-            color: #6e6e73;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 13px;
             line-height: 1.6;
         }
         .invoice-info {
             text-align: right;
         }
-        .invoice-info h2 {
-            font-size: 24px;
-            margin-bottom: 10px;
+        .invoice-info .doc-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
         }
         .invoice-info p {
-            color: #6e6e73;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .invoice-info .invoice-number {
+            font-size: 15px;
+            font-weight: 600;
+            color: #0066cc;
         }
         .customer-info {
-            margin-bottom: 40px;
+            margin-bottom: 32px;
+            padding: 20px;
+            background: #f9fafb;
+            border-radius: 10px;
         }
         .customer-info h3 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #1d1d1f;
+            font-size: 13px;
+            font-weight: 600;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 12px;
         }
         .customer-info p {
-            color: #6e6e73;
+            color: #1a1a1a;
             font-size: 14px;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
         thead {
-            background: #f5f5f7;
+            background: #f9fafb;
         }
         th {
-            padding: 15px;
+            padding: 12px 16px;
             text-align: left;
             font-weight: 600;
-            color: #1d1d1f;
-            border-bottom: 2px solid #d2d2d7;
+            font-size: 13px;
+            color: #374151;
+            border-bottom: 2px solid #e5e7eb;
         }
+        th.text-right { text-align: right; }
         td {
-            padding: 15px;
-            border-bottom: 1px solid #e5e5e7;
-            color: #1d1d1f;
+            padding: 14px 16px;
+            border-bottom: 1px solid #f3f4f6;
+            color: #1a1a1a;
+            font-size: 14px;
         }
         .text-right {
             text-align: right;
         }
         .total-section {
-            margin-top: 20px;
+            margin-top: 8px;
             text-align: right;
         }
         .total-row {
             display: flex;
             justify-content: flex-end;
-            margin-bottom: 10px;
+            align-items: center;
+            gap: 24px;
         }
         .total-label {
-            width: 200px;
-            text-align: right;
-            padding-right: 20px;
-            color: #6e6e73;
+            font-size: 15px;
+            color: #6b7280;
         }
         .total-value {
-            width: 150px;
-            text-align: right;
             font-weight: 600;
-            color: #1d1d1f;
+            color: #1a1a1a;
+            min-width: 140px;
+            text-align: right;
         }
         .total-final {
             font-size: 20px;
+            font-weight: 700;
             color: #0066cc;
-            padding-top: 10px;
-            border-top: 2px solid #d2d2d7;
+        }
+        .total-section .total-row {
+            padding-top: 16px;
+            border-top: 2px solid #e5e7eb;
         }
         .footer {
-            margin-top: 50px;
-            padding-top: 30px;
-            border-top: 1px solid #d2d2d7;
+            margin-top: 40px;
+            padding-top: 24px;
+            border-top: 1px solid #e5e7eb;
             text-align: center;
-            color: #6e6e73;
-            font-size: 14px;
+            color: #6b7280;
+            font-size: 13px;
+        }
+        .footer p { margin-bottom: 6px; }
+        .footer .thanks {
+            font-weight: 500;
+            color: #374151;
         }
         .print-btn {
             position: fixed;
-            bottom: 20px;
-            right: 20px;
+            bottom: 24px;
+            right: 24px;
             background: #0066cc;
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
+            padding: 12px 20px;
+            border-radius: 10px;
             cursor: pointer;
-            font-size: 16px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            font-size: 15px;
+            font-weight: 500;
+            font-family: inherit;
+            box-shadow: 0 4px 14px rgba(0, 102, 204, 0.35);
         }
         .print-btn:hover {
             background: #0052a3;
@@ -274,23 +316,23 @@ exports.handler = async function (event, context) {
         <div class="header">
             <div class="company-info">
                 <h1>TBQ Homie</h1>
-                <p>Tiệm Bản Quyền</p>
+                <p class="tagline">Tiệm Bản Quyền</p>
                 <p>Email: tranphilongib04@gmail.com</p>
                 <p>Zalo: 0988428496</p>
             </div>
             <div class="invoice-info">
-                <h2>HÓA ĐƠN</h2>
-                <p><strong>Số:</strong> ${orderData.invoice_number || order}</p>
-                <p><strong>Ngày:</strong> ${formattedDate}</p>
-                <p><strong>Mã đơn:</strong> ${order}</p>
+                <div class="doc-title">HÓA ĐƠN</div>
+                <p><span class="invoice-number">${orderData.invoice_number || order}</span></p>
+                <p>Ngày: ${formattedDate}</p>
+                <p>Mã đơn: ${order}</p>
             </div>
         </div>
 
         <div class="customer-info">
             <h3>Thông tin khách hàng</h3>
-            <p><strong>Tên:</strong> ${orderData.customer_name || 'N/A'}</p>
-            <p><strong>Email:</strong> ${orderData.customer_email}</p>
-            ${orderData.customer_phone ? `<p><strong>Điện thoại:</strong> ${orderData.customer_phone}</p>` : ''}
+            <p><strong>${orderData.customer_name || 'N/A'}</strong></p>
+            <p>${orderData.customer_email}</p>
+            ${orderData.customer_phone ? `<p>${orderData.customer_phone}</p>` : ''}
         </div>
 
         <table>
@@ -318,19 +360,19 @@ exports.handler = async function (event, context) {
 
         <div class="total-section">
             <div class="total-row">
-                <div class="total-label">Tổng cộng:</div>
-                <div class="total-value total-final">${formatPrice(orderData.amount_total)}</div>
+                <span class="total-label">Tổng cộng</span>
+                <span class="total-value total-final">${formatPrice(orderData.amount_total)}</span>
             </div>
         </div>
 
         <div class="footer">
-            <p><strong>Phương thức thanh toán:</strong> Chuyển khoản ngân hàng (Sepay)</p>
-            <p style="margin-top: 10px;">Cảm ơn bạn đã sử dụng dịch vụ của TBQ Homie!</p>
-            <p style="margin-top: 10px; font-size: 12px;">Hóa đơn này được tạo tự động và có giá trị pháp lý.</p>
+            <p>Phương thức thanh toán: Chuyển khoản ngân hàng (Sepay)</p>
+            <p class="thanks">Cảm ơn bạn đã sử dụng dịch vụ TBQ Homie!</p>
+            <p style="font-size: 12px; margin-top: 8px;">Hóa đơn điện tử — có giá trị pháp lý.</p>
         </div>
     </div>
 
-    <button class="print-btn no-print" onclick="window.print()">🖨️ In hóa đơn</button>
+    <button class="print-btn no-print" onclick="window.print()">In hóa đơn</button>
 </body>
 </html>
         `;
