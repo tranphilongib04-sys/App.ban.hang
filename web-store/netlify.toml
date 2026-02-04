@@ -1,5 +1,4 @@
 [build]
-  base = "tbq-homie-deployment"
   publish = "."
   command = "# no build needed"
 
