@@ -230,7 +230,7 @@
                     chép</button>
             </p>
 
-            <button onclick="generateInvoice()" id="invoiceBtn" class="invoice-btn" style="margin-bottom: 20px; display: none;">🖨️ Tải xuống hóa
+            <button onclick="generateInvoice()" id="invoiceBtn" class="invoice-btn" style="margin-bottom: 20px;">🖨️ Tải xuống hóa
                 đơn</button>
 
             <div class="payment-info">

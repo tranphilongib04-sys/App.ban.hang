@@ -1095,13 +1095,19 @@ function startPaymentPolling(orderCode, amount) {
                             ✅ Thanh toán thành công!
                         </span>
                         <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                            Đơn hàng đã được giao tự động. Đang chuyển hướng...
+                            Đơn hàng đã được xác nhận và giao tự động. Đang chuyển hướng...
                         </p>
                     `;
                 }
 
+                // Store invoice number and show invoice button after payment confirmation
                 if (data.invoiceNumber && lastOrder) {
                     lastOrder.invoiceNumber = data.invoiceNumber;
+                    // Show invoice download button now that payment is confirmed
+                    const invoiceBtn = document.getElementById('invoiceBtn');
+                    if (invoiceBtn) {
+                        invoiceBtn.style.display = 'inline-block';
+                    }
                 }
 
                 // Redirect to delivery page after 2 seconds
