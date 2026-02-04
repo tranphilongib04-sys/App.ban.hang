@@ -106,10 +106,15 @@ exports.handler = async function (event, context) {
         }
 
         if (order.status === 'fulfilled') {
+            console.log(`[Webhook] Order ${orderCode} already fulfilled. Idempotent return.`);
             return { statusCode: 200, body: JSON.stringify({ success: true, message: 'Already fulfilled' }) };
         }
 
-        // 4. Fulfill
+        // 4. Fulfill Order
+        // CRITICAL FIX: Ensure schema BEFORE transaction (DDL cannot run in active transaction)
+        const { ensurePaymentSchema } = require('./utils/fulfillment');
+        await ensurePaymentSchema(db);
+
         await db.execute('BEGIN IMMEDIATE');
         try {
             // Mock transaction object from Webhook body
@@ -118,20 +123,31 @@ exports.handler = async function (event, context) {
                 reference_number: body.referenceCode || body.reference_number
             };
 
-            await fulfillOrder(db, order, transaction);
+            // Pass skipSchemaCheck=true since we already called ensurePaymentSchema above
+            await fulfillOrder(db, order, transaction, true);
 
             await db.execute('COMMIT');
-            console.log(`Webhook: Order ${orderCode} fulfilled successfully.`);
+            console.log(`✅ [Webhook] Order ${orderCode} fulfilled successfully.`);
 
             return { statusCode: 200, body: JSON.stringify({ success: true }) };
 
         } catch (err) {
+            console.error(`❌ [Webhook] Fulfillment failed for ${orderCode}:`, err);
             await db.execute('ROLLBACK');
             throw err;
         }
 
     } catch (error) {
-        console.error('Webhook Error:', error);
-        return { statusCode: 500, body: JSON.stringify({ error: error.message }) };
+        console.error('❌ [Webhook] CRITICAL ERROR:', {
+            orderCode: error.orderCode || 'UNKNOWN',
+            message: error.message,
+            stack: error.stack
+        });
+        return {
+            statusCode: 500, body: JSON.stringify({
+                error: error.message,
+                stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+            })
+        };
     }
 };
