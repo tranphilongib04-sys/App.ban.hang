@@ -1,7 +1,6 @@
 import { getSubscriptionsAction, getCustomersAction, getInventoryItemsAction } from '@/app/actions';
 import { OrdersClient } from './orders-client';
 
-export const dynamic = 'force-dynamic';
 
 export default async function OrdersPage() {
     const [subscriptions, customers, inventoryItems] = await Promise.all([

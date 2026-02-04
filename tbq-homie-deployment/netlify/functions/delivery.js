@@ -17,24 +17,18 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
-// Verify delivery token (7-day validity window)
-function verifyDeliveryToken(token, orderId, email, nonce) {
-    const secret = process.env.DELIVERY_SECRET;
-    if (!secret) {
-        throw new Error('DELIVERY_SECRET not configured in environment variables');
-    }
-
-    // Check last 7 days
+// Verify delivery token
+function verifyDeliveryToken(token, orderId, email) {
+    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+    // Token is valid for 7 days
     const validTokens = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const day = Math.floor(date.getTime() / (1000 * 60 * 60 * 24));
-        const data = `${orderId}|${email}|${nonce}|${day}`;
-        const hash = crypto.createHmac('sha256', secret).update(data).digest('hex').substring(0, 32);
+        const data = `${orderId}|${email}|${Math.floor(date.getTime() / (1000 * 60 * 60 * 24))}`;
+        const hash = crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
         validTokens.push(hash);
     }
-
     return validTokens.includes(token);
 }
 
@@ -125,31 +119,8 @@ exports.handler = async function (event, context) {
 
         const orderData = orderResult.rows[0];
 
-        // Check if order has delivery_nonce (new orders) or is legacy (old orders without nonce)
-        if (!orderData.delivery_nonce) {
-            // Legacy orders without nonce - reject for security
-            return {
-                statusCode: 403,
-                headers: { 'Content-Type': 'text/html' },
-                body: `
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <title>Lỗi Bảo Mật</title>
-                    </head>
-                    <body style="font-family: Arial; text-align: center; padding: 50px;">
-                        <h1>Liên Kết Cũ Không Hợp Lệ</h1>
-                        <p>Đơn hàng của bạn sử dụng liên kết cũ không còn hợp lệ vì lý do bảo mật.</p>
-                        <p>Vui lòng liên hệ hỗ trợ để nhận liên kết mới.</p>
-                    </body>
-                    </html>
-                `
-            };
-        }
-
-        // Verify token with nonce
-        if (!verifyDeliveryToken(token, orderData.id, orderData.customer_email, orderData.delivery_nonce)) {
+        // Verify token
+        if (!verifyDeliveryToken(token, orderData.id, orderData.customer_email)) {
             return {
                 statusCode: 403,
                 headers: { 'Content-Type': 'text/html' },

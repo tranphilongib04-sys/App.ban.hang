@@ -1,8 +1,8 @@
 import { getReportStatsAction, getGrowthStatsAction, getProjectedRevenueAction, getMonthlyServiceStatsAction } from '@/app/actions';
-import dynamicImport from 'next/dynamic';
+import dynamic from 'next/dynamic';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const ReportsClient = dynamicImport(() => import('./reports-client').then(mod => mod.ReportsClient), {
+const ReportsClient = dynamic(() => import('./reports-client').then(mod => mod.ReportsClient), {
     loading: () => (
         <div className="space-y-8">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -15,7 +15,6 @@ const ReportsClient = dynamicImport(() => import('./reports-client').then(mod =>
 });
 
 
-export const dynamic = 'force-dynamic';
 
 export default async function ReportsPage() {
     // Calculate current month range (VN Timezone)

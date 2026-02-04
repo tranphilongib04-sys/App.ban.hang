@@ -1,7 +1,6 @@
 import { getWarrantiesAction, getSubscriptionsAction } from '@/app/actions';
 import { WarrantyClient } from './warranty-client';
 
-export const dynamic = 'force-dynamic';
 
 export default async function WarrantyPage() {
     const [warranties, subscriptions] = await Promise.all([
