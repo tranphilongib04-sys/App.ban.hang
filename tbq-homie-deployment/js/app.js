@@ -384,6 +384,23 @@ const products = {
             guide: `<h3>Hướng dẫn</h3><p>Cung cấp email/ID CapCut để nâng cấp</p>`,
             faq: `<h3>FAQ</h3><p>Dùng được trên cả điện thoại và máy tính</p>`
         }
+    },
+    test_payment: {
+        id: 'test_payment',
+        name: 'Testing Payment',
+        category: 'Testing',
+        description: 'Sản phẩm dùng để kiểm tra quy trình thanh toán',
+        image: 'https://placehold.co/400x400?text=Test+Product',
+        featured: false,
+        variants: [
+            { name: 'Test Pay 2k', price: 2000, duration: '1 lần', note: 'Không hoàn tiền', productCode: 'test_pay_2k' }
+        ],
+        tabs: {
+            description: `<h3>Testing</h3><p>Đây là sản phẩm test.</p>`,
+            warranty: `<h3>Bảo hành</h3><p>Không bảo hành.</p>`,
+            guide: `<h3>Hướng dẫn</h3><p>Thanh toán và kiểm tra mã đơn hàng.</p>`,
+            faq: `<h3>FAQ</h3><p>Chỉ dùng cho mục đích kiểm thử.</p>`
+        }
     }
 };
 
@@ -1410,3 +1427,27 @@ renderAllProducts = function (filter) {
     _origRenderAll(filter);
     triggerStagger(document.getElementById('allProducts'));
 };
+// HEADER SCROLL LOGIC (Mobile)
+let lastScrollTop = 0;
+window.addEventListener('scroll', function () {
+    // Only active on mobile
+    if (window.innerWidth > 768) return;
+
+    const header = document.querySelector('header');
+    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+    if (scrollTop < 0) scrollTop = 0; // iOS bounce fix
+
+    // Threshold
+    if (Math.abs(scrollTop - lastScrollTop) <= 5) return;
+
+    if (scrollTop > lastScrollTop && scrollTop > 60) {
+        // Scroll Down
+        header.classList.add('header-hidden');
+    } else {
+        // Scroll Up
+        header.classList.remove('header-hidden');
+    }
+
+    lastScrollTop = scrollTop;
+});
