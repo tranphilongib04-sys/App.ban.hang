@@ -1,9 +1,9 @@
 [build]
-  base = "tbq-homie-deployment"
-  publish = "tbq-homie-deployment"
-  command = "# no build needed"
+  command = "npm run build"
+  publish = ".next"
 
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+[functions]
+  included_files = ["src/**/*", "data/**/*"]
