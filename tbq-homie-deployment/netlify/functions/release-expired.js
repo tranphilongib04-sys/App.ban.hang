@@ -76,16 +76,19 @@ exports.handler = async function(event, context) {
 
             const ordersExpired = expiredOrders.rowsAffected || 0;
 
-            // 3. Release allocations
+            // 3. Release allocations for expired orders (allocations may not have reserved_until set)
             const releasedAllocations = await db.execute({
                 sql: `
                     UPDATE order_allocations
                     SET status = 'released', reserved_until = NULL
                     WHERE status = 'reserved'
-                      AND reserved_until IS NOT NULL
-                      AND reserved_until < ?
+                      AND order_line_id IN (
+                          SELECT id FROM order_lines WHERE order_id IN (
+                              SELECT id FROM orders WHERE status = 'expired'
+                          )
+                      )
                 `,
-                args: [now]
+                args: []
             });
 
             const allocationsReleased = releasedAllocations.rowsAffected || 0;

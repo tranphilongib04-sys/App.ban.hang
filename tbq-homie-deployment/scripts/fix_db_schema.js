@@ -41,10 +41,15 @@ async function main() {
                 FOREIGN KEY(product_id) REFERENCES products(id)
             )
         `);
-        // Add password_encrypted column if missing
+        // Add columns if missing (create-order expects reserved_until, updated_at)
+        for (const col of ['password_encrypted', 'reserved_until', 'updated_at', 'username', 'password_iv', 'extra_info', 'sold_order_id', 'sold_at']) {
+            try {
+                await db.execute(`ALTER TABLE stock_units ADD COLUMN ${col} TEXT`);
+                console.log("   -> Added " + col + " to stock_units");
+            } catch (e) { }
+        }
         try {
-            await db.execute("ALTER TABLE stock_units ADD COLUMN password_encrypted TEXT");
-            console.log("   -> Added password_encrypted column to stock_units");
+            await db.execute("ALTER TABLE stock_units ADD COLUMN sold_at DATETIME");
         } catch (e) { }
         console.log('✅ Checked/Created stock_units table');
 

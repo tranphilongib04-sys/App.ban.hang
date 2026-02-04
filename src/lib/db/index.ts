@@ -35,31 +35,42 @@ let db: ReturnType<typeof drizzle>;
 
 if (hasTursoCredentials && syncEnabled) {
   // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync
-  // Reads are fast (local), writes sync to cloud
   console.log('🔄 Database: Embedded Replicas Mode (Local + Cloud Sync)');
 
   const localPath = getLocalDbPath();
   console.log(`   Local replica: ${localPath}`);
   console.log(`   Cloud sync: ${process.env.TURSO_DATABASE_URL}`);
 
-  client = createClient({
-    url: `file:${localPath}`,
-    syncUrl: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  });
+  try {
+    client = createClient({
+      url: `file:${localPath}`,
+      syncUrl: process.env.TURSO_DATABASE_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN!,
+    });
 
-  db = drizzle(client, { schema });
+    db = drizzle(client, { schema });
 
-  // Initial sync from cloud to local
-  syncDatabase({ logSuccess: true }).catch(err => {
-    console.error('Initial sync failed:', err.message);
-  });
+    // Initial sync from cloud to local
+    // We await this to ensure connection is valid. If it fails due to timeout, we catch and fallback.
+    await client.sync();
+    console.log('✓ Database synced with cloud');
 
-  // Periodic sync so local changes are pushed to Turso and Vercel sees them
-  const SYNC_INTERVAL_MS = 5000;
-  setInterval(() => {
-    syncDatabase({ logSuccess: false }).catch(() => {});
-  }, SYNC_INTERVAL_MS);
+    // Periodic sync
+    const SYNC_INTERVAL_MS = 5000;
+    setInterval(() => {
+      syncDatabase({ logSuccess: false }).catch(() => { });
+    }, SYNC_INTERVAL_MS);
+
+  } catch (error: any) {
+    console.warn('⚠️  Cloud connection failed (Timeout/Network). Falling back to LOCAL ONLY mode.');
+    console.error('   Error:', error.message);
+
+    // Fallback: Initialize as Local Only
+    client = createClient({
+      url: `file:${localPath}`,
+    });
+    db = drizzle(client, { schema });
+  }
 
 } else if (hasTursoCredentials) {
   // CLOUD ONLY MODE: Direct connection to Turso

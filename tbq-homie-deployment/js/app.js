@@ -70,7 +70,7 @@ const products = {
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
         variants: [
-            { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị' }
+            { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m' }
         ],
         tabs: {
             description: `
@@ -119,9 +119,9 @@ const products = {
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
         variants: [
-            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '' },
-            { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '' },
-            { name: 'Spotify Premium 1 năm', price: 300000, duration: '1 năm', note: '' }
+            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_1m' },
+            { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_4m' },
+            { name: 'Spotify Premium 1 năm', price: 300000, duration: '1 năm', note: '', productCode: 'spotify_1y' }
         ],
         tabs: {
             description: `
@@ -214,7 +214,7 @@ const products = {
         image: 'https://www.gstatic.com/youtube/img/branding/youtubelogo/svg/youtubelogo.svg',
         featured: true,
         variants: [
-            { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành' }
+            { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành', productCode: 'youtube_1m' }
         ],
         tabs: {
             description: `
@@ -336,8 +336,8 @@ const products = {
         image: 'https://static.canva.com/web/images/8439b51bb7a19f6e65ce1064bc37c197.svg',
         featured: false,
         variants: [
-            { name: 'Canva Edu 1 năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành' },
-            { name: 'Canva Pro 1 năm FBH', price: 130000, duration: '1 năm', note: 'Full bảo hành' }
+            { name: 'Canva Edu 1 năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_edu_1y' },
+            { name: 'Canva Pro 1 năm FBH', price: 130000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_pro_1y' }
         ],
         tabs: {
             description: `
@@ -361,7 +361,7 @@ const products = {
         name: 'CapCut Pro',
         category: 'CapCut',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
-        image: 'images/capcut-logo.webp',
+        image: 'images/capcut-logo.svg',
         featured: true,
         variants: [
             { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Nâng cấp chính chủ' },
@@ -462,6 +462,15 @@ function getProductEmoji(productId) {
     return emojis[productId] || '📦';
 }
 
+// Fallback khi image load lỗi → hiện emoji trong ô màu
+function handleImgError(img, productId) {
+    img.onerror = null; // ngăn loop
+    img.style.display = 'none';
+    const wrap = img.parentElement;
+    wrap.style.cssText += 'display:flex;align-items:center;justify-content:center;background:#eef0f5;';
+    wrap.insertAdjacentHTML('beforeend', `<span style="font-size:64px;pointer-events:none;">${getProductEmoji(productId)}</span>`);
+}
+
 // Close search results when clicking outside
 document.addEventListener('click', function (e) {
     const searchContainer = document.querySelector('.search-container');
@@ -477,6 +486,15 @@ window.onload = function () {
     renderFilterList();
     updateCartUI();
 
+    // Inject background orbs into hero + CTA
+    injectOrbs();
+
+    // Attach scroll-reveal classes to static sections
+    initScrollReveal();
+
+    // Start observing for reveal
+    startObserver();
+
     // Handle initial page load
     handleRoute();
 
@@ -484,7 +502,7 @@ window.onload = function () {
     window.addEventListener('hashchange', handleRoute);
 };
 
-// HANDLE ROUTING (Consolidated Logic)
+// HANDLE ROUTING (Consolidated Logic + page-transition)
 function handleRoute() {
     closeCart();
 
@@ -492,36 +510,61 @@ function handleRoute() {
     const parts = hash.split('/');
     const page = parts[0];
 
-    // Hide all pages first
-    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-    if (page === 'product' && parts[1]) {
-        // Product detail page
-        showProductDetail(parts[1]);
-        document.getElementById('productDetailPage').classList.add('active');
-    } else if (page === 'checkout') {
-        document.getElementById('checkoutPage').classList.add('active');
-        renderCheckoutSummary();
-    } else if (page === 'products') {
-        document.getElementById('productsPage').classList.add('active');
-    } else if (page === 'confirmation') {
-        document.getElementById('confirmationPage').classList.add('active');
-    } else if (page === 'contact') {
-        // FIX BUG #3: Scroll to contact/footer section
-        document.getElementById('homePage').classList.add('active');
-        setTimeout(() => {
-            const contactSection = document.getElementById('contact');
-            if (contactSection) {
-                contactSection.scrollIntoView({ behavior: 'smooth' });
-            }
-        }, 500);
-        return; // Don't scroll to top
-    } else {
-        // Default to home
-        document.getElementById('homePage').classList.add('active');
+    function showPage(el) {
+        document.querySelectorAll('.page').forEach(p => {
+            p.classList.remove('active', 'page-enter');
+        });
+        // Force reflow so page-enter animation restarts reliably
+        void el.offsetWidth;
+        el.classList.add('active', 'page-enter');
+        el.addEventListener('animationend', () => el.classList.remove('page-enter'), { once: true });
     }
 
-    window.scrollTo(0, 0);
+    doRoute(page, parts, showPage);
+
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// helper: resolve target page element id
+function getTargetPageId(page, parts) {
+    if (page === 'product' && parts[1]) return 'productDetailPage';
+    if (page === 'checkout') return 'checkoutPage';
+    if (page === 'products') return 'productsPage';
+    if (page === 'confirmation') return 'confirmationPage';
+    return 'homePage';
+}
+
+function doRoute(page, parts, showPage) {
+    if (page === 'product' && parts[1]) {
+        showProductDetail(parts[1]);
+        showPage(document.getElementById('productDetailPage'));
+    } else if (page === 'checkout') {
+        showPage(document.getElementById('checkoutPage'));
+        renderCheckoutSummary();
+        // animate checkout form fields
+        setTimeout(() => {
+            const form = document.querySelector('.checkout-form');
+            if (form) form.classList.add('animated');
+        }, 100);
+    } else if (page === 'products') {
+        showPage(document.getElementById('productsPage'));
+        // re-trigger stagger on product grid
+        triggerStagger(document.getElementById('allProducts'));
+    } else if (page === 'confirmation') {
+        showPage(document.getElementById('confirmationPage'));
+        // launch confetti after a short delay
+        setTimeout(launchConfetti, 400);
+    } else if (page === 'contact') {
+        showPage(document.getElementById('homePage'));
+        setTimeout(() => {
+            const contactSection = document.getElementById('contact');
+            if (contactSection) contactSection.scrollIntoView({ behavior: 'smooth' });
+        }, 500);
+    } else {
+        showPage(document.getElementById('homePage'));
+        // re-observe home sections
+        startObserver();
+    }
 }
 
 // RENDER FEATURED PRODUCTS
@@ -533,7 +576,7 @@ function renderFeaturedProducts() {
     container.innerHTML = featured.map(product => `
         <div class="product-card" onclick="window.location.hash='product/${product.id}'">
             <div class="product-image">
-                <img src="${product.image}" alt="${product.name}">
+                <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
             <div class="product-info">
                 <span class="product-badge">Phổ biến</span>
@@ -557,7 +600,7 @@ function renderAllProducts(filter = 'all') {
     container.innerHTML = productsToShow.map(product => `
         <div class="product-card" onclick="window.location.hash='product/${product.id}'">
             <div class="product-image">
-                <img src="${product.image}" alt="${product.name}">
+                <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
             <div class="product-info">
                 ${product.featured ? '<span class="product-badge">Phổ biến</span>' : ''}
@@ -600,7 +643,7 @@ function showProductDetail(productId) {
         <div class="product-layout">
             <div class="product-gallery">
                 <div class="main-image">
-                    <img src="${product.image}" alt="${product.name}">
+                    <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
                 </div>
             </div>
             
@@ -651,6 +694,11 @@ function showProductDetail(productId) {
 function selectVariant(index) {
     document.querySelectorAll('.variant-option').forEach((opt, i) => {
         opt.classList.toggle('selected', i === index);
+        opt.classList.remove('just-selected');
+        if (i === index) {
+            void opt.offsetWidth; // reflow
+            opt.classList.add('just-selected');
+        }
     });
 }
 
@@ -701,29 +749,26 @@ function addToCart(productId) {
     toggleCart();
     saveCart(); // Save state
     showToast(`Đã thêm ${product.name} vào giỏ`, 'success');
+
+    // badge bounce
+    const badge = document.querySelector('.cart-count');
+    if (badge) {
+        badge.classList.remove('bounce');
+        void badge.offsetWidth; // force reflow
+        badge.classList.add('bounce');
+    }
 }
 
-// Generate productCode from productId and variant
+// productCode gửi lên API: ưu tiên variant.productCode (khớp DB), không thì tạo từ tên
 function getProductCode(productId, variantName) {
-    // Map productId to code prefix
-    const codeMap = {
-        'chatgpt': 'chatgpt',
-        'netflix': 'netflix',
-        'spotify': 'spotify',
-        'adobe': 'adobe',
-        'youtube': 'youtube',
-        'duolingo': 'duolingo',
-        'ms365': 'ms365',
-        'quizlet': 'quizlet',
-        'canva': 'canva',
-        'capcut': 'capcut'
-    };
-
+    const product = products[productId];
+    if (product) {
+        const variant = product.variants.find(v => v.name === variantName);
+        if (variant && variant.productCode) return variant.productCode;
+    }
+    const codeMap = { chatgpt: 'chatgpt', netflix: 'netflix', spotify: 'spotify', adobe: 'adobe', youtube: 'youtube', duolingo: 'duolingo', ms365: 'ms365', quizlet: 'quizlet', canva: 'canva', capcut: 'capcut' };
     const prefix = codeMap[productId] || productId;
-    const variantCode = variantName.toLowerCase()
-        .replace(/\s+/g, '_')
-        .replace(/[^a-z0-9_]/g, '');
-
+    const variantCode = variantName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     return `${prefix}_${variantCode}`;
 }
 
@@ -861,17 +906,21 @@ async function placeOrder() {
         return;
     }
 
-    // For now, support single item orders (can extend to multiple items later)
-    if (cart.length > 1) {
-        showToast('Vui lòng đặt từng sản phẩm một lần', 'error');
-        return;
-    }
+    // UX: Disable button to prevent double submit
+    const submitBtn = document.querySelector('.place-order-btn');
+    const originalBtnText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Đang xử lý...';
+    submitBtn.style.opacity = '0.7';
 
-    const cartItem = cart[0];
-    const productCode = getProductCode(cartItem.productId, cartItem.variantName);
-    const quantity = cartItem.quantity || 1;
-    const unitPrice = cartItem.unitPrice || cartItem.price;
-    const total = unitPrice * quantity;
+    // Build items payload
+    const items = cart.map(item => ({
+        productCode: getProductCode(item.productId, item.variantName),
+        quantity: item.quantity || 1,
+        price: item.unitPrice || item.price
+    }));
+
+    const total = cart.reduce((sum, item) => sum + (item.unitPrice || item.price) * (item.quantity || 1), 0);
 
     // Show loading
     showToast('Đang tạo đơn hàng...', 'info');
@@ -886,23 +935,53 @@ async function placeOrder() {
                 customerEmail: email,
                 customerPhone: phone,
                 customerNote: note,
-                productCode: productCode,
-                quantity: quantity,
-                price: unitPrice
+                items: items,
+                price: total
             })
         });
 
-        const data = await response.json();
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseErr) {
+            console.error('Create order response not JSON:', response.status, parseErr);
+            showToast(response.status === 404
+                ? 'Không tìm thấy API. Chạy bằng Netlify dev (netlify dev) để tạo đơn.'
+                : 'Máy chủ trả về lỗi. Vui lòng thử lại hoặc liên hệ hỗ trợ.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            submitBtn.style.opacity = '1';
+            return;
+        }
+
+        if (!response.ok) {
+            const msg = data?.error || data?.message || `Lỗi ${response.status}`;
+            showToast(msg, 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            submitBtn.style.opacity = '1';
+            return;
+        }
 
         if (!data.success) {
-            showToast(data.error === 'INSUFFICIENT_STOCK'
-                ? `Hết hàng! Chỉ còn ${data.available || 0} sản phẩm`
-                : data.message || 'Có lỗi xảy ra', 'error');
+            let errMsg = data.message || 'Có lỗi xảy ra';
+            if (data.error === 'INSUFFICIENT_STOCK') {
+                errMsg = `Hết hàng: ${data.product || 'sản phẩm'} chỉ còn ${data.available ?? 0}.`;
+            } else if (data.error === 'Product not found' || (data.error && data.error.includes('Product not found'))) {
+                errMsg = 'Sản phẩm không tồn tại trong kho. Vui lòng chọn sản phẩm khác hoặc liên hệ hỗ trợ.';
+            } else if (data.error === 'Too many requests' || response.status === 429) {
+                errMsg = 'Bạn đã gửi quá nhiều lần. Vui lòng đợi vài phút rồi thử lại.';
+            }
+            showToast(errMsg, 'error');
+
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            submitBtn.style.opacity = '1';
             return;
         }
 
         const orderCode = data.orderCode;
-        const paymentInfo = data.paymentInfo;
+        // const paymentInfo = data.paymentInfo;
 
         // Store order for invoice
         lastOrder = {
@@ -910,15 +989,15 @@ async function placeOrder() {
             date: new Date().toLocaleString('vi-VN'),
             customer: { name, email, phone },
             items: [...cart],
-            total: total
+            total: data.amount || total
         };
 
         document.getElementById('orderCode').textContent = orderCode;
         document.getElementById('transferContent').textContent = orderCode;
-        document.getElementById('transferAmount').textContent = formatPrice(total);
+        document.getElementById('transferAmount').textContent = formatPrice(data.amount || total);
 
         // Generate QR Code
-        const qrCodeUrl = generateTPBankQR(orderCode, total);
+        const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
         qrContainer.innerHTML = `
             <h4 style="font-size: 18px; margin-bottom: 16px; color: var(--accent);">
@@ -933,6 +1012,10 @@ async function placeOrder() {
             <div id="paymentStatus" style="margin-top: 20px; font-weight: 600; color: var(--warning);">
                 ⏳ Đang chờ thanh toán...
             </div>
+            <div style="margin-top:20px; color:#22c55e; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px;">
+                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 
+                 Giao dịch được bảo vệ
+            </div>
         `;
 
         // Clear cart
@@ -942,12 +1025,24 @@ async function placeOrder() {
         // Navigate to confirmation page
         window.location.hash = 'confirmation';
 
+        // Re-enable button (though we navigated away)
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        submitBtn.style.opacity = '1';
+
         // Start polling for payment status
-        startPaymentPolling(orderCode, total);
+        startPaymentPolling(orderCode, data.amount || total);
 
     } catch (error) {
         console.error('Place order error:', error);
-        showToast('Có lỗi xảy ra khi tạo đơn hàng', 'error');
+        const isNetwork = error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'));
+        showToast(isNetwork
+            ? 'Không kết nối được máy chủ. Kiểm tra mạng hoặc chạy "netlify dev" nếu test local.'
+            : 'Có lỗi xảy ra khi tạo đơn hàng. Vui lòng thử lại.', 'error');
+
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalBtnText;
+        submitBtn.style.opacity = '1';
     }
 }
 
@@ -986,6 +1081,10 @@ function startPaymentPolling(orderCode, amount) {
                             Đơn hàng đã được giao tự động. Đang chuyển hướng...
                         </p>
                     `;
+                }
+
+                if (data.invoiceNumber && lastOrder) {
+                    lastOrder.invoiceNumber = data.invoiceNumber;
                 }
 
                 // Redirect to delivery page after 2 seconds
@@ -1035,12 +1134,13 @@ function showToast(message, type = 'info') {
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
 
-    let icon = 'ℹ️';
-    if (type === 'success') icon = '✅';
-    if (type === 'error') icon = '❌';
+    const svgCheck = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>`;
+    const svgX = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+    const svgInfo = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>`;
+    const icons = { success: svgCheck, error: svgX, info: svgInfo };
 
     toast.innerHTML = `
-        <span class="toast-icon">${icon}</span>
+        <span class="toast-icon">${icons[type] || icons.info}</span>
         <span class="toast-message">${message}</span>
     `;
 
@@ -1130,8 +1230,11 @@ function generateInvoice() {
 
     doc.setFontSize(12);
     doc.setTextColor(0, 0, 0);
-    doc.text(`Ma don hang: ${lastOrder.code}`, 20, 40);
-    doc.text(`Ngay: ${lastOrder.date}`, 20, 50);
+    doc.setFontSize(12);
+    doc.setTextColor(0, 0, 0);
+    doc.text(`So hoa don: ${lastOrder.invoiceNumber || 'DRAFT'}`, 20, 40);
+    doc.text(`Ma don hang: ${lastOrder.code}`, 20, 50);
+    doc.text(`Ngay: ${lastOrder.date}`, 20, 60);
 
     doc.text("KHACH HANG:", 20, 70);
     doc.text(`Ten: ${lastOrder.customer.name}`, 30, 80);
@@ -1163,3 +1266,147 @@ function generateInvoice() {
 
     showToast('Đang tải xuống hóa đơn...', 'info');
 }
+
+// =============================================
+// 🎬 ANIMATION ENGINE
+// =============================================
+
+/* ---------- 1. FLOATING ORBS ---------- */
+function injectOrbs() {
+    // Hero orbs
+    const hero = document.querySelector('.hero');
+    if (hero) {
+        hero.insertAdjacentHTML('afterbegin', `
+            <div class="orb orb--1"></div>
+            <div class="orb orb--2"></div>
+            <div class="orb orb--3"></div>
+        `);
+    }
+    // CTA section orbs
+    const cta = document.querySelector('.cta-section');
+    if (cta) {
+        cta.insertAdjacentHTML('afterbegin', `
+            <div class="orb orb--1"></div>
+            <div class="orb orb--2"></div>
+        `);
+    }
+}
+
+/* ---------- 2. SCROLL-REVEAL + STAGGER ---------- */
+function initScrollReveal() {
+    // Wrap each top-level section inside #homePage with reveal
+    const home = document.getElementById('homePage');
+    if (!home) return;
+
+    // All direct <section> elements inside homePage
+    home.querySelectorAll('section').forEach(sec => {
+        sec.classList.add('reveal');
+    });
+
+    // Feature grid → stagger children
+    const featGrid = home.querySelector('.features-grid');
+    if (featGrid) {
+        featGrid.classList.add('stagger');
+        featGrid.parentElement.classList.add('reveal');
+    }
+
+    // Testimonials grid → stagger children
+    const testimGrid = home.querySelector('.testimonials-grid');
+    if (testimGrid) {
+        testimGrid.classList.add('stagger');
+        testimGrid.parentElement.classList.add('reveal');
+    }
+
+    // Featured product grid → stagger
+    const featProducts = document.getElementById('featuredProducts');
+    if (featProducts) {
+        featProducts.classList.add('stagger');
+        // The parent <section> already has reveal from the loop above
+    }
+}
+
+let revealObserver;
+function startObserver() {
+    if (revealObserver) revealObserver.disconnect();
+
+    revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('visible');
+            }
+        });
+    }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+    // Observe all .reveal and .stagger elements
+    document.querySelectorAll('.reveal, .stagger').forEach(el => {
+        revealObserver.observe(el);
+    });
+}
+
+/* ---------- 3. STAGGER PRODUCT GRID (dynamically rendered) ---------- */
+function triggerStagger(container) {
+    if (!container) return;
+    container.classList.add('stagger');
+    // reset → re-trigger
+    container.classList.remove('visible');
+    void container.offsetWidth;
+    container.classList.add('visible');
+}
+
+/* ---------- 4. BUTTON RIPPLE ---------- */
+document.addEventListener('click', function (e) {
+    const btn = e.target.closest('.cta-button, .add-to-cart-btn, .checkout-btn, .place-order-btn, .view-details');
+    if (!btn) return;
+
+    const ripple = document.createElement('span');
+    ripple.classList.add('ripple-span');
+    const rect = btn.getBoundingClientRect();
+    const size = Math.max(rect.width, rect.height);
+    ripple.style.width = ripple.style.height = size + 'px';
+    ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+    ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+    btn.appendChild(ripple);
+    ripple.addEventListener('animationend', () => ripple.remove());
+});
+
+/* ---------- 5. CONFETTI ---------- */
+function launchConfetti() {
+    const colors = ['#0066cc', '#a855f7', '#34c759', '#ff9500', '#ff3b30', '#5ac8fa', '#ffcc00'];
+    const count = 60;
+    for (let i = 0; i < count; i++) {
+        const piece = document.createElement('div');
+        piece.classList.add('confetti-piece');
+        piece.style.left = Math.random() * 100 + 'vw';
+        piece.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+        piece.style.width = (6 + Math.random() * 8) + 'px';
+        piece.style.height = piece.style.width;
+        piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '2px';
+        piece.style.animationDuration = (2 + Math.random() * 1.2) + 's';
+        piece.style.animationDelay = Math.random() * 0.4 + 's';
+        document.body.appendChild(piece);
+        piece.addEventListener('animationend', () => piece.remove());
+    }
+}
+
+/* ---------- 6. PRODUCT CARDS stagger after dynamic render ---------- */
+// Patch renderFeaturedProducts & renderAllProducts to add stagger after innerHTML
+const _origRenderFeatured = renderFeaturedProducts;
+renderFeaturedProducts = function () {
+    _origRenderFeatured();
+    const el = document.getElementById('featuredProducts');
+    if (el) {
+        el.classList.add('stagger');
+        // short delay so DOM is painted
+        requestAnimationFrame(() => {
+            el.classList.remove('visible');
+            void el.offsetWidth;
+            el.classList.add('visible');
+        });
+    }
+};
+
+const _origRenderAll = renderAllProducts;
+renderAllProducts = function (filter) {
+    _origRenderAll(filter);
+    triggerStagger(document.getElementById('allProducts'));
+};

@@ -38,20 +38,75 @@ function decryptPassword(encrypted, iv) {
     }
 }
 
-// Generate delivery token (for secure access)
+// Generate delivery token (for secure access) — must match delivery.js verifyDeliveryToken (day-based, 7-day window)
 function generateDeliveryToken(orderId, email) {
     const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
-    const data = `${orderId}|${email}|${Date.now()}`;
+    const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
+    const data = `${orderId}|${email}|${day}`;
     return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
 }
 
-exports.handler = async function(event, context) {
+// Rate Limiting Config for Check Payment (higher limit)
+const RATE_LIMIT_CHECK_WINDOW_MS = 60 * 1000; // 1 minute
+const RATE_LIMIT_CHECK_MAX_REQUESTS = 60; // 60 checks per minute per IP
+
+async function checkRateLimit(db, ip) {
+    // Ensure table exists (quick check)
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS rate_limits (
+            ip TEXT PRIMARY KEY,
+            count INTEGER DEFAULT 0,
+            reset_at DATETIME
+        )
+    `);
+
+    const now = new Date();
+    const result = await db.execute({
+        sql: 'SELECT count, reset_at FROM rate_limits WHERE ip = ?',
+        args: [ip]
+    });
+
+    let count = 0;
+    let resetAt = new Date(now.getTime() + RATE_LIMIT_CHECK_WINDOW_MS);
+
+    if (result.rows.length > 0) {
+        const row = result.rows[0];
+        const rowResetAt = new Date(row.reset_at);
+
+        if (now > rowResetAt) {
+            // Expired, reset
+            count = 1;
+            // resetAt is already set to now + window
+        } else {
+            // Still in window
+            count = row.count + 1;
+            resetAt = rowResetAt;
+        }
+    } else {
+        count = 1;
+    }
+
+    // Update DB
+    await db.execute({
+        sql: `INSERT INTO rate_limits (ip, count, reset_at) VALUES (?, ?, ?) 
+              ON CONFLICT(ip) DO UPDATE SET count = ?, reset_at = ?`,
+        args: [ip, count, resetAt.toISOString(), count, resetAt.toISOString()]
+    });
+
+    return count <= RATE_LIMIT_CHECK_MAX_REQUESTS;
+}
+
+exports.handler = async function (event, context) {
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
 
     const { orderCode, amount } = event.queryStringParameters || {};
     const SEPAY_API_TOKEN = process.env.SEPAY_API_TOKEN;
+
+    // Capture IP
+    const ipAddress = (event.headers['client-ip'] || event.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
+
 
     if (!orderCode) {
         return {
@@ -63,6 +118,18 @@ exports.handler = async function(event, context) {
 
     try {
         const db = getDbClient();
+
+        // Rate Limit Check (only if DB is available)
+        if (db) {
+            const isAllowed = await checkRateLimit(db, ipAddress);
+            if (!isAllowed) {
+                return {
+                    statusCode: 429,
+                    headers,
+                    body: JSON.stringify({ success: false, error: 'Too many requests' })
+                };
+            }
+        }
 
         // Get order with lines and allocations
         let order = null;
@@ -127,7 +194,7 @@ exports.handler = async function(event, context) {
                             const txTime = new Date(t.transaction_date);
                             const diffMins = (Date.now() - txTime.getTime()) / 60000;
                             isRecentTx = diffMins < 60 && diffMins > -10;
-                        } catch (e) {}
+                        } catch (e) { }
 
                         if (isContentMatch && isAmountMatch) return true;
                         if (isAmountMatch && isRecentTx && txAmount >= expectedAmount * 0.99) return true;
@@ -141,115 +208,14 @@ exports.handler = async function(event, context) {
 
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
-            const now = new Date().toISOString();
-            
             await db.execute('BEGIN IMMEDIATE');
 
             try {
-                // 1. Create/Update payment record
-                await db.execute({
-                    sql: `
-                        INSERT INTO payments (order_id, provider, amount, status, provider_ref, transaction_id, confirmed_at)
-                        VALUES (?, 'sepay', ?, 'confirmed', ?, ?, ?)
-                        ON CONFLICT DO NOTHING
-                    `,
-                    args: [
-                        order.id,
-                        order.amount_total,
-                        paidTransaction.id || paidTransaction.reference_number,
-                        paidTransaction.id || paidTransaction.reference_number,
-                        now
-                    ]
-                });
-
-                // 2. Get all allocated units for this order
-                const allocationsResult = await db.execute({
-                    sql: `
-                        SELECT oa.id, oa.unit_id, su.username, su.password_encrypted, su.password_iv, su.extra_info
-                        FROM order_allocations oa
-                        JOIN stock_units su ON oa.unit_id = su.id
-                        JOIN order_lines ol ON oa.order_line_id = ol.id
-                        WHERE ol.order_id = ? AND oa.status = 'reserved'
-                        ORDER BY oa.id ASC
-                    `,
-                    args: [order.id]
-                });
-
-                const credentials = [];
-                for (const alloc of allocationsResult.rows) {
-                    const password = decryptPassword(alloc.password_encrypted, alloc.password_iv);
-                    credentials.push({
-                        username: alloc.username,
-                        password: password,
-                        extraInfo: alloc.extra_info || ''
-                    });
-                }
-
-                // 3. Build delivery content
-                const deliveryContent = credentials.map((cred, idx) => {
-                    const extra = cred.extraInfo ? `\n${cred.extraInfo}` : '';
-                    return `Tài khoản ${idx + 1}:\nUsername: ${cred.username}\nPassword: ${cred.password}${extra}`;
-                }).join('\n\n---\n\n');
-
-                // 4. Update allocations: reserved -> sold
-                await db.execute({
-                    sql: `
-                        UPDATE order_allocations
-                        SET status = 'sold', reserved_until = NULL
-                        WHERE order_line_id IN (
-                            SELECT id FROM order_lines WHERE order_id = ?
-                        ) AND status = 'reserved'
-                    `,
-                    args: [order.id]
-                });
-
-                // 5. Update stock units: reserved -> sold
-                await db.execute({
-                    sql: `
-                        UPDATE stock_units
-                        SET status = 'sold',
-                            sold_order_id = ?,
-                            sold_at = ?,
-                            reserved_order_id = NULL,
-                            reserved_until = NULL,
-                            updated_at = CURRENT_TIMESTAMP
-                        WHERE id IN (
-                            SELECT unit_id FROM order_allocations
-                            WHERE order_line_id IN (
-                                SELECT id FROM order_lines WHERE order_id = ?
-                            ) AND status = 'sold'
-                        )
-                    `,
-                    args: [order.id, now, order.id]
-                });
-
-                // 6. Update order: pending_payment -> paid -> fulfilled
-                await db.execute({
-                    sql: `
-                        UPDATE orders
-                        SET status = 'fulfilled',
-                            reserved_until = NULL,
-                            updated_at = CURRENT_TIMESTAMP
-                        WHERE id = ?
-                    `,
-                    args: [order.id]
-                });
-
-                // 7. Create invoice
-                const invoiceNumber = `TBQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${Math.floor(Math.random() * 10000).toString().padStart(5, '0')}`;
-                
-                await db.execute({
-                    sql: `
-                        INSERT INTO invoices (order_id, invoice_number, issued_at, status)
-                        VALUES (?, ?, ?, 'issued')
-                    `,
-                    args: [order.id, invoiceNumber, now]
-                });
+                // USE SHARED FULFILLMENT LOGIC
+                const { fulfillOrder } = require('./utils/fulfillment');
+                const result = await fulfillOrder(db, order, paidTransaction);
 
                 await db.execute('COMMIT');
-
-                // Generate delivery token
-                const deliveryToken = generateDeliveryToken(order.id, order.customer_email);
 
                 return {
                     statusCode: 200,
@@ -261,10 +227,10 @@ exports.handler = async function(event, context) {
                             amount: paidTransaction.amount_in,
                             date: paidTransaction.transaction_date
                         },
-                        deliveryToken,
-                        invoiceNumber,
+                        deliveryToken: result.deliveryToken,
+                        invoiceNumber: result.invoiceNumber,
                         message: 'Thanh toán thành công! Đơn hàng đã được giao tự động.',
-                        redirectUrl: `/delivery?token=${deliveryToken}&order=${orderCode}`
+                        redirectUrl: `/delivery?token=${result.deliveryToken}&order=${orderCode}`
                     })
                 };
 

@@ -444,10 +444,16 @@ export async function deliverItem(subscriptionId: number, service: string, note?
 }
 
 export async function importInventoryItems(items: any[], batch: any) {
+    let successCount = 0;
     for (const item of items) {
-        await createInventoryItem(item);
+        try {
+            await createInventoryItem(item);
+            successCount++;
+        } catch (error) {
+            console.error(`[Import Error] Failed to import item: ${item.secretPayload?.slice(0, 10)}...`, error);
+        }
     }
-    return { success: true, count: items.length };
+    return { success: true, count: successCount };
 }
 
 // ==================== SYSTEM CONFIG (Simple JSON Store -> DB) ====================

@@ -1,26 +1,13 @@
 [build]
-  command = "# no build needed for static site"
-  publish = "."
-  functions = "netlify/functions"
-
-[dev]
-  framework = "#static"
+  command = "# no build needed"
   publish = "."
 
-# Disable NextJS plugin for static site
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 # [[plugins]]
-#   package = "@netlify/plugin-nextjs"
-#   [plugins.inputs]
-#     ignore = true
+# package = "@netlify/plugin-scheduled-functions"
 
-# Scheduled Functions Plugin (for release-expired cron)
-[[plugins]]
-  package = "@netlify/plugin-scheduled-functions"
-
-[functions.release-expired]
-  schedule = "*/5 * * * *"  # Every 5 minutes
-
-[[redirects]]
-  from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
+[functions.start-scheduler]
+  schedule = "*/5 * * * *"

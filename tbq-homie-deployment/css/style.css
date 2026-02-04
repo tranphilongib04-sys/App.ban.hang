@@ -219,6 +219,13 @@ nav {
     font-weight: 600;
 }
 
+/* SEARCH RESULTS FIX */
+.search-results {
+    top: 100%;
+    width: 100%;
+    border-radius: 0 0 12px 12px;
+}
+
 .hero {
     margin-top: 100px;
     padding: 60px 40px;
@@ -765,6 +772,8 @@ footer {
     justify-content: center;
     padding: 60px;
     margin-bottom: 16px;
+    overflow: hidden;
+    box-sizing: border-box;
 }
 
 .main-image img {
@@ -1106,6 +1115,10 @@ footer {
     transform: translateY(-2px);
 }
 
+/* =============================================
+   GLOBAL ANIMATION KEYFRAMES
+   ============================================= */
+
 @keyframes fadeInUp {
     from {
         opacity: 0;
@@ -1126,6 +1139,595 @@ footer {
     to {
         opacity: 1;
     }
+}
+
+/* Slide in from left */
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(60px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Scale + fade in (for cards) */
+@keyframes popIn {
+    0% {
+        opacity: 0;
+        transform: scale(0.88) translateY(24px);
+    }
+
+    60% {
+        transform: scale(1.03) translateY(-4px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Floating orb drift */
+@keyframes floatOrb1 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    33% {
+        transform: translate(40px, -30px) scale(1.08);
+    }
+
+    66% {
+        transform: translate(-20px, 20px) scale(0.95);
+    }
+}
+
+@keyframes floatOrb2 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    40% {
+        transform: translate(-50px, 30px) scale(1.1);
+    }
+
+    70% {
+        transform: translate(30px, -40px) scale(0.92);
+    }
+}
+
+@keyframes floatOrb3 {
+
+    0%,
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
+
+    50% {
+        transform: translate(25px, 45px) scale(1.05);
+    }
+}
+
+/* Slow spin (decorative ring) */
+@keyframes spinSlow {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Pulse glow (CTA button) */
+@keyframes pulseGlow {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(0, 102, 204, 0.45);
+    }
+
+    50% {
+        box-shadow: 0 0 0 18px rgba(0, 102, 204, 0);
+    }
+}
+
+/* Cart badge bounce */
+@keyframes cartBounce {
+    0% {
+        transform: scale(1);
+    }
+
+    30% {
+        transform: scale(1.6);
+    }
+
+    60% {
+        transform: scale(0.9);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* Ripple on button press */
+@keyframes ripple {
+    to {
+        transform: scale(4);
+        opacity: 0;
+    }
+}
+
+/* Success checkmark draw */
+@keyframes checkDraw {
+    0% {
+        stroke-dashoffset: 80;
+    }
+
+    100% {
+        stroke-dashoffset: 0;
+    }
+}
+
+@keyframes successCircle {
+    0% {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    60% {
+        transform: scale(1.15);
+    }
+
+    100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* Confetti fall */
+@keyframes confettiFall {
+    0% {
+        transform: translateY(-20px) rotate(0deg);
+        opacity: 1;
+    }
+
+    100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0;
+    }
+}
+
+/* number counter tick */
+@keyframes countUp {
+    0% {
+        transform: translateY(12px);
+        opacity: 0;
+    }
+
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* =============================================
+   SCROLL-REVEAL BASE  (JS toggles .visible)
+   ============================================= */
+.reveal {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.7s cubic-bezier(.22, 1, .36, 1),
+        transform 0.7s cubic-bezier(.22, 1, .36, 1);
+}
+
+.reveal.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Staggered children delay helpers  ─ up to 6 kids */
+.stagger>*:nth-child(1) {
+    transition-delay: 0s;
+}
+
+.stagger>*:nth-child(2) {
+    transition-delay: 0.08s;
+}
+
+.stagger>*:nth-child(3) {
+    transition-delay: 0.16s;
+}
+
+.stagger>*:nth-child(4) {
+    transition-delay: 0.24s;
+}
+
+.stagger>*:nth-child(5) {
+    transition-delay: 0.32s;
+}
+
+.stagger>*:nth-child(6) {
+    transition-delay: 0.40s;
+}
+
+/* Each child also needs reveal */
+.stagger>* {
+    opacity: 0;
+    transform: translateY(36px);
+    transition: opacity 0.65s cubic-bezier(.22, 1, .36, 1),
+        transform 0.65s cubic-bezier(.22, 1, .36, 1);
+}
+
+.stagger.visible>* {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* =============================================
+   FLOATING BACKGROUND ORBS
+   ============================================= */
+.orb {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(80px);
+}
+
+.orb--1 {
+    width: 380px;
+    height: 380px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%);
+    top: -80px;
+    left: -100px;
+    animation: floatOrb1 14s ease-in-out infinite;
+}
+
+.orb--2 {
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%);
+    bottom: -60px;
+    right: -80px;
+    animation: floatOrb2 18s ease-in-out infinite;
+}
+
+.orb--3 {
+    width: 220px;
+    height: 220px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    top: 50%;
+    left: 60%;
+    animation: floatOrb3 12s ease-in-out infinite;
+}
+
+/* Orb container wrapper – attach to hero & CTA */
+.orb-wrap {
+    position: relative;
+    overflow: hidden;
+}
+
+/* =============================================
+   HERO section enhancements
+   ============================================= */
+.hero {
+    position: relative;
+    /* orbs need this */
+}
+
+.hero>.orb {
+    /* orbs inside hero stay behind text */
+    z-index: 0;
+}
+
+.hero h1,
+.hero p,
+.hero .cta-button {
+    position: relative;
+    z-index: 1;
+}
+
+/* CTA button persistent pulse */
+.cta-button {
+    animation: fadeInUp 0.8s ease-out 0.4s backwards, pulseGlow 2.8s ease-in-out 1.6s infinite;
+}
+
+/* =============================================
+   PRODUCT CARD hover lift is already there,
+   add a subtle image zoom
+   ============================================= */
+.product-card:hover .product-image img {
+    transform: scale(1.06);
+    transition: transform 0.45s cubic-bezier(.22, 1, .36, 1);
+}
+
+.product-image img {
+    transition: transform 0.45s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* =============================================
+   FEATURE CARD icon float on hover
+   ============================================= */
+.feature-card:hover .feature-icon {
+    animation: floatIcon 0.6s ease-out;
+}
+
+@keyframes floatIcon {
+    0% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    100% {
+        transform: translateY(0);
+    }
+}
+
+/* =============================================
+   TESTIMONIAL CARD  – left-border accent slide
+   ============================================= */
+.testimonial-card {
+    border-left: 3px solid transparent;
+    transition: all 0.3s, border-color 0.3s;
+}
+
+.testimonial-card:hover {
+    border-left-color: var(--accent);
+}
+
+/* =============================================
+   CTA SECTION  – orb container
+   ============================================= */
+.cta-section {
+    position: relative;
+    overflow: hidden;
+}
+
+.cta-section .orb--1 {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 70%);
+    width: 300px;
+    height: 300px;
+    top: -60px;
+    right: 10%;
+}
+
+.cta-section .orb--2 {
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+    width: 200px;
+    height: 200px;
+    bottom: -40px;
+    left: 5%;
+}
+
+.cta-section h2,
+.cta-section p,
+.cta-section .cta-button {
+    position: relative;
+    z-index: 1;
+}
+
+/* =============================================
+   CART badge bounce  (JS adds .bounce)
+   ============================================= */
+.cart-count.bounce {
+    animation: cartBounce 0.45s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* =============================================
+   RIPPLE button effect  (JS injects .ripple span)
+   ============================================= */
+.cta-button,
+.add-to-cart-btn,
+.checkout-btn,
+.place-order-btn,
+.view-details {
+    position: relative;
+    overflow: hidden;
+}
+
+.ripple-span {
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(0);
+    animation: ripple 0.5s linear;
+    pointer-events: none;
+}
+
+/* =============================================
+   SUCCESS PAGE  – animated check + confetti
+   ============================================= */
+.success-icon {
+    animation: successCircle 0.55s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* confetti pieces (created by JS) */
+.confetti-piece {
+    position: fixed;
+    top: -20px;
+    width: 10px;
+    height: 10px;
+    z-index: 9990;
+    pointer-events: none;
+    animation: confettiFall 2.6s linear forwards;
+}
+
+/* =============================================
+   PAGE TRANSITION  (JS toggles .page-exit / .page-enter)
+   ============================================= */
+.page.page-exit {
+    animation: pageOut 0.28s ease-in forwards;
+}
+
+.page.page-enter {
+    animation: pageIn 0.38s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+@keyframes pageOut {
+    to {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.98);
+    }
+}
+
+@keyframes pageIn {
+    from {
+        opacity: 0;
+        transform: translateY(16px) scale(0.99);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* =============================================
+   VARIANT option selected wiggle
+   ============================================= */
+.variant-option.just-selected {
+    animation: variantPick 0.35s cubic-bezier(.22, 1, .36, 1);
+}
+
+@keyframes variantPick {
+    0% {
+        transform: scale(1);
+    }
+
+    40% {
+        transform: scale(1.025);
+    }
+
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* =============================================
+   FILTER LIST active pill slide-in
+   ============================================= */
+.filter-list li {
+    transition: color 0.3s, background 0.25s, transform 0.25s;
+}
+
+.filter-list li.active {
+    transform: scale(1.05);
+}
+
+/* =============================================
+   SEARCH RESULTS dropdown fade
+   ============================================= */
+.search-results.active {
+    animation: popIn 0.28s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* =============================================
+   CART SIDEBAR slide with spring feel
+   ============================================= */
+.cart-sidebar {
+    transition: right 0.38s cubic-bezier(.22, 1, .36, 1);
+}
+
+/* Cart overlay fade */
+.cart-overlay {
+    transition: opacity 0.3s;
+    opacity: 0;
+}
+
+.cart-overlay.active {
+    opacity: 1;
+}
+
+/* =============================================
+   CART ITEM entrance (JS adds class)
+   ============================================= */
+.cart-item.item-enter {
+    animation: slideInRight 0.3s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* =============================================
+   CHECKOUT form fields slide-up stagger
+   (applied on page show via JS)
+   ============================================= */
+.form-group {
+    opacity: 0;
+    transform: translateY(18px);
+    transition: opacity 0.5s cubic-bezier(.22, 1, .36, 1),
+        transform 0.5s cubic-bezier(.22, 1, .36, 1);
+}
+
+.checkout-form.animated .form-group {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.checkout-form.animated .form-group:nth-child(1) {
+    transition-delay: 0.06s;
+}
+
+.checkout-form.animated .form-group:nth-child(2) {
+    transition-delay: 0.14s;
+}
+
+.checkout-form.animated .form-group:nth-child(3) {
+    transition-delay: 0.22s;
+}
+
+.checkout-form.animated .form-group:nth-child(4) {
+    transition-delay: 0.30s;
+}
+
+.checkout-form.animated .form-group:nth-child(5) {
+    transition-delay: 0.38s;
+}
+
+/* =============================================
+   SECTION TITLES  – underline draw
+   ============================================= */
+.section-title {
+    position: relative;
+    display: inline-block;
+    width: 100%;
+}
+
+.section-title::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), #a855f7);
+    border-radius: 2px;
+    transition: width 0.7s cubic-bezier(.22, 1, .36, 1) 0.2s;
+}
+
+.reveal.visible .section-title::after,
+section .section-title::after {
+    width: 60px;
 }
 
 @media (max-width: 768px) {
@@ -1193,33 +1795,49 @@ footer {
         gap: 20px;
     }
 
-    /* FIX BUG #2: Product Detail Mobile Layout */
+    /* FIX: Product Detail Mobile - ảnh scroll cùng trang, không sticky để tránh che tiêu đề/nội dung */
     .product-layout {
         display: flex;
         flex-direction: column;
-        gap: 24px;
+        gap: 0;
         margin-bottom: 40px;
     }
 
     .product-gallery {
         position: static;
         width: 100%;
+        order: 1;
+        flex-shrink: 0;
+        margin-bottom: 20px;
     }
 
     .main-image {
-        height: 300px;
-        padding: 20px;
+        height: 220px;
+        min-height: 180px;
+        padding: 16px;
         margin-bottom: 0;
+        overflow: hidden;
+        box-sizing: border-box;
+        border-radius: 12px;
+        background: var(--bg-gray);
+    }
+
+    .main-image img {
+        object-fit: contain;
     }
 
     .product-details {
         width: 100%;
+        order: 2;
         display: block !important;
+        padding-top: 0;
     }
 
     .product-details h1 {
-        font-size: 28px;
+        font-size: 26px;
         margin-bottom: 12px;
+        margin-top: 0;
+        line-height: 1.3;
     }
 
     .variant-selector,
@@ -1317,8 +1935,8 @@ footer {
 /* TOAST NOTIFICATIONS */
 #toast-container {
     position: fixed;
-    top: 20px;
-    right: 20px;
+    top: 24px;
+    right: 24px;
     z-index: 9999;
     display: flex;
     flex-direction: column;
@@ -1326,38 +1944,85 @@ footer {
 }
 
 .toast {
-    padding: 16px 24px;
-    border-radius: 12px;
+    padding: 14px 18px;
+    border-radius: 14px;
     background: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1), 0 1px 3px rgba(0, 0, 0, 0.06);
     display: flex;
     align-items: center;
     gap: 12px;
-    min-width: 300px;
-    animation: toastSlideIn 0.3s ease-out;
-    border-left: 4px solid var(--accent);
+    min-width: 260px;
+    max-width: 340px;
+    animation: toastSlideIn 0.38s cubic-bezier(.22, 1, .36, 1);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    position: relative;
+    overflow: hidden;
 }
 
-.toast.success {
-    border-left-color: var(--success);
+/* progress bar đếm ngược ở đáy toast */
+.toast::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    width: 100%;
+    animation: toastProgress 3s linear forwards;
 }
 
-.toast.error {
-    border-left-color: #ff3b30;
+.toast.success::after {
+    background: linear-gradient(90deg, #16a34a, #4ade80);
 }
 
-.toast.info {
-    border-left-color: var(--accent);
+.toast.error::after {
+    background: linear-gradient(90deg, #dc2626, #f87171);
 }
 
+.toast.info::after {
+    background: linear-gradient(90deg, #2563eb, #60a5fa);
+}
+
+@keyframes toastProgress {
+    from {
+        width: 100%;
+    }
+
+    to {
+        width: 0;
+    }
+}
+
+/* icon circle */
 .toast-icon {
-    font-size: 20px;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.toast.success .toast-icon {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+.toast.error .toast-icon {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.toast.info .toast-icon {
+    background: #dbeafe;
+    color: #2563eb;
 }
 
 .toast-message {
     font-size: 14px;
     font-weight: 500;
     color: var(--text-primary);
+    line-height: 1.4;
 }
 
 @keyframes toastSlideIn {
@@ -1443,5 +2108,231 @@ footer {
     to {
         opacity: 1;
         transform: translateY(0);
+    }
+}
+/* FLOATING CONTACT - gọn, sát góc, không che nội dung */
+.contact-floating {
+    position: fixed;
+    bottom: 16px;
+    right: 16px;
+    z-index: 999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.contact-floating > * {
+    pointer-events: auto;
+}
+
+.contact-floating-hotline {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px 6px 6px;
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    text-decoration: none;
+    color: var(--text-primary);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.contact-floating-hotline:hover {
+    box-shadow: 0 4px 16px rgba(0, 102, 204, 0.12);
+    border-color: var(--accent);
+}
+
+.contact-floating-hotline-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    flex-shrink: 0;
+    background: var(--accent-bg);
+    color: var(--accent);
+    border-radius: 8px;
+}
+
+.contact-floating-hotline-icon svg {
+    width: 14px;
+    height: 14px;
+}
+
+.contact-floating-hotline-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0;
+    line-height: 1.2;
+}
+
+.contact-floating-hotline-label {
+    font-size: 10px;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.contact-floating-hotline-number {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    letter-spacing: 0.02em;
+}
+
+.contact-floating-socials {
+    display: flex;
+    gap: 8px;
+}
+
+.contact-floating-social {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--bg-white);
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.contact-floating-social:hover {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    transform: translateY(-1px);
+}
+
+.contact-floating-social img {
+    width: 26px;
+    height: 26px;
+    object-fit: contain;
+}
+
+.contact-floating-social-zalo img {
+    height: 22px;
+    width: auto;
+    max-width: 44px;
+    object-fit: contain;
+}
+
+@media (max-width: 768px) {
+    .contact-floating {
+        bottom: 12px;
+        right: 12px;
+        gap: 6px;
+    }
+    .contact-floating-hotline {
+        padding: 5px 8px 5px 5px;
+        gap: 6px;
+    }
+    .contact-floating-hotline-icon {
+        width: 26px;
+        height: 26px;
+    }
+    .contact-floating-hotline-icon svg {
+        width: 12px;
+        height: 12px;
+    }
+    .contact-floating-hotline-label {
+        font-size: 9px;
+    }
+    .contact-floating-hotline-number {
+        font-size: 12px;
+    }
+    .contact-floating-social {
+        width: 42px;
+        height: 42px;
+        border-radius: 10px;
+    }
+    .contact-floating-social img {
+        width: 22px;
+        height: 22px;
+    }
+    .contact-floating-social-zalo img {
+        height: 18px;
+        max-width: 36px;
+    }
+}
+
+/* LOGO UPDATE V2 */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.logo-img {
+    height: 70px;
+    width: auto;
+    object-fit: contain;
+}
+
+.logo-text {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary);
+    letter-spacing: -0.5px;
+}
+
+/* HERO SLOGAN UPDATE */
+.hero h1 {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.slogan-main {
+    font-size: 72px;
+    font-weight: 800;
+    color: var(--primary);
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    line-height: 1.1;
+}
+
+.slogan-sub {
+    font-size: 48px;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+@media (max-width: 768px) {
+    .slogan-main {
+        font-size: 48px;
+    }
+    .slogan-sub {
+        font-size: 32px;
+    }
+    .logo-img {
+        height: 50px;
+    }
+    .logo-text {
+        font-size: 20px;
+    }
+}
+
+/* MOBILE FIX FOR PRODUCT GALLERY */
+@media (max-width: 768px) {
+    .product-gallery {
+        position: static; /* Disable sticky on mobile */
+        margin-bottom: 24px;
+        z-index: 1; /* Reset stack context */
+    }
+    
+    .product-layout {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+    }
+    
+    .main-image {
+        height: 300px; /* Reduce height on mobile */
     }
 }

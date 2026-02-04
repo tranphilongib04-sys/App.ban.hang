@@ -8,7 +8,8 @@
     "migrate": "node scripts/fix_db_schema.js",
     "generate-secret": "node scripts/setup-helper.js generate-secret",
     "test-api": "node test-api.js",
-    "quick-test": "./scripts/quick-test.sh"
+    "quick-test": "./scripts/quick-test.sh",
+    "serve": "npx serve ."
   },
   "keywords": [],
   "author": "",

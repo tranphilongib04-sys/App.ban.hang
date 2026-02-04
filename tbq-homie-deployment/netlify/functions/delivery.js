@@ -41,6 +41,17 @@ function decryptPassword(encrypted, iv) {
     }
 }
 
+// Escape for HTML attribute (prevents XSS and broken onclick when cred contains ' or ")
+function escapeAttr(s) {
+    if (s == null) return '';
+    return String(s)
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+}
+
 exports.handler = async function(event, context) {
     const { token, order } = event.queryStringParameters || {};
 
@@ -310,7 +321,11 @@ exports.handler = async function(event, context) {
             ${orderData.invoice_number ? `Hóa đơn: <strong>${orderData.invoice_number}</strong>` : ''}
         </div>
 
-        ${credentials.map((cred, idx) => `
+        ${credentials.map((cred, idx) => {
+            const safeUser = escapeAttr(cred.username);
+            const safePass = escapeAttr(cred.password);
+            const safeExtra = escapeAttr(cred.extraInfo);
+            return `
             <div class="credential-card">
                 <div class="credential-header">
                     <div class="credential-title">Tài khoản ${idx + 1}</div>
@@ -318,27 +333,28 @@ exports.handler = async function(event, context) {
                 <div class="credential-field">
                     <div class="credential-label">Username</div>
                     <div class="credential-value">
-                        ${cred.username}
-                        <button class="copy-btn" onclick="copyToClipboard('${cred.username}')" style="margin-left: 10px;">Copy</button>
+                        ${escapeAttr(cred.username)}
+                        <button class="copy-btn" onclick="copyToClipboard(this.dataset.value)" data-value="${safeUser}" style="margin-left: 10px;">Copy</button>
                     </div>
                 </div>
                 <div class="credential-field">
                     <div class="credential-label">Password</div>
                     <div class="credential-value" id="password-${idx}">
                         <span class="password-hidden" id="password-hidden-${idx}">••••••••</span>
-                        <span id="password-revealed-${idx}" style="display: none;">${cred.password}</span>
+                        <span id="password-revealed-${idx}" style="display: none;">${safePass}</span>
                         <button class="reveal-btn" onclick="revealPassword(${idx})" id="reveal-btn-${idx}">Hiện</button>
-                        <button class="copy-btn" onclick="copyToClipboard('${cred.password}')" id="copy-password-btn-${idx}" style="display: none; margin-left: 10px;">Copy</button>
+                        <button class="copy-btn" onclick="copyToClipboard(this.dataset.value)" id="copy-password-btn-${idx}" data-value="${safePass}" style="display: none; margin-left: 10px;">Copy</button>
                     </div>
                 </div>
                 ${cred.extraInfo ? `
                     <div class="credential-field">
                         <div class="credential-label">Ghi chú</div>
-                        <div class="credential-value">${cred.extraInfo}</div>
+                        <div class="credential-value">${safeExtra}</div>
                     </div>
                 ` : ''}
             </div>
-        `).join('')}
+        `;
+        }).join('')}
 
         <button class="copy-all-btn" onclick="copyAllCredentials()">📋 Copy tất cả thông tin</button>
 
@@ -376,7 +392,8 @@ exports.handler = async function(event, context) {
             copyBtn.style.display = 'inline-block';
         }
 
-        function copyToClipboard(text) {
+        function copyToClipboard(textOrEl) {
+            const text = typeof textOrEl === 'string' ? textOrEl : (textOrEl && textOrEl.dataset && textOrEl.dataset.value ? textOrEl.dataset.value : '');
             navigator.clipboard.writeText(text).then(() => {
                 showToast('Đã sao chép!');
             }).catch(() => {

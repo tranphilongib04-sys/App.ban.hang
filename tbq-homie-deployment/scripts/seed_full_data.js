@@ -16,8 +16,11 @@ async function main() {
     try {
         const products = [
             { code: 'netflix_1m', name: 'Netflix Premium 1 Month', price: 70000 },
+            { code: 'spotify_1m', name: 'Spotify Premium 1 Month', price: 30000 },
+            { code: 'spotify_4m', name: 'Spotify Premium 4 Months', price: 100000 },
             { code: 'spotify_1y', name: 'Spotify Premium 1 Year', price: 300000 },
             { code: 'youtube_1m', name: 'YouTube Premium 1 Month', price: 40000 },
+            { code: 'canva_edu_1y', name: 'Canva Edu 1 Year', price: 80000 },
             { code: 'canva_pro_1y', name: 'Canva Pro 1 Year', price: 130000 }
         ];
 
