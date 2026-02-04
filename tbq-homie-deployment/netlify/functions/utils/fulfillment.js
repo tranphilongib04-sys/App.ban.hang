@@ -92,7 +92,7 @@ async function fulfillOrder(db, order, transaction, skipSchemaCheck = false) {
     // 2. Get all allocated units for this order
     const allocationsResult = await db.execute({
         sql: `
-            SELECT oa.id, oa.unit_id, su.username, su.password_encrypted, su.password_iv, su.extra_info
+            SELECT oa.id, oa.unit_id, su.content, su.password_encrypted, su.password_iv
             FROM order_allocations oa
             JOIN stock_units su ON oa.unit_id = su.id
             JOIN order_lines ol ON oa.order_line_id = ol.id
@@ -105,10 +105,22 @@ async function fulfillOrder(db, order, transaction, skipSchemaCheck = false) {
     const credentials = [];
     for (const alloc of allocationsResult.rows) {
         const password = decryptPassword(alloc.password_encrypted, alloc.password_iv);
+        // Parse content as JSON if it contains credentials
+        let username = '';
+        let extraInfo = '';
+        try {
+            const contentObj = JSON.parse(alloc.content || '{}');
+            username = contentObj.username || contentObj.email || alloc.content;
+            extraInfo = contentObj.note || '';
+        } catch {
+            // If not JSON, treat as plain text username
+            username = alloc.content || '';
+        }
+
         credentials.push({
-            username: alloc.username,
+            username: username,
             password: password,
-            extraInfo: alloc.extra_info || ''
+            extraInfo: extraInfo
         });
     }
 

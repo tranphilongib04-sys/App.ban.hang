@@ -5,10 +5,16 @@
  */
 
 import 'dotenv/config';
-import { initializeDatabase } from '../src/lib/db';
+import Database from 'better-sqlite3';
+import path from 'path';
 import { createInventoryItem, getInventoryItems } from '../src/lib/db/queries';
 import { triggerSync, initSyncTables } from '../src/lib/sync/loop';
-import { client } from '../src/lib/db';
+
+// Use direct client for testing to avoid top-level await issues
+function getClient() {
+    const localDbPath = path.join(process.cwd(), 'data', 'tpb-manage.db');
+    return new Database(localDbPath);
+}
 
 async function testInventorySync() {
     console.log('🧪 Testing Inventory Sync...\n');
