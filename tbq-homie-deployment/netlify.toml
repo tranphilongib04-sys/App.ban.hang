@@ -2,6 +2,11 @@
   publish = "."
   command = "# no build needed"
 
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+  [plugins.inputs]
+    disabled = true
+
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
