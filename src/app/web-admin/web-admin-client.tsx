@@ -71,6 +71,7 @@ interface WebStats {
     paid: number;
     delivered: number;
     expired: number;
+    cancelled: number;
     total_revenue: number;
 }
 
