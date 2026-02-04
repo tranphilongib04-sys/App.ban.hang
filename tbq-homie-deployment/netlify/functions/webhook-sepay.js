@@ -5,7 +5,7 @@
  * Receives payment notifications from SePay
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const { fulfillOrder } = require('./utils/fulfillment');
 
 function getDbClient() {

@@ -11,7 +11,7 @@
  * - Invoice
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -22,9 +22,9 @@ function getDbClient() {
 
 async function migrate() {
     const db = getDbClient();
-    
+
     console.log('Starting migration...');
-    
+
     try {
         // 1. Create Products table
         await db.execute(`
@@ -41,7 +41,7 @@ async function migrate() {
             )
         `);
         console.log('✓ Products table created');
-        
+
         // 2. Migrate inventory_items to stock_units
         await db.execute(`
             CREATE TABLE IF NOT EXISTS stock_units (
@@ -71,20 +71,20 @@ async function migrate() {
             )
         `);
         console.log('✓ StockUnits table created');
-        
+
         // Create unique index for username
         await db.execute(`
             CREATE UNIQUE INDEX IF NOT EXISTS idx_stock_units_username 
             ON stock_units (username)
         `);
-        
+
         // Create index for available stock queries
         await db.execute(`
             CREATE INDEX IF NOT EXISTS idx_stock_units_available
             ON stock_units (product_id, status, reserved_until)
         `);
         console.log('✓ StockUnits indexes created');
-        
+
         // 3. Create Orders table (upgraded)
         await db.execute(`
             CREATE TABLE IF NOT EXISTS orders (
@@ -103,7 +103,7 @@ async function migrate() {
             )
         `);
         console.log('✓ Orders table created');
-        
+
         // 4. Create OrderLines table
         await db.execute(`
             CREATE TABLE IF NOT EXISTS order_lines (
@@ -119,7 +119,7 @@ async function migrate() {
             )
         `);
         console.log('✓ OrderLines table created');
-        
+
         // 5. Create OrderAllocations table (chống cấp trùng)
         await db.execute(`
             CREATE TABLE IF NOT EXISTS order_allocations (
@@ -135,7 +135,7 @@ async function migrate() {
             )
         `);
         console.log('✓ OrderAllocations table created');
-        
+
         // 6. Create Payments table
         await db.execute(`
             CREATE TABLE IF NOT EXISTS payments (
@@ -153,7 +153,7 @@ async function migrate() {
             )
         `);
         console.log('✓ Payments table created');
-        
+
         // 7. Create Invoices table
         await db.execute(`
             CREATE TABLE IF NOT EXISTS invoices (
@@ -169,7 +169,7 @@ async function migrate() {
             )
         `);
         console.log('✓ Invoices table created');
-        
+
         // 8. Create InventoryLog table (audit)
         await db.execute(`
             CREATE TABLE IF NOT EXISTS inventory_logs (
@@ -185,29 +185,29 @@ async function migrate() {
             )
         `);
         console.log('✓ InventoryLogs table created');
-        
+
         // 9. Migrate existing inventory_items to stock_units (if exists)
         try {
             const existingItems = await db.execute(`
                 SELECT * FROM inventory_items WHERE status IN ('available', 'reserved', 'sold')
             `);
-            
+
             if (existingItems.rows.length > 0) {
                 console.log(`Migrating ${existingItems.rows.length} existing inventory items...`);
-                
+
                 // First, create products from unique service/variant combinations
                 const serviceVariants = new Set();
                 for (const item of existingItems.rows) {
                     const key = `${item.service}|${item.variant || 'default'}`;
                     serviceVariants.add(key);
                 }
-                
+
                 const productMap = new Map();
                 for (const sv of serviceVariants) {
                     const [service, variant] = sv.split('|');
                     const code = `${service}_${variant === 'default' ? 'standard' : variant.replace(/\s+/g, '_').toLowerCase()}`;
                     const name = variant === 'default' ? service : `${service} - ${variant}`;
-                    
+
                     // Insert product
                     const prodResult = await db.execute({
                         sql: `
@@ -218,27 +218,27 @@ async function migrate() {
                         `,
                         args: [code, name, variant === 'default' ? null : variant]
                     });
-                    
+
                     const productId = prodResult.rows[0]?.id || prodResult.lastInsertRowid;
                     productMap.set(sv, productId);
                 }
-                
+
                 // Migrate items
                 for (const item of existingItems.rows) {
                     const sv = `${item.service}|${item.variant || 'default'}`;
                     const productId = productMap.get(sv);
-                    
+
                     if (!productId) continue;
-                    
+
                     // Extract username/password from secret_payload (format: "username|password")
                     const parts = (item.secret_payload || '').split('|');
                     const username = parts[0] || '';
                     const password = parts[1] || '';
-                    
+
                     // Simple encryption placeholder (you should use proper encryption)
                     const passwordEncrypted = Buffer.from(password).toString('base64');
                     const passwordIv = Buffer.from('defaultiv123456').toString('base64'); // 12 bytes
-                    
+
                     await db.execute({
                         sql: `
                             INSERT INTO stock_units (
@@ -265,15 +265,15 @@ async function migrate() {
                         ]
                     });
                 }
-                
+
                 console.log(`✓ Migrated ${existingItems.rows.length} inventory items`);
             }
         } catch (err) {
             console.log('Note: inventory_items table may not exist, skipping migration');
         }
-        
+
         console.log('\n✅ Migration completed successfully!');
-        
+
     } catch (error) {
         console.error('❌ Migration failed:', error);
         throw error;

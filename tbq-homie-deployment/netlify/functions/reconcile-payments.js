@@ -6,7 +6,7 @@
  * Schedule: "0/5 * * * *"
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const { fulfillOrder } = require('./utils/fulfillment');
 const fetch = require('node-fetch');
 

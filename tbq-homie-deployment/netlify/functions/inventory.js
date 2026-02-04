@@ -6,7 +6,7 @@
  * - GET /inventory/all - Get all products with stock counts
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;

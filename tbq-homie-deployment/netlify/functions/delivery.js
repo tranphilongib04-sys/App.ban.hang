@@ -7,7 +7,7 @@
  * + Invoice download button
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
 
 function getDbClient() {
@@ -52,7 +52,7 @@ function escapeAttr(s) {
         .replace(/>/g, '&gt;');
 }
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
     const { token, order } = event.queryStringParameters || {};
 
     if (!token || !order) {
@@ -402,9 +402,9 @@ exports.handler = async function(event, context) {
         }
 
         function copyAllCredentials() {
-            const allText = ${JSON.stringify(credentials.map((c, i) => 
-                `Tài khoản ${i + 1}:\\nUsername: ${c.username}\\nPassword: ${c.password}${c.extraInfo ? '\\n' + c.extraInfo : ''}`
-            ).join('\\n\\n---\\n\\n'))};
+            const allText = ${JSON.stringify(credentials.map((c, i) =>
+            `Tài khoản ${i + 1}:\\nUsername: ${c.username}\\nPassword: ${c.password}${c.extraInfo ? '\\n' + c.extraInfo : ''}`
+        ).join('\\n\\n---\\n\\n'))};
             copyToClipboard(allText);
         }
 

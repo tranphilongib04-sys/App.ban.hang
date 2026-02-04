@@ -7,7 +7,7 @@
  * GET /release-expired (optional: ?secret=xxx for security)
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -23,7 +23,7 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }

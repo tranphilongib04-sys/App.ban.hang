@@ -6,7 +6,7 @@
  * Returns HTML invoice (can be printed as PDF)
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
 
 function getDbClient() {
@@ -30,7 +30,7 @@ function verifyDeliveryToken(token, orderId, email) {
     return validTokens.includes(token);
 }
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
     const { order, token } = event.queryStringParameters || {};
 
     if (!order || !token) {

@@ -11,7 +11,7 @@
  * Auth: Bearer token from ADMIN_API_TOKEN env
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -38,7 +38,7 @@ function checkAuth(event) {
     return token === adminToken;
 }
 
-exports.handler = async function(event, context) {
+exports.handler = async function (event, context) {
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }

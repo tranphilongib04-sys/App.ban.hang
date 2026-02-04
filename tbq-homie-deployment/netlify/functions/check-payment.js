@@ -11,7 +11,7 @@
  * 5. Return payment status and delivery info
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
 
 function getDbClient() {

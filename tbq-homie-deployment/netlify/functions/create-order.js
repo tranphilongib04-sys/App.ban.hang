@@ -5,7 +5,7 @@
  * Body: { customerName, customerEmail, customerPhone, customerNote, productCode, variant, quantity, price }
  */
 
-const { createClient } = require('@libsql/client');
+const { createClient } = require('@libsql/client/web');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
