@@ -1,0 +1,9 @@
+[build]
+  base = "tbq-homie-deployment"
+  publish = "."
+  command = "# no build needed"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
