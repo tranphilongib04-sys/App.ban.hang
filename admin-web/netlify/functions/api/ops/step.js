@@ -19,6 +19,7 @@
  */
 const { getDb } = require('../../utils/db');
 const { requireRole } = require('../../utils/rbac');
+const { parseBodySafe } = require('../../utils/parseBody');
 
 exports.handler = requireRole(['ADMIN', 'OPS'], async (event, context, actor) => {
     if (event.httpMethod !== 'POST') {
@@ -29,7 +30,7 @@ exports.handler = requireRole(['ADMIN', 'OPS'], async (event, context, actor) =>
     const id = extractId(event.path);
     if (!id) return { statusCode: 400, body: JSON.stringify({ error: 'Missing subscription ID in path' }) };
 
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { step, note } = body;
 
     if (!step) return { statusCode: 400, body: JSON.stringify({ error: 'step required' }) };

@@ -10,6 +10,7 @@
  */
 const { getDb } = require('../../utils/db');
 const { requireRole } = require('../../utils/rbac');
+const { parseBodySafe } = require('../../utils/parseBody');
 
 exports.handler = requireRole(['ADMIN'], async (event, context, actor) => {
     const db = getDb();
@@ -91,7 +92,7 @@ async function handleList(db, qs = {}) {
 // Body: { product_id, username, password, extra_info?, cost_price? }
 // ──────────────────────────────────
 async function handleAdd(db, event, actor) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { product_id, username, password, extra_info, cost_price } = body;
 
     if (!product_id || !username || !password) {
@@ -130,7 +131,7 @@ async function handleAdd(db, event, actor) {
 // Body: { product_id, items: [{ username, password, extra_info?, cost_price? }] }
 // ──────────────────────────────────
 async function handleBulkAdd(db, event, actor) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { product_id, items } = body;
 
     if (!product_id || !Array.isArray(items) || items.length === 0) {
@@ -184,7 +185,7 @@ async function handleBulkAdd(db, event, actor) {
 // Cannot transition FROM 'sold' (immutable after sale)
 // ──────────────────────────────────
 async function handlePatch(db, event, actor, id) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { status, note } = body;
 
     // Fetch current

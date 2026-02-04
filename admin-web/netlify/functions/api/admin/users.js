@@ -10,6 +10,7 @@
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../../utils/db');
 const { requireRole } = require('../../utils/rbac');
+const { parseBodySafe } = require('../../utils/parseBody');
 
 exports.handler = requireRole(['ADMIN'], async (event, context, actor) => {
     const db = getDb();
@@ -34,7 +35,7 @@ exports.handler = requireRole(['ADMIN'], async (event, context, actor) => {
 });
 
 async function handleCreate(db, event, actor) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { email, password, role } = body;
 
     if (!email || !password || password.length < 8) {
@@ -66,7 +67,7 @@ async function handleCreate(db, event, actor) {
 }
 
 async function handleUpdate(db, event, actor, id) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { role, is_active } = body;
 
     // Guard: cannot deactivate yourself

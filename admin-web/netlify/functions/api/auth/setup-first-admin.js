@@ -11,6 +11,7 @@
 const bcrypt = require('bcryptjs');
 const { getDb } = require('../../utils/db');
 const { CORS } = require('../../utils/rbac');
+const { parseBody } = require('../../utils/parseBody');
 
 exports.handler = async function (event) {
     if (event.httpMethod === 'OPTIONS') {
@@ -21,7 +22,7 @@ exports.handler = async function (event) {
     }
 
     let body;
-    try { body = JSON.parse(event.body); } catch {
+    try { body = parseBody(event); } catch {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON' }) };
     }
 

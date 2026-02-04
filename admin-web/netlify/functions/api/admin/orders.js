@@ -9,6 +9,7 @@
  */
 const { getDb } = require('../../utils/db');
 const { requireRole } = require('../../utils/rbac');
+const { parseBodySafe } = require('../../utils/parseBody');
 
 exports.handler = requireRole(['ADMIN', 'OPS', 'ACCOUNTANT'], async (event, context, actor) => {
     const db = getDb();
@@ -128,7 +129,7 @@ async function handleDetail(db, orderCode) {
 // Only cancels pending_payment orders. Releases stock.
 // ──────────────────────────────────
 async function handleCancel(db, event, actor, orderCode) {
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { reason } = body;
 
     const orderRow = await db.execute({

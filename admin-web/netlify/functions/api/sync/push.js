@@ -24,6 +24,7 @@
  */
 const { getDb } = require('../../utils/db');
 const { CORS } = require('../../utils/rbac');
+const { parseBody } = require('../../utils/parseBody');
 
 const ALLOWED_TABLES = {
     subscription:   'subscriptions',
@@ -53,7 +54,7 @@ exports.handler = async function (event) {
     }
 
     let events;
-    try { events = JSON.parse(event.body); } catch {
+    try { events = parseBody(event); } catch {
         return { statusCode: 400, headers: CORS, body: JSON.stringify({ error: 'Invalid JSON body' }) };
     }
 

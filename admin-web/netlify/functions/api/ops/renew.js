@@ -21,6 +21,7 @@
  */
 const { getDb } = require('../../utils/db');
 const { requireRole } = require('../../utils/rbac');
+const { parseBodySafe } = require('../../utils/parseBody');
 
 exports.handler = requireRole(['ADMIN', 'OPS'], async (event, context, actor) => {
     if (event.httpMethod !== 'POST') {
@@ -31,7 +32,7 @@ exports.handler = requireRole(['ADMIN', 'OPS'], async (event, context, actor) =>
     const oldId = extractId(event.path);
     if (!oldId) return { statusCode: 400, body: JSON.stringify({ error: 'Missing subscription ID' }) };
 
-    const body = JSON.parse(event.body || '{}');
+    const body = parseBodySafe(event);
     const { new_start_date, new_end_date, price, stock_unit_id } = body;
 
     if (!new_start_date || !new_end_date) {
