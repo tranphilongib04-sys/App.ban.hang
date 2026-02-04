@@ -269,7 +269,8 @@ exports.handler = async function (event, context) {
 
         // 4. Create Payment Record (Pending)
         await tx.execute({
-            sql: `INSERT INTO payments (order_id, provider, amount, status, created_at) VALUES (?, 'Sepay', ?, 'INITIATED', ?)`,
+            // Normalize provider/status to match DB CHECK constraints + other functions
+            sql: `INSERT INTO payments (order_id, provider, amount, status, created_at) VALUES (?, 'sepay', ?, 'initiated', ?)`,
             args: [orderId, totalAmount, now.toISOString()]
         });
 

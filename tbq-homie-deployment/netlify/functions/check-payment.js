@@ -29,6 +29,11 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
+// Keep in sync with reconcile-payments.js for better reliability.
+const SEPAY_LIST_LIMIT = 200;
+const LOOKBACK_MINUTES = 180; // allow delayed posting
+const AMOUNT_TOLERANCE = 0.95;
+
 // Decrypt password (simple base64 decode for now - you should use proper AES-GCM)
 function decryptPassword(encrypted, iv) {
     try {
@@ -168,7 +173,7 @@ exports.handler = async function (event, context) {
 
         if (SEPAY_API_TOKEN && order) {
             try {
-                const response = await fetch('https://my.sepay.vn/userapi/transactions/list?limit=20', {
+                const response = await fetch(`https://my.sepay.vn/userapi/transactions/list?limit=${SEPAY_LIST_LIMIT}`, {
                     headers: {
                         'Authorization': `Bearer ${SEPAY_API_TOKEN}`,
                         'Content-Type': 'application/json'
@@ -184,16 +189,15 @@ exports.handler = async function (event, context) {
                         const content = (t.transaction_content || '').toUpperCase();
                         const code = orderCode.toUpperCase();
                         const isContentMatch = content.includes(code);
-                        const tolerance = 0.95;
                         const txAmount = parseFloat(t.amount_in) || 0;
                         const expectedAmount = parseFloat(amount) || parseFloat(order.amount_total);
-                        const isAmountMatch = txAmount >= expectedAmount * tolerance;
+                        const isAmountMatch = txAmount >= expectedAmount * AMOUNT_TOLERANCE;
 
                         let isRecentTx = true;
                         try {
                             const txTime = new Date(t.transaction_date);
                             const diffMins = (Date.now() - txTime.getTime()) / 60000;
-                            isRecentTx = diffMins < 60 && diffMins > -10;
+                            isRecentTx = diffMins < LOOKBACK_MINUTES && diffMins > -10;
                         } catch (e) { }
 
                         if (isContentMatch && isAmountMatch) return true;

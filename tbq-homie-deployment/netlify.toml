@@ -5,9 +5,9 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
+  external_node_modules = ["@libsql/client"]
 
-# [[plugins]]
-# package = "@netlify/plugin-scheduled-functions"
-
-[functions.start-scheduler]
+# Scheduled functions (Netlify native scheduler).
+# Note: the scheduled function name must match the JS file in `netlify/functions/`.
+[functions.reconcile-payments]
   schedule = "*/5 * * * *"

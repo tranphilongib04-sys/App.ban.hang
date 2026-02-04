@@ -9,6 +9,44 @@ function decryptPassword(encrypted, iv) {
     }
 }
 
+async function ensurePaymentSchema(db) {
+    // These guards prevent webhook/polling from failing if migrations weren't run yet.
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS order_status_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            old_status TEXT,
+            new_status TEXT NOT NULL,
+            actor TEXT DEFAULT 'system',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(order_id) REFERENCES orders(id)
+        )
+    `);
+
+    await db.execute(`
+        CREATE TABLE IF NOT EXISTS invoices (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            order_id INTEGER NOT NULL,
+            invoice_number TEXT UNIQUE NOT NULL,
+            issued_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            status TEXT DEFAULT 'issued',
+            FOREIGN KEY(order_id) REFERENCES orders(id)
+        )
+    `);
+
+    // Idempotency for payments (webhook retries / polling race)
+    try {
+        await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_provider_txn ON payments(provider, transaction_id)`);
+    } catch {
+        // ignore (e.g. duplicates already exist)
+    }
+    try {
+        await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id)`);
+    } catch {
+        // ignore
+    }
+}
+
 // Generate delivery token
 function generateDeliveryToken(orderId, email) {
     const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
@@ -21,12 +59,14 @@ function generateDeliveryToken(orderId, email) {
 async function fulfillOrder(db, order, transaction) {
     const now = new Date().toISOString();
 
+    await ensurePaymentSchema(db);
+
     // 1. Create/Update payment record
     await db.execute({
         sql: `
             INSERT INTO payments (order_id, provider, amount, status, provider_ref, transaction_id, confirmed_at)
             VALUES (?, 'sepay', ?, 'confirmed', ?, ?, ?)
-            ON CONFLICT DO NOTHING
+            ON CONFLICT(provider, transaction_id) DO NOTHING
         `,
         args: [
             order.id,

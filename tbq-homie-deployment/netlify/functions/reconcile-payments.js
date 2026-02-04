@@ -8,13 +8,13 @@
 
 const { createClient } = require('@libsql/client/web');
 const { fulfillOrder } = require('./utils/fulfillment');
-const fetch = require('node-fetch');
 
 // Config
-const SEPAY_API_URL = 'https://my.sepay.vn/userapi/transactions/list'; // Note: Some docs say /api/v1, others userapi. Using userapi as it's common for personal accounts. Will verify.
-// Actually, search result said /api/v1/transactions. Let's use that.
-const SEPAY_ENDPOINT = 'https://my.sepay.vn/api/v1/transactions';
-const LOOKBACK_MINUTES = 60; // Check transactions from last 60 minutes
+// Keep this aligned with `check-payment.js` to avoid mismatched APIs.
+const SEPAY_ENDPOINT = 'https://my.sepay.vn/userapi/transactions/list';
+const SEPAY_LIST_LIMIT = 200;
+const LOOKBACK_MINUTES = 180; // 3 hours lookback (handles delayed webhook / bank posting)
+const AMOUNT_TOLERANCE = 0.95;
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -61,9 +61,7 @@ exports.handler = async function (event, context) {
         }
 
         // 2. Fetch Recent Transactions from SePay
-        // Filter by date to reduce payload
-        // Not all APIs support from_date easily on the simple list, but let's try.
-        const response = await fetch(`${SEPAY_ENDPOINT}?limit=100`, {
+        const response = await fetch(`${SEPAY_ENDPOINT}?limit=${SEPAY_LIST_LIMIT}`, {
             headers: {
                 'Authorization': `Bearer ${apiToken}`,
                 'Content-Type': 'application/json'
@@ -77,11 +75,17 @@ exports.handler = async function (event, context) {
         }
 
         const data = await response.json();
-        const transactions = data.transactions || data.results || []; // Adjust based on actual response structure
+        const transactions = data.transactions || data.results || [];
 
-        // Helper to normalize transaction content
-        // SePay content: "TBQ12345678" or "Chuyen khoan TBQ12345678"
-        // We look for the order code in the content.
+        function isTxWithinLookback(txDateRaw) {
+            try {
+                const txTime = new Date(txDateRaw);
+                const diffMins = (Date.now() - txTime.getTime()) / 60000;
+                return diffMins >= -10 && diffMins <= LOOKBACK_MINUTES;
+            } catch {
+                return true; // If parsing fails, don't exclude
+            }
+        }
 
         let reconCount = 0;
 
@@ -92,58 +96,47 @@ exports.handler = async function (event, context) {
             // Find matching transaction
             // Condition: 
             // 1. Content contains orderCode (case insensitive)
-            // 2. Amount >= orderAmount
+            // 2. Amount >= orderAmount * tolerance
             // 3. Status handled by webhook usually, but here we cover missed ones.
 
             const match = transactions.find(t => {
                 const content = (t.transaction_content || t.content || '').toUpperCase();
                 const amount = parseFloat(t.amount_in || t.amount || 0);
+                const dateOk = isTxWithinLookback(t.transaction_date || t.transactionDate || t.date);
 
-                return content.includes(orderCode.toUpperCase()) && amount >= orderAmount;
+                return dateOk && content.includes(orderCode.toUpperCase()) && amount >= (orderAmount * AMOUNT_TOLERANCE);
             });
 
             if (match) {
                 console.log(`[Reconcile] MATCH FOUND for ${orderCode}. Transaction: ${match.id}`);
 
-                // Fulfill Order
-                // We wrap in transaction to be safe
-                const tx = await db.transaction('write');
+                // Fulfill Order - wrap per order in BEGIN/COMMIT (same pattern as webhook/check-payment)
                 try {
-                    // Double check status inside transaction to avoid race
-                    const currentOrderCheck = await tx.execute({
+                    await db.execute('BEGIN IMMEDIATE');
+                    const currentOrderCheck = await db.execute({
                         sql: 'SELECT status FROM orders WHERE id = ?',
                         args: [order.id]
                     });
 
-                    if (currentOrderCheck.rows[0].status !== 'pending_payment') {
+                    if (currentOrderCheck.rows[0]?.status !== 'pending_payment') {
                         console.log(`[Reconcile] Order ${orderCode} was already updated. Skipping.`);
-                        tx.close(); // Read-only close or just commit empty? Drizzle doesn't have rollback on read easily, but commit is fine if no writes.
-                        // Actually standard tx commit is fine.
+                        await db.execute('ROLLBACK');
                         continue;
                     }
 
-                    // Fulfill
-                    // We need to adapt match object to what fulfillOrder expects
-                    // fulfillOrder expects: { id, reference_number }
                     const transactionData = {
                         id: match.id,
-                        reference_number: match.reference_number
+                        reference_number: match.reference_number || match.referenceCode || match.reference_number
                     };
 
-                    await fulfillOrder(tx, order, transactionData);
-
-                    await tx.commit();
+                    await fulfillOrder(db, order, transactionData);
+                    await db.execute('COMMIT');
                     console.log(`[Reconcile] Successfully reconciled ${orderCode}`);
                     reconCount++;
 
                 } catch (err) {
                     console.error(`[Reconcile] Failed to reconcile ${orderCode}:`, err);
-                    // Rollback happen automatically on error in some drivers, 
-                    // but with @libsql/client manual transaction handling might be needed if not using drizzle ORM transaction wrapper.
-                    // The fulfillOrder takes 'db', which is expected to be a client or transaction object.
-                    // If we used `db.transaction`, `tx` is the object to pass.
-
-                    try { tx.rollback(); } catch (e) { } // specific to driver
+                    try { await db.execute('ROLLBACK'); } catch (e) { }
                 }
             }
         }
