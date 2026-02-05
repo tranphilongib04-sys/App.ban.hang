@@ -1048,17 +1048,16 @@ async function placeOrder() {
 }
 
 // Show success UI with credentials inline (no redirect)
+// SaaS Professional Design - Stripe/Notion/Apple inspired
 async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumber) {
     const pendingState = document.getElementById('pendingPaymentState');
     const successState = document.getElementById('successPaymentState');
 
     if (!pendingState || !successState) {
-        // Fallback to redirect
         window.location.href = `/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}`;
         return;
     }
 
-    // Fetch credentials from delivery endpoint
     try {
         const response = await fetch(`/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}&format=json`);
         const data = await response.json();
@@ -1074,54 +1073,116 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
         pendingState.style.display = 'none';
         successState.style.display = 'block';
 
-        // Build success HTML
+        // Build success HTML - Professional SaaS Design
         successState.innerHTML = `
-            <div class="success-header">
-                <div class="success-icon-large">✓</div>
-                <h1 class="success-title">Thanh toán thành công!</h1>
-                <p class="success-subtitle">Đơn hàng <strong>${orderCode}</strong></p>
+            <!-- Success Header -->
+            <div class="conf-success-header">
+                <div class="conf-success-icon">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                </div>
+                <h1 class="conf-success-title">Thanh toán hoàn tất</h1>
+                <p class="conf-success-subtitle">
+                    Cảm ơn bạn đã mua hàng tại TBQ Homie.<br>
+                    Mã đơn hàng: <strong>${orderCode}</strong>
+                    <span class="conf-order-note">Vui lòng lưu lại mã đơn để được hỗ trợ nhanh hơn khi cần.</span>
+                </p>
             </div>
 
-            <div class="credentials-section">
-                <h3 class="credentials-title">🔐 Thông tin tài khoản</h3>
+            <!-- Credentials Section -->
+            <div class="conf-credentials-section">
+                <h3 class="conf-credentials-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    Thông tin đăng nhập dịch vụ
+                </h3>
                 ${credentials.map((cred, idx) => `
-                    <div class="credential-card">
-                        <div class="credential-row">
-                            <label>Username</label>
-                            <div class="credential-value-wrap">
-                                <code class="credential-value">${escapeHtml(cred.username)}</code>
-                                <button class="copy-btn-small" onclick="copyText('${escapeAttr(cred.username)}')">📋</button>
+                    <div class="conf-credential-item">
+                        <div class="conf-credential-field">
+                            <label class="conf-credential-label">Tên đăng nhập</label>
+                            <div class="conf-credential-value-wrap">
+                                <span class="conf-credential-value">${escapeHtml(cred.username)}</span>
+                                <button class="conf-action-btn" onclick="copyText('${escapeAttr(cred.username)}')" title="Sao chép">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
                             </div>
                         </div>
-                        <div class="credential-row">
-                            <label>Mật khẩu</label>
-                            <div class="credential-value-wrap">
-                                <code class="credential-value password-blur" id="pass-${idx}">${escapeHtml(cred.password)}</code>
-                                <button class="reveal-btn-small" onclick="togglePassword(${idx})">👁️</button>
-                                <button class="copy-btn-small" onclick="copyText('${escapeAttr(cred.password)}')">📋</button>
+                        <div class="conf-credential-field">
+                            <label class="conf-credential-label">Mật khẩu</label>
+                            <div class="conf-credential-value-wrap">
+                                <span class="conf-credential-value conf-password-blur" id="pass-${idx}">${escapeHtml(cred.password)}</span>
+                                <button class="conf-action-btn secondary" onclick="togglePassword(${idx})" title="Hiện/Ẩn">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                                </button>
+                                <button class="conf-action-btn" onclick="copyText('${escapeAttr(cred.password)}')" title="Sao chép">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
                             </div>
                         </div>
+                        ${cred.extraInfo ? `<p class="conf-credential-note" style="font-size:12px;color:#6b7280;margin-top:8px;">${escapeHtml(cred.extraInfo)}</p>` : ''}
                     </div>
                 `).join('')}
-                <button class="copy-all-btn" onclick="copyAllCreds()">📋 Sao chép tất cả</button>
+                <button class="conf-copy-all-btn" onclick="copyAllCreds()">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    Sao chép toàn bộ thông tin đăng nhập
+                </button>
             </div>
 
-            <div class="guide-section">
-                <h4>📝 Hướng dẫn</h4>
-                <ul>
-                    <li>Đăng nhập tại trang chính thức của dịch vụ</li>
-                    <li>Lưu thông tin tài khoản ngay</li>
-                </ul>
+            <!-- Next Steps -->
+            <div class="conf-steps-section">
+                <h4 class="conf-steps-title">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                    Bước tiếp theo
+                </h4>
+                <ol class="conf-steps-list">
+                    <li><span class="conf-step-number">1</span>Truy cập trang đăng nhập chính thức của dịch vụ.</li>
+                    <li><span class="conf-step-number">2</span>Dán thông tin đăng nhập để đăng nhập.</li>
+                    <li><span class="conf-step-number">3</span>Không thay đổi mật khẩu nếu chưa có hướng dẫn từ TBQ.</li>
+                </ol>
             </div>
 
-            <div class="support-link" style="margin-top: 16px;">
-                Cần hỗ trợ? <a href="https://zalo.me/0988428496" target="_blank">Zalo: 0988428496</a>
+            <!-- Security Note -->
+            <div class="conf-security-note">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                </svg>
+                <span>Vì lý do bảo mật, vui lòng lưu lại thông tin ngay sau khi nhận. Hệ thống có thể không hiển thị lại.</span>
             </div>
 
-            <a href="#home" class="back-home-btn">← Về trang chủ</a>
+            <!-- Support Section -->
+            <div class="conf-support-section">
+                <h4 class="conf-support-title">Hỗ trợ</h4>
+                <p class="conf-support-text">Nếu bạn gặp lỗi đăng nhập hoặc cần hỗ trợ, hãy liên hệ TBQ để được xử lý nhanh.</p>
+                <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    Liên hệ Zalo hỗ trợ
+                </a>
+                <span class="conf-hotline">Hotline: 0988 428 496</span>
+            </div>
+
+            <!-- Back Home -->
+            <a href="#home" class="conf-back-home">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Về trang chủ
+            </a>
         `;
 
         window._credentials = credentials;
+
+        // Show toast notification
+        showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
 
     } catch (error) {
         console.error('Error fetching credentials:', error);
@@ -1142,7 +1203,7 @@ function escapeAttr(str) {
 
 function togglePassword(idx) {
     const el = document.getElementById('pass-' + idx);
-    if (el) el.classList.toggle('password-blur');
+    if (el) el.classList.toggle('conf-password-blur');
 }
 
 function copyText(text) {
@@ -1154,10 +1215,10 @@ function copyText(text) {
 function copyAllCreds() {
     if (!window._credentials) return;
     const text = window._credentials.map((c, i) =>
-        `Tài khoản ${i+1}:\nUsername: ${c.username}\nPassword: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
+        `Tài khoản ${i+1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
     ).join('\n\n---\n\n');
     navigator.clipboard.writeText(text).then(() => {
-        showToast('Đã sao chép tất cả!');
+        showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
     });
 }
 

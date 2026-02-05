@@ -5,6 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TBQ Homie - Dịch vụ Premium</title>
+    <!-- Google Fonts - Be Vietnam Pro for proper Vietnamese support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Favicon -->
@@ -219,61 +223,78 @@
         </div>
     </div>
 
-    <!-- CONFIRMATION PAGE -->
-    <div id="confirmationPage" class="page">
-        <div class="confirmation-container">
+    <!-- CONFIRMATION PAGE - SaaS Professional Design -->
+    <div id="confirmationPage" class="page confirmation-page-standalone">
+        <div class="confirmation-wrapper">
             <!-- Pending Payment State -->
-            <div id="pendingPaymentState">
-                <div class="pending-header">
-                    <div class="pending-icon">📱</div>
-                    <h2>Quét mã để thanh toán</h2>
-                    <p class="pending-order">Đơn hàng: <strong id="orderCode"></strong></p>
+            <div id="pendingPaymentState" class="confirmation-card">
+                <div class="conf-pending-header">
+                    <div class="conf-pending-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="5" y="2" width="14" height="20" rx="2" ry="2"></rect>
+                            <line x1="12" y1="18" x2="12.01" y2="18"></line>
+                        </svg>
+                    </div>
+                    <h1 class="conf-title">Quét mã để thanh toán</h1>
+                    <p class="conf-order-code">Mã đơn hàng: <strong id="orderCode"></strong></p>
                 </div>
 
-                <div class="qr-section">
-                    <div id="qrCodeContainer" class="qr-wrapper"></div>
-                    <div class="qr-amount">
-                        <span class="amount-label">Số tiền:</span>
-                        <span class="amount-value" id="transferAmount">0₫</span>
+                <div class="conf-qr-card">
+                    <div id="qrCodeContainer" class="conf-qr-wrapper"></div>
+                    <div class="conf-amount-display">
+                        <span class="conf-amount-label">Số tiền thanh toán</span>
+                        <span class="conf-amount-value" id="transferAmount">0₫</span>
                     </div>
                 </div>
 
-                <div class="payment-status-box">
-                    <div class="status-spinner"></div>
+                <div class="conf-status-indicator">
+                    <div class="conf-spinner"></div>
                     <span>Đang chờ thanh toán...</span>
                 </div>
 
-                <div class="bank-info-compact">
-                    <p class="bank-info-title">Hoặc chuyển khoản thủ công:</p>
-                    <div class="bank-details">
-                        <div class="bank-row">
-                            <span>Ngân hàng:</span>
-                            <strong>TP Bank</strong>
+                <div class="conf-bank-info">
+                    <p class="conf-bank-title">Hoặc chuyển khoản thủ công</p>
+                    <div class="conf-bank-grid">
+                        <div class="conf-bank-row">
+                            <span class="conf-bank-label">Ngân hàng</span>
+                            <span class="conf-bank-value">TPBank</span>
                         </div>
-                        <div class="bank-row">
-                            <span>STK:</span>
-                            <strong>00000828511</strong>
-                            <button class="copy-mini" onclick="copyToClipboard('00000828511')">📋</button>
+                        <div class="conf-bank-row">
+                            <span class="conf-bank-label">Số tài khoản</span>
+                            <div class="conf-bank-value-wrap">
+                                <span class="conf-bank-value conf-mono">00000828511</span>
+                                <button class="conf-copy-btn" onclick="copyToClipboard('00000828511')" title="Sao chép">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
+                            </div>
                         </div>
-                        <div class="bank-row">
-                            <span>Chủ TK:</span>
-                            <strong>TRAN PHI LONG</strong>
+                        <div class="conf-bank-row">
+                            <span class="conf-bank-label">Chủ tài khoản</span>
+                            <span class="conf-bank-value">TRAN PHI LONG</span>
                         </div>
-                        <div class="bank-row">
-                            <span>Nội dung:</span>
-                            <strong id="transferContent">—</strong>
-                            <button class="copy-mini" onclick="copyToClipboard(document.getElementById('transferContent').textContent)">📋</button>
+                        <div class="conf-bank-row">
+                            <span class="conf-bank-label">Nội dung CK</span>
+                            <div class="conf-bank-value-wrap">
+                                <span class="conf-bank-value conf-mono conf-highlight" id="transferContent">—</span>
+                                <button class="conf-copy-btn" onclick="copyToClipboard(document.getElementById('transferContent').textContent)" title="Sao chép">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="support-link">
-                    Cần hỗ trợ? <a href="https://zalo.me/0988428496" target="_blank">Zalo: 0988428496</a>
+                <div class="conf-support-footer">
+                    <span>Cần hỗ trợ?</span>
+                    <a href="https://zalo.me/0988428496" target="_blank" class="conf-support-link">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        Zalo: 0988428496
+                    </a>
                 </div>
             </div>
 
             <!-- Success State (will be populated by JS) -->
-            <div id="successPaymentState" style="display: none;"></div>
+            <div id="successPaymentState" class="confirmation-card" style="display: none;"></div>
         </div>
     </div>
 
