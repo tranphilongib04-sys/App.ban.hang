@@ -6,7 +6,7 @@
 import { client } from '../db';
 
 const ADMIN_WEB_URL = process.env.ADMIN_WEB_URL || 'https://tbq-admin.netlify.app';
-const SYNC_TOKEN    = process.env.DESKTOP_SYNC_TOKEN || '';
+const SYNC_TOKEN = process.env.DESKTOP_SYNC_TOKEN || '';
 
 const MAX_RETRIES = 3;
 const BACKOFFS_MS = [5000, 15000, 60000]; // 5s, 15s, 60s
@@ -27,10 +27,10 @@ export async function pushPending(): Promise<{ pushed: number; failed: number }>
 
   // Build payload for server
   const payload = pending.map((p: any) => ({
-    entity_type:     p.entity_type,
-    entity_id:       p.entity_id,
-    action:          p.action,
-    payload:         JSON.parse(p.payload || '{}'),
+    entity_type: p.entity_type,
+    entity_id: p.entity_id,
+    action: p.action,
+    payload: JSON.parse(p.payload || '{}'),
     idempotency_key: p.idempotency_key
   }));
 
@@ -101,6 +101,12 @@ export async function enqueuePush(
   action: 'upsert' | 'delete',
   payload: Record<string, unknown>
 ): Promise<void> {
+  // Skip on Vercel/cloud environment - no local sync queue available
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  if (isVercel) {
+    return; // Cloud mode doesn't need local push queue
+  }
+
   const updatedAt = payload.updated_at || new Date().toISOString();
   // idempotency_key: deterministic from entity + updated_at
   const raw = `${entityType}:${entityId}:${updatedAt}`;
