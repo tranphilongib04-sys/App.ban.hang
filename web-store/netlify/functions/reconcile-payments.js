@@ -117,7 +117,7 @@ exports.handler = async function (event, context) {
                     };
 
                     const result = await finalizeOrder(tx, order, transactionData, 'reconcile');
-                    tx.close();   // commits
+                    await tx.commit();   // explicitly commit
 
                     if (result.alreadyFulfilled) {
                         console.log(`[Reconcile] ${orderCode} already fulfilled – skipped`);

@@ -192,7 +192,7 @@ exports.handler = async function (event, context) {
         };
 
         await finalizeOrder(tx, order, transaction, 'webhook');
-        tx.close();   // commits
+        await tx.commit();   // explicitly commit
         console.log('[Webhook] Order', orderCode, 'fulfilled OK');
 
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
