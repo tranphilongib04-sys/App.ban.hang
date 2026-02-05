@@ -16,6 +16,12 @@ function getLocalDbPath() {
     return path.join(dataDir, 'tpb-manage.db');
   }
 
+  // Skip local file operations on Vercel (read-only filesystem)
+  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+  if (isVercel) {
+    return ''; // Will not be used in cloud-only mode
+  }
+
   // Development mode
   const dataDir = path.join(process.cwd(), 'data');
   if (!existsSync(dataDir)) {
@@ -32,6 +38,7 @@ const syncEnabled = !isVercel && !!hasTursoCredentials && (process.env.TURSO_SYN
 
 let client: Client;
 let db: ReturnType<typeof drizzle>;
+let syncInitialized = false;
 
 if (hasTursoCredentials && syncEnabled) {
   // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync
@@ -41,36 +48,16 @@ if (hasTursoCredentials && syncEnabled) {
   console.log(`   Local replica: ${localPath}`);
   console.log(`   Cloud sync: ${process.env.TURSO_DATABASE_URL}`);
 
-  try {
-    client = createClient({
-      url: `file:${localPath}`,
-      syncUrl: process.env.TURSO_DATABASE_URL!,
-      authToken: process.env.TURSO_AUTH_TOKEN!,
-    });
+  client = createClient({
+    url: `file:${localPath}`,
+    syncUrl: process.env.TURSO_DATABASE_URL!,
+    authToken: process.env.TURSO_AUTH_TOKEN!,
+  });
 
-    db = drizzle(client, { schema });
+  db = drizzle(client, { schema });
 
-    // Initial sync from cloud to local
-    // We await this to ensure connection is valid. If it fails due to timeout, we catch and fallback.
-    await client.sync();
-    console.log('✓ Database synced with cloud');
-
-    // Periodic sync
-    const SYNC_INTERVAL_MS = 5000;
-    setInterval(() => {
-      syncDatabase({ logSuccess: false }).catch(() => { });
-    }, SYNC_INTERVAL_MS);
-
-  } catch (error: any) {
-    console.warn('⚠️  Cloud connection failed (Timeout/Network). Falling back to LOCAL ONLY mode.');
-    console.error('   Error:', error.message);
-
-    // Fallback: Initialize as Local Only
-    client = createClient({
-      url: `file:${localPath}`,
-    });
-    db = drizzle(client, { schema });
-  }
+  // Initial sync will be done lazily on first database access or manually
+  // This avoids top-level await which can cause issues with Next.js bundling
 
 } else if (hasTursoCredentials) {
   // CLOUD ONLY MODE: Direct connection to Turso
@@ -99,6 +86,26 @@ if (hasTursoCredentials && syncEnabled) {
 
 // Export database instance
 export { db, client };
+
+// Initialize sync for embedded replicas mode (call this once after app starts)
+export async function initializeSync(): Promise<void> {
+  if (syncInitialized || !syncEnabled) return;
+
+  try {
+    await client.sync();
+    console.log('✓ Database synced with cloud');
+    syncInitialized = true;
+
+    // Start periodic sync
+    const SYNC_INTERVAL_MS = 5000;
+    setInterval(() => {
+      syncDatabase({ logSuccess: false }).catch(() => { });
+    }, SYNC_INTERVAL_MS);
+  } catch (error: any) {
+    console.warn('⚠️  Initial sync failed:', error.message);
+    // Don't throw - allow app to work with local data
+  }
+}
 
 // Sync function for embedded replicas (local → Turso). Pass logSuccess=true to log on success (e.g. initial sync).
 export async function syncDatabase(options?: { logSuccess?: boolean }) {
@@ -225,8 +232,8 @@ export async function initializeDatabase() {
   await runSafe(`CREATE INDEX IF NOT EXISTS idx_deliveries_subscription ON deliveries(subscription_id);`, 'idx_deliveries_subscription');
   await runSafe(`CREATE INDEX IF NOT EXISTS idx_warranties_subscription ON warranties(subscription_id);`, 'idx_warranties_subscription');
 
-  // Sync after initialization if in embedded replicas mode
+  // Initialize sync after database setup
   if (hasTursoCredentials && syncEnabled) {
-    await syncDatabase({ logSuccess: true });
+    await initializeSync();
   }
 }
