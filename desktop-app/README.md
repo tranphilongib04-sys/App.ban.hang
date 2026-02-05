@@ -54,3 +54,4 @@ See `docs/` folder for detailed guides:
 - `WEB_ADMIN_SETUP.md` - Setup instructions
 - `WEB_ADMIN_COMPLETE.md` - Feature overview
 - `CHANGELOG_WEB_ADMIN.md` - Change history
+# Trigger redeploy
