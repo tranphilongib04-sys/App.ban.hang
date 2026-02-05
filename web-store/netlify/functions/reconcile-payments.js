@@ -108,16 +108,16 @@ exports.handler = async function (event, context) {
 
             if (match) {
                 console.log(`[Reconcile] MATCH for ${orderCode} → tx ${match.id}`);
+                // HttpTransaction: implicit transaction; close() = commit, throw = rollback
+                const tx = await db.transaction('write');
                 try {
-                    await db.execute('BEGIN IMMEDIATE');
-
                     const transactionData = {
                         id: match.id || match.transaction_id,
                         reference_number: match.reference_number || match.referenceCode || match.id
                     };
 
-                    const result = await finalizeOrder(db, order, transactionData, 'reconcile');
-                    await db.execute('COMMIT');
+                    const result = await finalizeOrder(tx, order, transactionData, 'reconcile');
+                    tx.close();   // commits
 
                     if (result.alreadyFulfilled) {
                         console.log(`[Reconcile] ${orderCode} already fulfilled – skipped`);
@@ -127,7 +127,7 @@ exports.handler = async function (event, context) {
                     }
                 } catch (err) {
                     console.error(`[Reconcile] Failed ${orderCode}:`, err.message);
-                    try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+                    try { tx.close(); } catch { /* ignore */ }   // rolls back
                 }
             }
         }

@@ -222,86 +222,58 @@
     <!-- CONFIRMATION PAGE -->
     <div id="confirmationPage" class="page">
         <div class="confirmation-container">
-            <div class="success-icon" style="background: var(--warning); color: white;">⏳</div>
-            <h1 style="color: var(--text-primary);">Đơn hàng đã được tạo</h1>
-            <p style="color: var(--warning); font-weight: 600; margin: 12px 0;">⏳ Vui lòng thanh toán để hoàn tất đơn
-                hàng</p>
-            <p class="order-code">
-                Mã đơn hàng: <strong id="orderCode"></strong>
-                <button class="copy-btn" onclick="copyToClipboard(document.getElementById('orderCode').textContent)">Sao
-                    chép</button>
-            </p>
+            <!-- Pending Payment State -->
+            <div id="pendingPaymentState">
+                <div class="pending-header">
+                    <div class="pending-icon">📱</div>
+                    <h2>Quét mã để thanh toán</h2>
+                    <p class="pending-order">Đơn hàng: <strong id="orderCode"></strong></p>
+                </div>
 
-            <button onclick="generateInvoice()" id="invoiceBtn" class="invoice-btn"
-                style="margin-bottom: 20px; display: none;">🖨️ Tải xuống hóa
-                đơn</button>
+                <div class="qr-section">
+                    <div id="qrCodeContainer" class="qr-wrapper"></div>
+                    <div class="qr-amount">
+                        <span class="amount-label">Số tiền:</span>
+                        <span class="amount-value" id="transferAmount">0₫</span>
+                    </div>
+                </div>
 
-            <div class="payment-info">
-                <h3 class="payment-info-title">Hướng dẫn thanh toán</h3>
-                <div id="qrCodeContainer" class="qr-code-wrapper"></div>
+                <div class="payment-status-box">
+                    <div class="status-spinner"></div>
+                    <span>Đang chờ thanh toán...</span>
+                </div>
 
-                <div class="payment-manual-section">
-                    <p class="payment-manual-label">Hoặc chuyển khoản thủ công</p>
-                    <div class="payment-info-card">
-                        <div class="payment-row">
-                            <span class="payment-label">Ngân hàng</span>
-                            <span class="payment-value payment-value-bank">TP Bank</span>
+                <div class="bank-info-compact">
+                    <p class="bank-info-title">Hoặc chuyển khoản thủ công:</p>
+                    <div class="bank-details">
+                        <div class="bank-row">
+                            <span>Ngân hàng:</span>
+                            <strong>TP Bank</strong>
                         </div>
-                        <div class="payment-row payment-row-highlight">
-                            <span class="payment-label">Số tiền</span>
-                            <div class="payment-value-wrap">
-                                <span class="payment-value payment-value-amount" id="transferAmount">0₫</span>
-                                <button type="button" class="copy-btn-primary"
-                                    onclick="copyToClipboard(document.getElementById('transferAmount').textContent.replace(/\D/g,''))"
-                                    title="Sao chép số tiền">
-                                    <span class="copy-icon">📋</span> Sao chép
-                                </button>
-                            </div>
+                        <div class="bank-row">
+                            <span>STK:</span>
+                            <strong>00000828511</strong>
+                            <button class="copy-mini" onclick="copyToClipboard('00000828511')">📋</button>
                         </div>
-                        <div class="payment-row payment-row-highlight">
-                            <span class="payment-label">Số tài khoản</span>
-                            <div class="payment-value-wrap">
-                                <span class="payment-value payment-value-mono" id="bankAccount">00000828511</span>
-                                <button type="button" class="copy-btn-primary" onclick="copyToClipboard('00000828511')"
-                                    title="Sao chép số tài khoản">
-                                    <span class="copy-icon">📋</span> Sao chép
-                                </button>
-                            </div>
+                        <div class="bank-row">
+                            <span>Chủ TK:</span>
+                            <strong>TRAN PHI LONG</strong>
                         </div>
-                        <div class="payment-row">
-                            <span class="payment-label">Chủ tài khoản</span>
-                            <span class="payment-value payment-value-mono">TRAN PHI LONG</span>
-                        </div>
-                        <div class="payment-row payment-row-highlight">
-                            <span class="payment-label">Nội dung chuyển khoản</span>
-                            <div class="payment-value-wrap">
-                                <span class="payment-value payment-value-content" id="transferContent">—</span>
-                                <button type="button" class="copy-btn-primary"
-                                    onclick="copyToClipboard(document.getElementById('transferContent').textContent)"
-                                    title="Sao chép nội dung">
-                                    <span class="copy-icon">📋</span> Sao chép
-                                </button>
-                            </div>
+                        <div class="bank-row">
+                            <span>Nội dung:</span>
+                            <strong id="transferContent">—</strong>
+                            <button class="copy-mini" onclick="copyToClipboard(document.getElementById('transferContent').textContent)">📋</button>
                         </div>
                     </div>
                 </div>
 
-                <div class="payment-note-box">
-                    <div class="payment-note-icon">💡</div>
-                    <div class="payment-note-content">
-                        <strong class="payment-note-title">Lưu ý quan trọng</strong>
-                        <ul class="payment-note-list">
-                            <li>Ghi <strong>chính xác</strong> nội dung chuyển khoản để hệ thống tự động xác nhận.</li>
-                            <li>Sau khi chuyển khoản, gửi ảnh bill qua <strong>Zalo: 0988428496</strong> nếu cần hỗ trợ.
-                            </li>
-                            <li>Bạn sẽ nhận tài khoản trong vòng <strong>5–15 phút</strong> (hoặc ngay lập tức nếu hệ
-                                thống tự xác nhận).</li>
-                        </ul>
-                    </div>
+                <div class="support-link">
+                    Cần hỗ trợ? <a href="https://zalo.me/0988428496" target="_blank">Zalo: 0988428496</a>
                 </div>
             </div>
 
-            <a href="#home" class="back-home">Về trang chủ</a>
+            <!-- Success State (will be populated by JS) -->
+            <div id="successPaymentState" style="display: none;"></div>
         </div>
     </div>
 

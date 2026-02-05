@@ -1009,31 +1009,15 @@ async function placeOrder() {
             total: data.amount || total
         };
 
+        // Update UI elements
         document.getElementById('orderCode').textContent = orderCode;
         document.getElementById('transferContent').textContent = orderCode;
         document.getElementById('transferAmount').textContent = formatPrice(data.amount || total);
 
-        // Generate QR Code
+        // Generate and display QR Code
         const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
-        qrContainer.innerHTML = `
-            <h4 style="font-size: 18px; margin-bottom: 16px; color: var(--accent);">
-                📱 Quét mã QR để thanh toán nhanh
-            </h4>
-            <div style="background: white; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);">
-                <img src="${qrCodeUrl}" alt="QR Code" style="width: 280px; height: 280px; border-radius: 12px;">
-            </div>
-            <p style="font-size: 14px; color: var(--text-secondary); margin-top: 12px; max-width: 320px; margin-left: auto; margin-right: auto;">
-                Mở app ngân hàng → Quét mã QR → Xác nhận thanh toán
-            </p>
-            <div id="paymentStatus" style="margin-top: 20px; font-weight: 600; color: var(--warning);">
-                ⏳ Đang chờ thanh toán...
-            </div>
-            <div style="margin-top:20px; color:#22c55e; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px;">
-                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg> 
-                 Giao dịch được bảo vệ
-            </div>
-        `;
+        qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" style="max-width: 220px; border-radius: 8px;">`;
 
         // Clear cart
         cart = [];
@@ -1063,6 +1047,120 @@ async function placeOrder() {
     }
 }
 
+// Show success UI with credentials inline (no redirect)
+async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumber) {
+    const pendingState = document.getElementById('pendingPaymentState');
+    const successState = document.getElementById('successPaymentState');
+
+    if (!pendingState || !successState) {
+        // Fallback to redirect
+        window.location.href = `/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}`;
+        return;
+    }
+
+    // Fetch credentials from delivery endpoint
+    try {
+        const response = await fetch(`/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}&format=json`);
+        const data = await response.json();
+
+        if (!data.success) {
+            window.location.href = `/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}`;
+            return;
+        }
+
+        const credentials = data.credentials || [];
+
+        // Hide pending, show success
+        pendingState.style.display = 'none';
+        successState.style.display = 'block';
+
+        // Build success HTML
+        successState.innerHTML = `
+            <div class="success-header">
+                <div class="success-icon-large">✓</div>
+                <h1 class="success-title">Thanh toán thành công!</h1>
+                <p class="success-subtitle">Đơn hàng <strong>${orderCode}</strong></p>
+            </div>
+
+            <div class="credentials-section">
+                <h3 class="credentials-title">🔐 Thông tin tài khoản</h3>
+                ${credentials.map((cred, idx) => `
+                    <div class="credential-card">
+                        <div class="credential-row">
+                            <label>Username</label>
+                            <div class="credential-value-wrap">
+                                <code class="credential-value">${escapeHtml(cred.username)}</code>
+                                <button class="copy-btn-small" onclick="copyText('${escapeAttr(cred.username)}')">📋</button>
+                            </div>
+                        </div>
+                        <div class="credential-row">
+                            <label>Mật khẩu</label>
+                            <div class="credential-value-wrap">
+                                <code class="credential-value password-blur" id="pass-${idx}">${escapeHtml(cred.password)}</code>
+                                <button class="reveal-btn-small" onclick="togglePassword(${idx})">👁️</button>
+                                <button class="copy-btn-small" onclick="copyText('${escapeAttr(cred.password)}')">📋</button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+                <button class="copy-all-btn" onclick="copyAllCreds()">📋 Sao chép tất cả</button>
+            </div>
+
+            <div class="guide-section">
+                <h4>📝 Hướng dẫn</h4>
+                <ul>
+                    <li>Đăng nhập tại trang chính thức của dịch vụ</li>
+                    <li>Lưu thông tin tài khoản ngay</li>
+                </ul>
+            </div>
+
+            <div class="support-link" style="margin-top: 16px;">
+                Cần hỗ trợ? <a href="https://zalo.me/0988428496" target="_blank">Zalo: 0988428496</a>
+            </div>
+
+            <a href="#home" class="back-home-btn">← Về trang chủ</a>
+        `;
+
+        window._credentials = credentials;
+
+    } catch (error) {
+        console.error('Error fetching credentials:', error);
+        window.location.href = `/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}`;
+    }
+}
+
+// Helper functions for success page
+function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function escapeAttr(str) {
+    if (!str) return '';
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function togglePassword(idx) {
+    const el = document.getElementById('pass-' + idx);
+    if (el) el.classList.toggle('password-blur');
+}
+
+function copyText(text) {
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Đã sao chép!');
+    });
+}
+
+function copyAllCreds() {
+    if (!window._credentials) return;
+    const text = window._credentials.map((c, i) =>
+        `Tài khoản ${i+1}:\nUsername: ${c.username}\nPassword: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
+    ).join('\n\n---\n\n');
+    navigator.clipboard.writeText(text).then(() => {
+        showToast('Đã sao chép tất cả!');
+    });
+}
+
 // POLL PAYMENT STATUS – uses lightweight order-status endpoint (read-only).
 // check-payment is still the server-side fallback that *triggers* fulfillment;
 // order-status just reads the current state so the UI stays in sync even if
@@ -1082,56 +1180,27 @@ function startPaymentPolling(orderCode, amount) {
         }
 
         try {
-            const response = await fetch(`/.netlify/functions/order-status?code=${orderCode}`);
+            // Use check-payment which both checks AND triggers fulfillment
+            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${orderCode}`);
             const data = await response.json();
 
-            if (data.status === 'fulfilled' || data.status === 'paid') {
+            // check-payment returns status: 'paid' when successful
+            if (data.status === 'paid' || data.status === 'fulfilled') {
                 clearInterval(pollingInterval);
 
-                // Update confirmation page UI
-                const confirmationContainer = document.querySelector('.confirmation-container');
-                if (confirmationContainer) {
-                    const successIcon = confirmationContainer.querySelector('.success-icon');
-                    const heading = confirmationContainer.querySelector('h1');
-                    const pendingText = confirmationContainer.querySelector('p[style*="warning"]');
-                    if (successIcon) { successIcon.style.background = 'var(--success)'; successIcon.textContent = '✓'; }
-                    if (heading)     { heading.textContent = 'Thanh toán thành công!'; heading.style.color = 'var(--success)'; }
-                    if (pendingText) { pendingText.remove(); }
-                }
-
-                const statusEl = document.getElementById('paymentStatus');
-                if (statusEl) {
-                    statusEl.innerHTML = `
-                        <span style="color: var(--success); font-size: 18px; display:block; margin-bottom:16px;">
-                            ✅ Đã xác nhận thanh toán!
-                        </span>
-                        <p style="color: var(--text-secondary); margin-bottom: 16px;">
-                            Đơn hàng đã được xác nhận và giao tự động. Đang chuyển hướng…
-                        </p>
-                    `;
-                }
-
-                if (data.invoiceNumber && lastOrder) {
-                    lastOrder.invoiceNumber = data.invoiceNumber;
-                    const invoiceBtn = document.getElementById('invoiceBtn');
-                    if (invoiceBtn) invoiceBtn.style.display = 'inline-block';
-                }
-
-                // If fulfilled and we have a delivery URL, redirect after 2 s
-                if (data.status === 'fulfilled' && data.deliveryUrl) {
-                    setTimeout(() => { window.location.href = data.deliveryUrl; }, 2000);
-                }
-                // If only paid (not yet fulfilled), keep polling a few more times
-                // then fall back to check-payment which will trigger fulfillment
-                else if (data.status === 'paid') {
-                    // Reset counter – give a few more cycles for webhook to finish
-                    attempts = maxAttempts - 5;
+                // Show success UI with credentials
+                if (data.deliveryToken) {
+                    await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
+                } else {
+                    // Fallback: redirect to delivery page
+                    window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
                 }
             }
+            // status: 'pending' means still waiting for payment
         } catch (error) {
-            console.error('[poll] order-status error:', error);
+            console.error('[poll] check-payment error:', error);
         }
-    }, 3000);
+    }, 5000); // Poll every 5 seconds (less aggressive than before)
 }
 
 // Generate QR Code for TP Bank using VietQR API

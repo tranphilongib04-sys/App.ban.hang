@@ -7,6 +7,17 @@
   to = "/.netlify/functions/:splat"
   status = 200
 
+# Allow direct access to HTML files
+[[redirects]]
+  from = "/admin.html"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin_debug.html"
+  to = "/admin_debug.html"
+  status = 200
+
 # SPA fallback - redirect all non-file requests to index.html
 [[redirects]]
   from = "/*"

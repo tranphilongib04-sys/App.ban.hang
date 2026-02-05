@@ -60,34 +60,36 @@ exports.handler = async function (event, context) {
 
             let sql = `
                 SELECT
-                    po.*,
+                    o.*,
                     ii.secret_masked,
                     ii.status as inventory_status
-                FROM public_orders po
-                LEFT JOIN inventory_items ii ON po.inventory_id = ii.id
+                FROM orders o
+                LEFT JOIN order_lines ol ON ol.order_id = o.id
+                LEFT JOIN order_allocations oa ON oa.order_line_id = ol.id
+                LEFT JOIN inventory_items ii ON ii.id = oa.unit_id
             `;
 
             const args = [];
             if (status) {
-                sql += ' WHERE po.status = ?';
+                sql += ' WHERE o.status = ?';
                 args.push(status);
             }
 
-            sql += ' ORDER BY po.created_at DESC LIMIT ?';
+            sql += ' ORDER BY o.created_at DESC LIMIT ?';
             args.push(parseInt(limit));
 
             const result = await db.execute({ sql, args });
 
-            // Get stats
+            // Get stats (SQLite-compatible: no FILTER clause)
             const statsResult = await db.execute(`
                 SELECT
                     COUNT(*) as total,
-                    COUNT(*) FILTER (WHERE status = 'pending') as pending,
-                    COUNT(*) FILTER (WHERE status = 'paid') as paid,
-                    COUNT(*) FILTER (WHERE status = 'delivered') as delivered,
-                    COUNT(*) FILTER (WHERE status = 'expired') as expired,
-                    SUM(CASE WHEN status = 'delivered' THEN price ELSE 0 END) as total_revenue
-                FROM public_orders
+                    SUM(CASE WHEN status = 'pending_payment' THEN 1 ELSE 0 END) as pending,
+                    SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
+                    SUM(CASE WHEN status = 'fulfilled' THEN 1 ELSE 0 END) as delivered,
+                    SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
+                    SUM(CASE WHEN status = 'fulfilled' THEN amount_total ELSE 0 END) as total_revenue
+                FROM orders
             `);
 
             return {
@@ -109,27 +111,41 @@ exports.handler = async function (event, context) {
                 // Manual delivery
                 const now = new Date().toISOString();
 
-                await db.execute({
-                    sql: `
-                        UPDATE public_orders
-                        SET status = 'delivered',
-                            delivered_at = ?,
-                            delivery_content = ?
-                        WHERE order_code = ?
-                    `,
-                    args: [now, deliveryContent, orderCode]
-                });
-
-                // Mark inventory as sold if linked
+                // Look up order id
                 const orderResult = await db.execute({
-                    sql: 'SELECT inventory_id FROM public_orders WHERE order_code = ?',
+                    sql: 'SELECT id FROM orders WHERE order_code = ?',
                     args: [orderCode]
                 });
+                if (!orderResult.rows[0]) {
+                    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Order not found' }) };
+                }
+                const orderId = orderResult.rows[0].id;
 
-                if (orderResult.rows[0]?.inventory_id) {
+                // Update order status to fulfilled
+                await db.execute({
+                    sql: `UPDATE orders SET status = 'fulfilled', updated_at = ? WHERE id = ?`,
+                    args: [now, orderId]
+                });
+
+                // Find allocated unit(s) for this order
+                const allocResult = await db.execute({
+                    sql: `SELECT oa.unit_id FROM order_allocations oa
+                          JOIN order_lines ol ON ol.id = oa.order_line_id
+                          WHERE ol.order_id = ?`,
+                    args: [orderId]
+                });
+
+                for (const alloc of allocResult.rows) {
+                    // Record delivery
                     await db.execute({
-                        sql: `UPDATE inventory_items SET status = 'sold', sold_at = ? WHERE id = ?`,
-                        args: [now, orderResult.rows[0].inventory_id]
+                        sql: `INSERT OR IGNORE INTO deliveries (order_id, unit_id, delivery_token, delivered_at, delivery_note)
+                              VALUES (?, ?, ?, ?, ?)`,
+                        args: [orderId, alloc.unit_id, '', now, deliveryContent || '']
+                    });
+                    // Mark inventory as sold
+                    await db.execute({
+                        sql: `UPDATE inventory_items SET status = 'sold' WHERE id = ? AND status = 'reserved'`,
+                        args: [alloc.unit_id]
                     });
                 }
 
@@ -141,19 +157,33 @@ exports.handler = async function (event, context) {
             }
 
             if (action === 'update_status') {
+                const now = new Date().toISOString();
+
+                // Look up order id
+                const orderResult = await db.execute({
+                    sql: 'SELECT id FROM orders WHERE order_code = ?',
+                    args: [orderCode]
+                });
+                if (!orderResult.rows[0]) {
+                    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Order not found' }) };
+                }
+                const orderId = orderResult.rows[0].id;
+
                 await db.execute({
-                    sql: 'UPDATE public_orders SET status = ? WHERE order_code = ?',
-                    args: [newStatus, orderCode]
+                    sql: 'UPDATE orders SET status = ?, updated_at = ? WHERE id = ?',
+                    args: [newStatus, now, orderId]
                 });
 
-                // If cancelled/expired, release inventory
+                // If cancelled/expired, release allocated inventory
                 if (['cancelled', 'expired'].includes(newStatus)) {
-                    const orderResult = await db.execute({
-                        sql: 'SELECT inventory_id FROM public_orders WHERE order_code = ?',
-                        args: [orderCode]
+                    const allocResult = await db.execute({
+                        sql: `SELECT oa.unit_id FROM order_allocations oa
+                              JOIN order_lines ol ON ol.id = oa.order_line_id
+                              WHERE ol.order_id = ?`,
+                        args: [orderId]
                     });
 
-                    if (orderResult.rows[0]?.inventory_id) {
+                    for (const alloc of allocResult.rows) {
                         await db.execute({
                             sql: `
                                 UPDATE inventory_items
@@ -163,9 +193,16 @@ exports.handler = async function (event, context) {
                                     reservation_expires = NULL
                                 WHERE id = ? AND status = 'reserved'
                             `,
-                            args: [orderResult.rows[0].inventory_id]
+                            args: [alloc.unit_id]
                         });
                     }
+
+                    // Clear allocation status
+                    await db.execute({
+                        sql: `UPDATE order_allocations SET status = 'released'
+                              WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?)`,
+                        args: [orderId]
+                    });
                 }
 
                 return {

@@ -117,13 +117,22 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         return { alreadyFulfilled: true, deliveryToken: null, invoiceNumber: null, credentials: [] };
     }
 
-    // ── 2. Record payment (idempotent ON CONFLICT) ───────────────────
-    await db.execute({
-        sql: `INSERT INTO payments (order_id, provider, amount, status, provider_ref, transaction_id, confirmed_at)
-              VALUES (?, 'sepay', ?, 'confirmed', ?, ?, ?)
-              ON CONFLICT(provider, transaction_id) DO NOTHING`,
-        args: [fresh.id, fresh.amount_total, txId, txId, now]
+    // ── 2. Record payment (idempotent – skip if confirmed payment already exists) ──
+    //    Partial unique index idx_payments_order_confirmed prevents duplicate confirmed
+    //    rows per order, so we guard with a pre-check instead of relying solely on
+    //    ON CONFLICT(provider, transaction_id).
+    const existingConfirmed = await db.execute({
+        sql: `SELECT id FROM payments WHERE order_id = ? AND status = 'confirmed' LIMIT 1`,
+        args: [fresh.id]
     });
+    if (!existingConfirmed.rows[0]) {
+        await db.execute({
+            sql: `INSERT INTO payments (order_id, provider, amount, status, provider_ref, transaction_id, confirmed_at)
+                  VALUES (?, 'sepay', ?, 'confirmed', ?, ?, ?)
+                  ON CONFLICT(provider, transaction_id) DO NOTHING`,
+            args: [fresh.id, fresh.amount_total, txId, txId, now]
+        });
+    }
 
     // ── 3. Transition: pending_payment → paid ────────────────────────
     await db.execute({
@@ -133,7 +142,8 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
 
     // ── 4. Collect allocated credentials ──────────────────────────────
     const allocationsResult = await db.execute({
-        sql: `SELECT oa.id, oa.unit_id, su.content, su.password_encrypted, su.password_iv
+        sql: `SELECT oa.id, oa.unit_id, su.content, su.username, su.extra_info,
+                     su.password_encrypted, su.password_iv
               FROM order_allocations oa
               JOIN stock_units su ON oa.unit_id = su.id
               JOIN order_lines ol ON oa.order_line_id = ol.id
@@ -145,12 +155,16 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     const credentials = [];
     for (const alloc of allocationsResult.rows) {
         const password = decryptPassword(alloc.password_encrypted, alloc.password_iv);
-        let username = '', extraInfo = '';
-        try {
-            const obj = JSON.parse(alloc.content || '{}');
-            username = obj.username || obj.email || alloc.content;
-            extraInfo = obj.note || '';
-        } catch { username = alloc.content || ''; }
+        // stock_units has dedicated username / extra_info columns; fall back to content JSON only if empty
+        let username = alloc.username || '';
+        let extraInfo = alloc.extra_info || '';
+        if (!username && alloc.content) {
+            try {
+                const obj = JSON.parse(alloc.content);
+                username  = obj.username || obj.email || alloc.content;
+                extraInfo = extraInfo || obj.note || '';
+            } catch { username = alloc.content; }
+        }
         credentials.push({ username, password, extraInfo });
     }
 

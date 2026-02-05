@@ -53,9 +53,17 @@ function escapeAttr(s) {
 }
 
 exports.handler = async function (event, context) {
-    const { token, order } = event.queryStringParameters || {};
+    const { token, order, format } = event.queryStringParameters || {};
+    const wantsJson = format === 'json';
 
     if (!token || !order) {
+        if (wantsJson) {
+            return {
+                statusCode: 400,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({ success: false, error: 'Missing token or order' })
+            };
+        }
         return {
             statusCode: 400,
             headers: { 'Content-Type': 'text/html' },
@@ -94,6 +102,13 @@ exports.handler = async function (event, context) {
         });
 
         if (orderResult.rows.length === 0) {
+            if (wantsJson) {
+                return {
+                    statusCode: 404,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                    body: JSON.stringify({ success: false, error: 'Order not found' })
+                };
+            }
             return {
                 statusCode: 404,
                 headers: { 'Content-Type': 'text/html' },
@@ -121,6 +136,13 @@ exports.handler = async function (event, context) {
 
         // Verify token
         if (!verifyDeliveryToken(token, orderData.id, orderData.customer_email)) {
+            if (wantsJson) {
+                return {
+                    statusCode: 403,
+                    headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                    body: JSON.stringify({ success: false, error: 'Invalid or expired token' })
+                };
+            }
             return {
                 statusCode: 403,
                 headers: { 'Content-Type': 'text/html' },
@@ -177,6 +199,20 @@ exports.handler = async function (event, context) {
                 password: password,
                 extraInfo: extraInfo
             });
+        }
+
+        // If JSON format requested, return JSON response
+        if (wantsJson) {
+            return {
+                statusCode: 200,
+                headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                body: JSON.stringify({
+                    success: true,
+                    orderCode: order,
+                    invoiceNumber: orderData.invoice_number,
+                    credentials: credentials
+                })
+            };
         }
 
         // Generate HTML

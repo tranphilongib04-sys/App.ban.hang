@@ -179,12 +179,11 @@ exports.handler = async function (event, context) {
     }
 
     // ------------------------------------------------------------------
-    // 5. Fulfill inside IMMEDIATE transaction
+    // 5. Fulfill inside write transaction
+    //    HttpTransaction wraps all .execute() calls in an implicit
+    //    transaction.  close() after success = commit; close() after
+    //    throw = rollback.  No explicit BEGIN / COMMIT needed.
     // ------------------------------------------------------------------
-    // ------------------------------------------------------------------
-    // 5. Fulfill inside IMMEDIATE transaction
-    // ------------------------------------------------------------------
-    // Use proper transaction object for LibSQL HTTP client state management
     const tx = await db.transaction('write');
     try {
         const transaction = {
@@ -192,17 +191,15 @@ exports.handler = async function (event, context) {
             reference_number: body.referenceCode || body.reference_number || body.referenceNumber || txId
         };
 
-        // Pass tx object which has same .execute() API but holds transaction state
         await finalizeOrder(tx, order, transaction, 'webhook');
-
-        await tx.commit();
+        tx.close();   // commits
         console.log('[Webhook] Order', orderCode, 'fulfilled OK');
 
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
 
     } catch (err) {
         console.error('[Webhook] Fulfillment error for', orderCode, ':', err.message);
-        try { tx.close(); } catch { /* ignore */ } // Ensure transaction is closed/rolled back
+        try { tx.close(); } catch { /* ignore */ }   // rolls back
         throw err;
     }
 };

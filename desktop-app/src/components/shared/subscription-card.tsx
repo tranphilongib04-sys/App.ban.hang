@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, memo, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { StatusBadge } from '@/components/shared/status-badge';
@@ -39,7 +39,7 @@ interface SubscriptionCardProps {
     inventoryItems?: InventoryItem[];
 }
 
-export function SubscriptionCard({ subscription, onUpdate, showActions = true, index, inventoryItems = [] }: SubscriptionCardProps) {
+export const SubscriptionCard = memo(function SubscriptionCard({ subscription, onUpdate, showActions = true, index, inventoryItems = [] }: SubscriptionCardProps) {
     const [loading, setLoading] = useState<string | null>(null);
 
     const handleCopyMessage = async () => {
@@ -167,7 +167,7 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             </div>
                             <p className="text-sm text-gray-500 mt-1">{subscription.service}</p>
                             {subscription.accountInfo && (
-                                <p className="text-xs font-mono text-gray-400 mt-1 truncate" title={subscription.accountInfo}>
+                                <p className="text-sm font-mono text-gray-600 mt-1.5 truncate bg-gray-50 px-2 py-1 rounded" title={subscription.accountInfo}>
                                     {subscription.accountInfo}
                                 </p>
                             )}
@@ -194,7 +194,7 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
                             size="icon"
                             onClick={handleDelete}
                             disabled={loading === 'delete'}
-                            className="h-8 w-8 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border-2 border-red-300 hover:border-red-400 rounded-lg transition-all shadow-sm hover:shadow-md shrink-0"
+                            className="h-8 w-8 opacity-0 group-hover:opacity-100 hover:bg-red-100 text-gray-400 hover:text-red-600 rounded-lg transition-all duration-200 shrink-0"
                             title="Xoá đơn hàng"
                         >
                             <Trash2 className="h-4 w-4" />
@@ -389,4 +389,4 @@ export function SubscriptionCard({ subscription, onUpdate, showActions = true, i
             </div>
         </Card >
     );
-}
+});

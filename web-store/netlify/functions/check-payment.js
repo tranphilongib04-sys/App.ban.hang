@@ -241,12 +241,13 @@ exports.handler = async function (event, context) {
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
             const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
-            await ensurePaymentSchema(db);  // DDL must run BEFORE BEGIN
+            await ensurePaymentSchema(db);  // DDL must run BEFORE BEGIN (outside transaction)
 
-            await db.execute('BEGIN IMMEDIATE');
+            // HttpTransaction: implicit transaction; commit() to save, rollback on error
+            const tx = await db.transaction('write');
             try {
-                const result = await finalizeOrder(db, order, paidTransaction, 'check-payment');
-                await db.execute('COMMIT');
+                const result = await finalizeOrder(tx, order, paidTransaction, 'check-payment');
+                await tx.commit();   // explicitly commit
 
                 return {
                     statusCode: 200,
@@ -266,7 +267,7 @@ exports.handler = async function (event, context) {
                 };
             } catch (error) {
                 console.error('[CheckPayment] Fulfillment error:', error);
-                try { await db.execute('ROLLBACK'); } catch { /* ignore */ }
+                try { await tx.rollback(); } catch { /* ignore */ }
                 throw error;
             }
         }
