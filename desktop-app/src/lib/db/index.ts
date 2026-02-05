@@ -39,22 +39,40 @@ function getLocalDbPath(): string {
 let client: Client;
 let db: ReturnType<typeof drizzle>;
 let syncInitialized = false;
+let usingSyncMode = false;
 
 if (hasTursoCredentials && syncEnabled) {
   // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync (only on non-Vercel)
-  console.log('🔄 Database: Embedded Replicas Mode (Local + Cloud Sync)');
+  // Try to create with sync, fallback to local-only if credentials are invalid
+  console.log('🔄 Database: Attempting Embedded Replicas Mode (Local + Cloud Sync)');
 
   const localPath = getLocalDbPath();
   console.log(`   Local replica: ${localPath}`);
   console.log(`   Cloud sync: ${process.env.TURSO_DATABASE_URL}`);
 
-  client = createClient({
-    url: `file:${localPath}`,
-    syncUrl: process.env.TURSO_DATABASE_URL!,
-    authToken: process.env.TURSO_AUTH_TOKEN!,
-  });
+  try {
+    // Try creating client with sync - this may throw if credentials are invalid
+    const syncClient = createClient({
+      url: `file:${localPath}`,
+      syncUrl: process.env.TURSO_DATABASE_URL!,
+      authToken: process.env.TURSO_AUTH_TOKEN!,
+    });
 
-  db = drizzle(client, { schema });
+    client = syncClient;
+    db = drizzle(client, { schema });
+    usingSyncMode = true;
+    console.log('✓ Embedded Replicas client created');
+  } catch (error: any) {
+    console.warn('⚠️  Failed to create sync client:', error.message);
+    console.log('💾 Falling back to Local Only Mode');
+
+    // Fallback to local-only
+    client = createClient({
+      url: `file:${localPath}`,
+    });
+    db = drizzle(client, { schema });
+    usingSyncMode = false;
+  }
 
 } else if (hasTursoCredentials) {
   // CLOUD ONLY MODE: Direct connection to Turso (used on Vercel)
@@ -86,7 +104,7 @@ export { db, client };
 
 // Initialize sync for embedded replicas mode (call this once after app starts)
 export async function initializeSync(): Promise<void> {
-  if (syncInitialized || !syncEnabled) return;
+  if (syncInitialized || !usingSyncMode) return;
 
   try {
     await client.sync();
@@ -106,7 +124,7 @@ export async function initializeSync(): Promise<void> {
 
 // Sync function for embedded replicas (local → Turso)
 export async function syncDatabase(options?: { logSuccess?: boolean }) {
-  if (!hasTursoCredentials || !syncEnabled) {
+  if (!usingSyncMode || syncInitialized === false) {
     return { success: true, message: 'Sync not enabled' };
   }
 
@@ -230,7 +248,7 @@ export async function initializeDatabase() {
   await runSafe(`CREATE INDEX IF NOT EXISTS idx_warranties_subscription ON warranties(subscription_id);`, 'idx_warranties_subscription');
 
   // Initialize sync after database setup
-  if (hasTursoCredentials && syncEnabled) {
+  if (usingSyncMode) {
     await initializeSync();
   }
 }
