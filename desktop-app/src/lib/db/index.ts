@@ -1,47 +1,47 @@
 import * as schema from './schema';
-import path from 'path';
-import { existsSync, mkdirSync } from 'fs';
 import { drizzle } from 'drizzle-orm/libsql';
 import { createClient, Client } from '@libsql/client';
 
-// Get local database path
-function getLocalDbPath() {
+// Check configuration early to avoid unnecessary operations
+const hasTursoCredentials = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
+const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
+const syncEnabled = !isVercel && !!hasTursoCredentials && (process.env.TURSO_SYNC_ENABLED !== 'false');
+
+// Get local database path (only used in non-Vercel environments)
+function getLocalDbPath(): string {
+  // On Vercel, we use cloud-only mode - no local file needed
+  if (isVercel) {
+    return '';
+  }
+
+  // Dynamically import fs and path only when needed (not on Vercel)
+  const path = require('path');
+  const fs = require('fs');
+
   // Check if running in Electron
   if (process.env.ELECTRON_USER_DATA) {
     const userDataPath = process.env.ELECTRON_USER_DATA;
     const dataDir = path.join(userDataPath, 'data');
-    if (!existsSync(dataDir)) {
-      mkdirSync(dataDir, { recursive: true });
+    if (!fs.existsSync(dataDir)) {
+      fs.mkdirSync(dataDir, { recursive: true });
     }
     return path.join(dataDir, 'tpb-manage.db');
   }
 
-  // Skip local file operations on Vercel (read-only filesystem)
-  const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-  if (isVercel) {
-    return ''; // Will not be used in cloud-only mode
-  }
-
   // Development mode
   const dataDir = path.join(process.cwd(), 'data');
-  if (!existsSync(dataDir)) {
-    mkdirSync(dataDir, { recursive: true });
+  if (!fs.existsSync(dataDir)) {
+    fs.mkdirSync(dataDir, { recursive: true });
   }
   return path.join(dataDir, 'tpb-manage.db');
 }
-
-// Check configuration
-const hasTursoCredentials = process.env.TURSO_DATABASE_URL && process.env.TURSO_AUTH_TOKEN;
-// Vercel: always cloud-only (read-only filesystem). Local: when Turso is set, use embedded replicas (sync) by default so local + Vercel share the same DB.
-const isVercel = process.env.VERCEL === '1' || process.env.VERCEL_ENV;
-const syncEnabled = !isVercel && !!hasTursoCredentials && (process.env.TURSO_SYNC_ENABLED !== 'false');
 
 let client: Client;
 let db: ReturnType<typeof drizzle>;
 let syncInitialized = false;
 
 if (hasTursoCredentials && syncEnabled) {
-  // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync
+  // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync (only on non-Vercel)
   console.log('🔄 Database: Embedded Replicas Mode (Local + Cloud Sync)');
 
   const localPath = getLocalDbPath();
@@ -56,11 +56,8 @@ if (hasTursoCredentials && syncEnabled) {
 
   db = drizzle(client, { schema });
 
-  // Initial sync will be done lazily on first database access or manually
-  // This avoids top-level await which can cause issues with Next.js bundling
-
 } else if (hasTursoCredentials) {
-  // CLOUD ONLY MODE: Direct connection to Turso
+  // CLOUD ONLY MODE: Direct connection to Turso (used on Vercel)
   console.log('☁️  Database: Cloud Only Mode (Turso)');
 
   client = createClient({
@@ -71,7 +68,7 @@ if (hasTursoCredentials && syncEnabled) {
   db = drizzle(client, { schema });
 
 } else {
-  // LOCAL ONLY MODE: Just local SQLite
+  // LOCAL ONLY MODE: Just local SQLite (development without Turso)
   console.log('💾 Database: Local Only Mode');
 
   const localPath = getLocalDbPath();
@@ -107,7 +104,7 @@ export async function initializeSync(): Promise<void> {
   }
 }
 
-// Sync function for embedded replicas (local → Turso). Pass logSuccess=true to log on success (e.g. initial sync).
+// Sync function for embedded replicas (local → Turso)
 export async function syncDatabase(options?: { logSuccess?: boolean }) {
   if (!hasTursoCredentials || !syncEnabled) {
     return { success: true, message: 'Sync not enabled' };
