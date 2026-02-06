@@ -99,6 +99,26 @@ exports.handler = async function (event, context) {
     let tx = null;
     const db = getDbClient();
 
+    // Ensure schema columns exist (DDL outside transaction)
+    try {
+        await db.execute(`ALTER TABLE order_lines ADD COLUMN variant_name TEXT`);
+    } catch (e) { console.log('Notice: variant_name column add skipped', e.message); }
+    try {
+        await db.execute(`ALTER TABLE order_lines ADD COLUMN fulfillment_type TEXT DEFAULT 'auto'`);
+    } catch (e) { console.log('Notice: fulfillment_type column add skipped', e.message); }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN delivery_token TEXT`);
+    } catch (e) { console.log('Notice: delivery_token column add skipped', e.message); }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN delivery_token_expires_at DATETIME`);
+    } catch (e) { console.log('Notice: delivery_token_expires_at column add skipped', e.message); }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN ip_address TEXT`);
+    } catch (e) { console.log('Notice: ip_address column add skipped', e.message); }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN user_agent TEXT`);
+    } catch (e) { console.log('Notice: user_agent column add skipped', e.message); }
+
     try {
         const body = JSON.parse(event.body);
         let {

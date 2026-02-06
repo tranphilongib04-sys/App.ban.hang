@@ -1,0 +1,16 @@
+{
+  "name": "dark-observatory-root",
+  "private": true,
+  "scripts": {
+    "web-store:install": "npm --prefix web-store install",
+    "web-store:dev": "npm --prefix web-store run dev",
+    "web-store:build": "npm --prefix web-store run build",
+    "web-store:test": "npm --prefix web-store test",
+    "desktop:install": "npm --prefix desktop-app install",
+    "desktop:dev": "npm --prefix desktop-app run electron:dev",
+    "desktop:next": "npm --prefix desktop-app run dev",
+    "desktop:build": "npm --prefix desktop-app run electron:build",
+    "desktop:test": "npm --prefix desktop-app test"
+  }
+}
+

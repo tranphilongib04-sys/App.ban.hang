@@ -1,7 +1,7 @@
 /**
  * GOOGLE SHEETS UTILITY - Fetch data from public Google Sheets
  * 
- * Uses the published CSV export URL (no API key required)
+ * Schema: sku, account, password, 2fa_code, purchase_date, status
  */
 
 const SHEET_ID = process.env.GOOGLE_SHEETS_ID || '1y_MD9okFwz6zIdkhDXLOnEM4VKVjxfEJVr-Oq0L3CoA';
@@ -15,7 +15,9 @@ async function fetchInventoryFromSheets() {
     const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=0`;
 
     try {
-        const response = await fetch(csvUrl);
+        const response = await fetch(csvUrl, {
+            redirect: 'follow' // Follow redirects automatically
+        });
         if (!response.ok) {
             throw new Error(`Failed to fetch sheet: ${response.status}`);
         }
@@ -84,19 +86,19 @@ function parseCSVLine(line) {
 }
 
 /**
- * Get available stock count for a product
- * @param {string} productCode - Product code to filter
+ * Get available stock count for a SKU
+ * @param {string} sku - SKU to filter (e.g., ChatGPT_1m)
  * @returns {Promise<number>} Count of available items
  */
-async function getAvailableStock(productCode = null) {
+async function getAvailableStock(sku = null) {
     const inventory = await fetchInventoryFromSheets();
 
     let available = inventory.filter(item => item.status === 'available');
 
-    if (productCode) {
+    if (sku) {
         available = available.filter(item =>
-            item.product_code === productCode ||
-            item.product_code?.includes(productCode)
+            item.sku === sku ||
+            item.sku?.toLowerCase().includes(sku.toLowerCase())
         );
     }
 
@@ -104,45 +106,73 @@ async function getAvailableStock(productCode = null) {
 }
 
 /**
- * Get inventory summary grouped by product
- * @returns {Promise<Array>} Array of {product_code, available}
+ * Get inventory summary grouped by SKU
+ * @returns {Promise<Array>} Array of {sku, available, total}
  */
 async function getInventorySummary() {
     const inventory = await fetchInventoryFromSheets();
 
     const summary = {};
     for (const item of inventory) {
-        if (!item.product_code) continue;
+        if (!item.sku) continue;
 
-        if (!summary[item.product_code]) {
-            summary[item.product_code] = { total: 0, available: 0 };
+        if (!summary[item.sku]) {
+            summary[item.sku] = { total: 0, available: 0 };
         }
 
-        summary[item.product_code].total++;
+        summary[item.sku].total++;
         if (item.status === 'available') {
-            summary[item.product_code].available++;
+            summary[item.sku].available++;
         }
     }
 
-    return Object.entries(summary).map(([code, counts]) => ({
-        product_code: code,
+    return Object.entries(summary).map(([sku, counts]) => ({
+        sku: sku,
+        product_code: sku, // For backward compatibility
         available: counts.available,
         total: counts.total
     }));
 }
 
 /**
- * Get a single available item for a product (for order fulfillment)
- * @param {string} productCode - Product code to get
- * @returns {Promise<Object|null>} Available item or null
+ * Get a single available item for a SKU (for order fulfillment)
+ * Returns full credential details
+ * @param {string} sku - SKU to get (e.g., ChatGPT_1m)
+ * @returns {Promise<Object|null>} Available item with credentials or null
  */
-async function getAvailableItem(productCode) {
+async function getAvailableItem(sku) {
     const inventory = await fetchInventoryFromSheets();
 
-    return inventory.find(item =>
-        item.product_code === productCode &&
+    const item = inventory.find(item =>
+        item.sku === sku &&
         item.status === 'available'
-    ) || null;
+    );
+
+    if (!item) return null;
+
+    // Return structured credential object
+    return {
+        sku: item.sku,
+        account: item.account,
+        password: item.password,
+        twofa_code: item['2fa_code'] || '',
+        purchase_date: item.purchase_date,
+        status: item.status
+    };
+}
+
+/**
+ * Get all items for a specific SKU
+ * @param {string} sku - SKU to filter
+ * @returns {Promise<Array>} All items matching SKU
+ */
+async function getItemsBySku(sku) {
+    const inventory = await fetchInventoryFromSheets();
+
+    return inventory.filter(item =>
+        item.sku === sku ||
+        item.sku?.toLowerCase().includes(sku.toLowerCase())
+    );
 }
 
 module.exports = {
@@ -150,5 +180,6 @@ module.exports = {
     getAvailableStock,
     getInventorySummary,
     getAvailableItem,
+    getItemsBySku,
     SHEET_ID
 };

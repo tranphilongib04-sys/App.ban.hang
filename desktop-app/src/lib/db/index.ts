@@ -40,6 +40,7 @@ let client: Client;
 let db: ReturnType<typeof drizzle>;
 let syncInitialized = false;
 let usingSyncMode = false;
+let initDbPromise: Promise<void> | null = null;
 
 if (hasTursoCredentials && syncEnabled) {
   // EMBEDDED REPLICAS MODE: Local SQLite + Cloud Sync (only on non-Vercel)
@@ -102,6 +103,17 @@ if (hasTursoCredentials && syncEnabled) {
 // Export database instance
 export { db, client };
 
+// Ensure schema exists on first use (important for cloud DBs on Vercel)
+export function ensureDatabaseInitialized(): Promise<void> {
+  if (!initDbPromise) {
+    initDbPromise = initializeDatabase().catch((e: any) => {
+      // Don't crash the process on init failure; queries will surface errors.
+      console.error('✗ Database init failed:', e?.message || e);
+    });
+  }
+  return initDbPromise;
+}
+
 // Initialize sync for embedded replicas mode (call this once after app starts)
 export async function initializeSync(): Promise<void> {
   if (syncInitialized || !usingSyncMode) return;
@@ -156,6 +168,17 @@ export async function initializeDatabase() {
     }
   };
 
+  const ensureColumn = async (table: string, column: string, columnDDL: string) => {
+    try {
+      const info = await client.execute(`PRAGMA table_info(${table});`);
+      const exists = info.rows?.some((r: any) => r?.name === column);
+      if (exists) return;
+      await runSafe(`ALTER TABLE ${table} ADD COLUMN ${columnDDL};`, `${table}.${column}`);
+    } catch (error: any) {
+      console.error(`✗ Failed to ensure column ${table}.${column}:`, error.message);
+    }
+  };
+
   await runSafe(`
     CREATE TABLE IF NOT EXISTS customers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -194,17 +217,33 @@ export async function initializeDatabase() {
     CREATE TABLE IF NOT EXISTS inventory_items (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       service TEXT NOT NULL,
+      variant TEXT,
       distribution TEXT,
       secret_payload TEXT NOT NULL,
       secret_masked TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'available',
+      reserved_by TEXT,
+      reserved_at TEXT,
+      reservation_expires TEXT,
       import_batch TEXT,
       cost REAL DEFAULT 0,
+      expires_at TEXT,
       note TEXT,
       category TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      sold_at TEXT,
+      updated_at TEXT
     );
   `, 'inventory_items');
+
+  // Backfill missing columns for older DBs (pre-migration deployments)
+  await ensureColumn('inventory_items', 'variant', 'variant TEXT');
+  await ensureColumn('inventory_items', 'reserved_by', 'reserved_by TEXT');
+  await ensureColumn('inventory_items', 'reserved_at', 'reserved_at TEXT');
+  await ensureColumn('inventory_items', 'reservation_expires', 'reservation_expires TEXT');
+  await ensureColumn('inventory_items', 'expires_at', 'expires_at TEXT');
+  await ensureColumn('inventory_items', 'sold_at', 'sold_at TEXT');
+  await ensureColumn('inventory_items', 'updated_at', 'updated_at TEXT');
 
   await runSafe(`
     CREATE TABLE IF NOT EXISTS deliveries (
@@ -252,3 +291,6 @@ export async function initializeDatabase() {
     await initializeSync();
   }
 }
+
+// Kick off initialization on module load (server/runtime only)
+ensureDatabaseInitialized();

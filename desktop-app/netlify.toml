@@ -1,5 +1,11 @@
 [build]
-  command = "npm run build"
+  command = "npm run db:push && npm run build"
+
+[build.environment]
+  # Netlify is not Vercel, so our DB client would otherwise try Embedded Replicas
+  # (local file + Turso sync). In the build image the local .db file is not present,
+  # which causes sync initialization to fail and then prerender fails on missing tables.
+  TURSO_SYNC_ENABLED = "false"
 
 
 [[plugins]]

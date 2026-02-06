@@ -216,7 +216,20 @@ tr:hover td{background:#1e2130}
 
 <script>
 // ── CONFIG ──────────────────────────────────────────────────
-const BASE = '/.netlify/functions';
+function resolveBase() {
+  // Allow override: admin.html?base=https://your-site.com/.netlify/functions
+  const qs = new URLSearchParams(location.search);
+  const fromQuery = (qs.get('base') || '').trim();
+  if (fromQuery) return fromQuery.replace(/\/+$/, '');
+
+  // When opening via file://, relative "/.netlify/functions" cannot work.
+  // Default Netlify Dev runs at http://localhost:8888
+  if (location.protocol === 'file:') return 'http://localhost:8888/.netlify/functions';
+
+  return '/.netlify/functions';
+}
+
+const BASE = resolveBase();
 let ADMIN_TOKEN = '';                          // set after login
 const POLL_INTERVAL = 10_000;                  // auto-refresh every 10 s
 let pollTimer = null;
@@ -243,7 +256,10 @@ async function doLogin() {
     startAutoRefresh();
     loadDashboard();
   } catch (e) {
-    document.getElementById('loginErr').textContent = '❌ Không kết nối được máy chủ';
+    const hint = (location.protocol === 'file:')
+      ? 'Bạn đang mở bằng file://. Hãy chạy "netlify dev" và mở admin tại http://localhost:8888/admin.html (hoặc truyền ?base=...).'
+      : 'Kiểm tra mạng / endpoint Netlify Functions.';
+    document.getElementById('loginErr').textContent = `❌ Không kết nối được máy chủ. (${hint})`;
   }
 }
 

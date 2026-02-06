@@ -238,8 +238,8 @@ export function FamilyClient({ families }: FamilyClientProps) {
             await confirmFamilyPaymentAction(id);
             toast.success('Đã xác nhận thanh toán - chuyển sang tháng mới');
             router.refresh();
-        } catch (error) {
-            toast.error('Có lỗi xảy ra');
+        } catch (error: any) {
+            toast.error(error?.message || 'Có lỗi xảy ra');
         } finally {
             setConfirmingPayment(null);
         }

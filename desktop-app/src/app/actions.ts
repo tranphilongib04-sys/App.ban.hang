@@ -1357,16 +1357,20 @@ export async function confirmFamilyPaymentAction(id: number) {
 
   const current = family[0];
 
-  // Add 1 month to start and end dates
+  // Add 1 month to start and end dates (validate first to avoid "Invalid time value")
   const startDate = new Date(current.startDate);
   const endDate = new Date(current.endDate);
+  if (Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) {
+    throw new Error('Ngày bắt đầu/kết thúc không hợp lệ. Vui lòng kiểm tra lại Family.');
+  }
 
-  startDate.setMonth(startDate.getMonth() + 1);
-  endDate.setMonth(endDate.getMonth() + 1);
+  // Use date-fns to handle end-of-month safely (e.g., 31st → clamp)
+  const nextStart = addMonths(startDate, 1);
+  const nextEnd = addMonths(endDate, 1);
 
   await db.update(families).set({
-    startDate: startDate.toISOString().split('T')[0],
-    endDate: endDate.toISOString().split('T')[0],
+    startDate: nextStart.toISOString().split('T')[0],
+    endDate: nextEnd.toISOString().split('T')[0],
   }).where(eq(families.id, id));
 
   revalidatePath('/family');
