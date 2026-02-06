@@ -3844,7 +3844,7 @@ section .section-title::after {
     }
 }
 
-/* FLOATING CONTACT - minimal Zalo FAB */
+/* FLOATING CONTACT - Zalo icon FAB */
 .contact-fab {
     position: fixed;
     bottom: 20px;
@@ -3852,13 +3852,14 @@ section .section-title::after {
     z-index: 999;
     width: 48px;
     height: 48px;
-    border-radius: 50%;
-    background: #0068ff;
+    border-radius: 14px;
+    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 12px rgba(0, 104, 255, 0.35);
+    box-shadow: 0 2px 12px rgba(0, 104, 255, 0.3);
     transition: transform 0.2s, box-shadow 0.2s;
+    overflow: hidden;
 }
 
 .contact-fab:hover {
@@ -3866,11 +3867,9 @@ section .section-title::after {
     box-shadow: 0 4px 20px rgba(0, 104, 255, 0.45);
 }
 
-.contact-fab img {
-    width: 24px;
-    height: 24px;
-    object-fit: contain;
-    filter: brightness(0) invert(1);
+.contact-fab svg {
+    width: 36px;
+    height: 36px;
 }
 
 @media (max-width: 768px) {
@@ -3879,11 +3878,12 @@ section .section-title::after {
         height: 44px;
         bottom: 16px;
         right: 16px;
+        border-radius: 12px;
     }
 
-    .contact-fab img {
-        width: 22px;
-        height: 22px;
+    .contact-fab svg {
+        width: 32px;
+        height: 32px;
     }
 }
 
