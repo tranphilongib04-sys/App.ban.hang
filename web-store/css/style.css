@@ -3985,24 +3985,27 @@ section .section-title::after {
     }
 }
 
-/* LOGO UPDATE V2 */
+/* LOGO UPDATE V3 */
 .logo {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
+    text-decoration: none;
 }
 
 .logo-img {
-    height: 70px;
-    width: auto;
-    object-fit: contain;
+    height: 38px;
+    width: 38px;
+    object-fit: cover;
+    border-radius: 10px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
 }
 
 .logo-text {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 700;
-    color: var(--primary);
-    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    letter-spacing: -0.3px;
 }
 
 /* HERO SLOGAN UPDATE */
@@ -4050,11 +4053,12 @@ section .section-title::after {
     }
 
     .logo-img {
-        height: 40px;
+        height: 32px;
+        width: 32px;
     }
 
     .logo-text {
-        font-size: var(--h2);
+        font-size: 17px;
     }
 }
 
