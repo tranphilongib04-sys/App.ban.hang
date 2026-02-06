@@ -1,11 +1,31 @@
 [build]
-  base = "desktop-app"
-  command = "npm run build"
-
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+  base = "web-store"
+  publish = "."
+  command = "# no build needed"
 
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/:splat"
   status = 200
+
+# Allow direct access to HTML files
+[[redirects]]
+  from = "/admin.html"
+  to = "/admin.html"
+  status = 200
+
+[[redirects]]
+  from = "/admin_debug.html"
+  to = "/admin_debug.html"
+  status = 200
+
+# SPA fallback - redirect all non-file requests to index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Scheduled function for payment reconciliation (fallback for missed webhooks)
+# Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
+[functions."reconcile-payments"]
+  schedule = "*/5 * * * *"
