@@ -105,6 +105,11 @@ header {
     backdrop-filter: saturate(180%) blur(20px);
     z-index: 1000;
     border-bottom: 1px solid var(--border);
+    transition: transform 0.3s ease;
+}
+
+header.header-hidden {
+    transform: translateY(-100%);
 }
 
 nav {
@@ -1630,7 +1635,7 @@ footer {
 .confirmation-page-standalone.active~footer,
 body:has(.confirmation-page-standalone.active) header,
 body:has(.confirmation-page-standalone.active) footer,
-body:has(.confirmation-page-standalone.active) .contact-floating {
+body:has(.confirmation-page-standalone.active) .contact-fab {
     display: none !important;
 }
 
@@ -3832,156 +3837,46 @@ section .section-title::after {
     }
 }
 
-/* FLOATING CONTACT - đơn giản, một nút gọn */
-.contact-floating {
+/* FLOATING CONTACT - minimal Zalo FAB */
+.contact-fab {
     position: fixed;
-    bottom: 16px;
-    right: 16px;
+    bottom: 20px;
+    right: 20px;
     z-index: 999;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 6px;
-    pointer-events: none;
-}
-
-.contact-floating>* {
-    pointer-events: auto;
-}
-
-.contact-floating-hotline {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    border-radius: 24px;
-    text-decoration: none;
-    color: var(--text-primary);
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s, border-color 0.2s;
-}
-
-.contact-floating-hotline:hover {
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
-    border-color: var(--accent);
-}
-
-.contact-floating-hotline-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #0068ff;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 12px rgba(0, 104, 255, 0.35);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.contact-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 4px 20px rgba(0, 104, 255, 0.45);
+}
+
+.contact-fab img {
     width: 24px;
     height: 24px;
-    flex-shrink: 0;
-    color: var(--accent);
-}
-
-.contact-floating-hotline-icon svg {
-    width: 14px;
-    height: 14px;
-}
-
-.contact-floating-hotline-text {
-    display: flex;
-    align-items: baseline;
-    gap: 4px;
-    line-height: 1.2;
-}
-
-.contact-floating-hotline-label {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-}
-
-.contact-floating-hotline-number {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--accent);
-}
-
-.contact-floating-socials {
-    display: flex;
-    gap: 4px;
-}
-
-.contact-floating-social {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    background: var(--bg-white);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow-sm);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: box-shadow 0.2s, transform 0.2s;
-}
-
-.contact-floating-social:hover {
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
-    transform: translateY(-1px);
-}
-
-.contact-floating-social img {
-    width: 20px;
-    height: 20px;
     object-fit: contain;
-}
-
-.contact-floating-social-zalo img {
-    height: 18px;
-    width: auto;
-    max-width: 36px;
-    object-fit: contain;
+    filter: brightness(0) invert(1);
 }
 
 @media (max-width: 768px) {
-    .contact-floating {
-        bottom: var(--spacing-3);
-        right: var(--spacing-3);
-        gap: var(--spacing);
+    .contact-fab {
+        width: 44px;
+        height: 44px;
+        bottom: 16px;
+        right: 16px;
     }
 
-    .contact-floating-hotline {
-        padding: var(--spacing-2) var(--spacing-3);
-        gap: var(--spacing-2);
-    }
-
-    .contact-floating-hotline-icon {
-        width: 24px;
-        height: 24px;
-    }
-
-    .contact-floating-hotline-icon svg {
-        width: 12px;
-        height: 12px;
-    }
-
-    .contact-floating-hotline-label {
-        font-size: var(--caption);
-    }
-
-    .contact-floating-hotline-number {
-        font-size: var(--caption);
-    }
-
-    .contact-floating-social {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-    }
-
-    .contact-floating-social img {
-        width: 18px;
-        height: 18px;
-    }
-
-    .contact-floating-social-zalo img {
-        height: 18px;
-        max-width: 36px;
+    .contact-fab img {
+        width: 22px;
+        height: 22px;
     }
 }
 
