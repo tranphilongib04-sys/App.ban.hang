@@ -1,19 +1,27 @@
 /**
- * INVENTORY API - Netlify Function (V2 - New Schema)
+ * INVENTORY API - Netlify Function (V3 - Google Sheets + Turso Fallback)
  *
  * Endpoints:
  * - GET /inventory?service=chatgpt&variant=... - Get available stock count
  * - GET /inventory/all - Get all products with stock counts
+ * 
+ * Data Source Priority:
+ * 1. Google Sheets (if GOOGLE_SHEETS_ID configured)
+ * 2. Turso DB (fallback)
  */
 
 const { createClient } = require('@libsql/client/web');
+const { fetchInventoryFromSheets, getInventorySummary, getAvailableStock } = require('./utils/google-sheets');
+
+// Check if Google Sheets is configured
+const USE_GOOGLE_SHEETS = !!process.env.GOOGLE_SHEETS_ID;
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
 
     if (!url) {
-        throw new Error('TURSO_DATABASE_URL not configured');
+        return null; // Allow running without DB if using Google Sheets
     }
 
     return createClient({ url, authToken });
@@ -36,8 +44,63 @@ exports.handler = async function (event, context) {
     }
 
     try {
-        const db = getDbClient();
         const { service, variant, action } = event.queryStringParameters || {};
+
+        // === Google Sheets Mode ===
+        if (USE_GOOGLE_SHEETS) {
+            console.log('[Inventory] Using Google Sheets as data source');
+
+            if (action === 'all') {
+                const summary = await getInventorySummary();
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        source: 'google-sheets',
+                        inventory: summary
+                    })
+                };
+            }
+
+            if (service) {
+                const productCode = variant
+                    ? `${service}_${variant.replace(/-/g, '_')}`
+                    : service;
+                const count = await getAvailableStock(productCode);
+
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        source: 'google-sheets',
+                        service,
+                        variant: variant || 'all',
+                        available: count,
+                        inStock: count > 0
+                    })
+                };
+            }
+
+            const summary = await getInventorySummary();
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    source: 'google-sheets',
+                    summary
+                })
+            };
+        }
+
+        // === Turso DB Mode (Fallback) ===
+        console.log('[Inventory] Using Turso DB as data source');
+        const db = getDbClient();
+        if (!db) {
+            throw new Error('No data source configured. Set GOOGLE_SHEETS_ID or TURSO_DATABASE_URL');
+        }
 
         // Clean up expired reservations first
         const now = new Date().toISOString();
@@ -52,6 +115,7 @@ exports.handler = async function (event, context) {
                 headers,
                 body: JSON.stringify({
                     success: true,
+                    source: 'turso-db',
                     inventory: result.rows
                 })
             };
