@@ -3297,6 +3297,13 @@ section .section-title::after {
         background: var(--bg-page);
         -ms-overflow-style: none;
         scrollbar-width: none;
+        transition: top 0.3s ease;
+    }
+
+    header.header-hidden~main .filter-sidebar,
+    header.header-hidden~.page .filter-sidebar,
+    body:has(header.header-hidden) .filter-sidebar {
+        top: 0;
     }
 
     .filter-sidebar::-webkit-scrollbar {
