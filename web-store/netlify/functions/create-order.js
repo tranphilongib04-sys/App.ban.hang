@@ -165,7 +165,7 @@ exports.handler = async function (event, context) {
 
         // 1. Process each item (Check & Reserve)
         for (const item of items) {
-            const { productCode, quantity, price } = item;
+            const { productCode, quantity, price, variantName, fulfillmentType } = item;
 
             // Find product
             const productResult = await tx.execute({
@@ -219,6 +219,8 @@ exports.handler = async function (event, context) {
             processedItems.push({
                 productId,
                 productName: product.name,
+                variantName: variantName || null,
+                fulfillmentType: fulfillmentType || 'auto',
                 quantity,
                 unitPrice: price,
                 subtotal: price * quantity,
@@ -237,10 +239,10 @@ exports.handler = async function (event, context) {
 
         // 3. Create Order Lines & Allocations & Logs
         for (const pItem of processedItems) {
-            // Create Line
+            // Create Line with fulfillment_type
             const orderLineResult = await tx.execute({
-                sql: `INSERT INTO order_lines (order_id, product_id, product_name, quantity, unit_price, subtotal) VALUES (?, ?, ?, ?, ?, ?) RETURNING id`,
-                args: [orderId, pItem.productId, pItem.productName, pItem.quantity, pItem.unitPrice, pItem.subtotal]
+                sql: `INSERT INTO order_lines (order_id, product_id, product_name, variant_name, quantity, unit_price, subtotal, fulfillment_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+                args: [orderId, pItem.productId, pItem.productName, pItem.variantName, pItem.quantity, pItem.unitPrice, pItem.subtotal, pItem.fulfillmentType]
             });
             const orderLineId = orderLineResult.rows[0]?.id || orderLineResult.lastInsertRowid;
 

@@ -110,15 +110,27 @@ async function migrate() {
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 order_id INTEGER NOT NULL,
                 product_id INTEGER NOT NULL,
+                product_name TEXT,
+                variant_name TEXT,
                 quantity INTEGER NOT NULL DEFAULT 1,
                 unit_price INTEGER NOT NULL,
                 subtotal INTEGER NOT NULL,
+                fulfillment_type TEXT DEFAULT 'auto',
                 created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY (order_id) REFERENCES orders(id),
                 FOREIGN KEY (product_id) REFERENCES products(id)
             )
         `);
         console.log('✓ OrderLines table created');
+
+        // Add fulfillment_type column if not exists (for existing tables)
+        try {
+            await db.execute(`ALTER TABLE order_lines ADD COLUMN fulfillment_type TEXT DEFAULT 'auto'`);
+            console.log('✓ Added fulfillment_type column to order_lines');
+        } catch (e) {
+            // Column may already exist
+            console.log('ℹ fulfillment_type column already exists or migration skipped');
+        }
 
         // 5. Create OrderAllocations table (chống cấp trùng)
         await db.execute(`

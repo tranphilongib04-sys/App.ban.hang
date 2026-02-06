@@ -3,10 +3,12 @@ const products = {
     chatgpt: {
         id: 'chatgpt',
         name: 'ChatGPT',
-        category: 'ChatGPT',
+        category: 'AI',
         description: 'Trợ lý AI thông minh nhất hiện nay, hỗ trợ viết lách, code, và nhiều tác vụ khác',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
         featured: true,
+        rating: 4.8,
+        reviewCount: 34,
         variants: [
             { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '' },
             { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo' },
@@ -65,10 +67,12 @@ const products = {
     netflix: {
         id: 'netflix',
         name: 'Netflix',
-        category: 'Netflix',
+        category: 'Giải trí',
         description: 'Xem phim và chương trình truyền hình không giới hạn với chất lượng HD/4K',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
+        rating: 4.7,
+        reviewCount: 29,
         variants: [
             { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m' }
         ],
@@ -114,10 +118,12 @@ const products = {
     spotify: {
         id: 'spotify',
         name: 'Spotify Premium',
-        category: 'Spotify',
+        category: 'Giải trí',
         description: 'Nghe nhạc không giới hạn với chất lượng cao, không quảng cáo',
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
+        rating: 4.6,
+        reviewCount: 18,
         variants: [
             { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_1m' },
             { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_4m' },
@@ -160,10 +166,12 @@ const products = {
     adobe: {
         id: 'adobe',
         name: 'Adobe Creative Cloud',
-        category: 'Adobe',
+        category: 'Thiết kế',
         description: 'Bộ công cụ thiết kế chuyên nghiệp với Photoshop, Illustrator, Premiere Pro...',
         image: 'https://www.adobe.com/content/dam/cc/icons/Adobe_Corporate_Horizontal_Red_HEX.svg',
         featured: true,
+        rating: 4.9,
+        reviewCount: 39,
         variants: [
             { name: 'Adobe 4 tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành' },
             { name: 'Adobe 1 năm Log Ultraview', price: 400000, duration: '1 năm', note: '' },
@@ -209,10 +217,12 @@ const products = {
     youtube: {
         id: 'youtube',
         name: 'YouTube Premium',
-        category: 'YouTube',
+        category: 'Giải trí',
         description: 'Xem YouTube không quảng cáo, nghe nhạc nền và download video',
         image: 'https://www.gstatic.com/youtube/img/branding/youtubelogo/svg/youtubelogo.svg',
         featured: true,
+        rating: 4.5,
+        reviewCount: 22,
         variants: [
             { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành', productCode: 'youtube_1m' }
         ],
@@ -252,10 +262,12 @@ const products = {
     duolingo: {
         id: 'duolingo',
         name: 'Duolingo Plus',
-        category: 'Duolingo',
+        category: 'Học tập',
         description: 'Học ngoại ngữ hiệu quả với Duolingo Premium',
         image: 'https://d35aaqx5ub95lt.cloudfront.net/images/duolingo-logo-horizontal.svg',
         featured: false,
+        rating: 4.7,
+        reviewCount: 15,
         variants: [
             { name: 'Duolingo Plus 1 năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành' }
         ],
@@ -278,10 +290,12 @@ const products = {
     ms365: {
         id: 'ms365',
         name: 'Microsoft 365',
-        category: 'Microsoft 365',
+        category: 'Công cụ',
         description: 'Bộ công cụ văn phòng Microsoft Office với Word, Excel, PowerPoint...',
         image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png',
         featured: false,
+        rating: 4.8,
+        reviewCount: 21,
         variants: [
             { name: 'MS 365 1 năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành' }
         ],
@@ -304,10 +318,12 @@ const products = {
     quizlet: {
         id: 'quizlet',
         name: 'Quizlet',
-        category: 'Quizlet',
+        category: 'Học tập',
         description: 'Ứng dụng học tập với flashcard và công cụ ghi nhớ hiệu quả',
         image: 'https://assets.quizlet.com/a/i/logos/quizlet-logo-resizable-400-x.png',
         featured: false,
+        rating: 4.5,
+        reviewCount: 12,
         variants: [
             { name: 'Quizlet Plus 1 năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK' },
             { name: 'Quizlet Unlimited 1 năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK' }
@@ -331,7 +347,7 @@ const products = {
     canva: {
         id: 'canva',
         name: 'Canva Pro',
-        category: 'Canva',
+        category: 'Thiết kế',
         description: 'Công cụ thiết kế đồ họa online dễ sử dụng với hàng triệu template',
         image: 'https://static.canva.com/web/images/8439b51bb7a19f6e65ce1064bc37c197.svg',
         featured: false,
@@ -359,7 +375,7 @@ const products = {
     capcut: {
         id: 'capcut',
         name: 'CapCut Pro',
-        category: 'CapCut',
+        category: 'Thiết kế',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
         image: 'images/capcut-logo.svg',
         featured: true,
@@ -589,17 +605,15 @@ function renderFeaturedProducts() {
     const container = document.getElementById('featuredProducts');
     const featured = Object.values(products).filter(p => p.featured);
 
-    // FIX: Removed onclick and used href for SEO and reliable navigation
     container.innerHTML = featured.map(product => `
         <div class="product-card" onclick="window.location.hash='product/${product.id}'">
             <div class="product-image">
                 <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
-            <div class="product-info">
-                <span class="product-badge">Phổ biến</span>
+            <div class="product-info product-info-simple">
                 <h3 class="product-name">${product.name}</h3>
-                <p class="product-price">Từ ${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
-                <a href="#product/${product.id}" class="view-details" onclick="event.stopPropagation()">Xem chi tiết</a>
+                <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
+                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem</a>
             </div>
         </div>
     `).join('');
@@ -619,11 +633,10 @@ function renderAllProducts(filter = 'all') {
             <div class="product-image">
                 <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
-            <div class="product-info">
-                ${product.featured ? '<span class="product-badge">Phổ biến</span>' : ''}
+            <div class="product-info product-info-simple">
                 <h3 class="product-name">${product.name}</h3>
-                <p class="product-price">Từ ${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
-                <a href="#product/${product.id}" class="view-details" onclick="event.stopPropagation()">Xem chi tiết</a>
+                <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
+                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem</a>
             </div>
         </div>
     `).join('');
@@ -634,7 +647,8 @@ function renderFilterList() {
     const container = document.getElementById('filterList');
     const categories = [...new Set(Object.values(products).map(p => p.category))];
 
-    const allItem = '<li class="active" onclick="filterProducts(this, \'all\')">Tất cả sản phẩm</li>';
+    // Clean UI - No icons as requested
+    const allItem = '<li class="active" onclick="filterProducts(this, \'all\')">Tất cả</li>';
     const categoryItems = categories.map(cat =>
         `<li onclick="filterProducts(this, '${cat}')">${cat}</li>`
     ).join('');
@@ -673,13 +687,20 @@ function showProductDetail(productId) {
                     <div class="variant-options" id="variantOptions">
                         ${product.variants.map((variant, index) => `
                             <label class="variant-option ${index === 0 ? 'selected' : ''}">
-                                <input type="radio" name="variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})">
-                                <div class="variant-info">
-                                    <div class="variant-name">${variant.name}</div>
-                                    ${variant.note ? `<div class="variant-note">${variant.note}</div>` : ''}
-                                    <div class="variant-note">${variant.duration}</div>
+                                <div class="variant-select-circle">
+                                    <input type="radio" name="variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})">
                                 </div>
-                                <div class="variant-price">${formatPrice(variant.price)}</div>
+                                <div class="variant-info">
+                                    <div class="variant-header">
+                                        <div class="variant-name">${variant.name}</div>
+                                    </div>
+                                    ${variant.note ? `<div class="variant-note">${variant.note}</div>` : ''}
+                                    <div class="variant-meta-row">
+                                        <span class="variant-duration-text ${(variant.duration || '').includes('năm') ? 'duration-year' : 'duration-month'}">${variant.duration}</span>
+                                        <span class="variant-separator"></span>
+                                        <span class="variant-price-text">${formatPrice(variant.price)}</span>
+                                    </div>
+                                </div>
                             </label>
                         `).join('')}
                     </div>
@@ -1017,7 +1038,11 @@ async function placeOrder() {
         // Generate and display QR Code
         const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
-        qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="QR Code" style="max-width: 220px; border-radius: 8px;">`;
+        qrContainer.innerHTML = `
+            <img src="${qrCodeUrl}" alt="Mã QR thanh toán" 
+                 style="max-width: 220px; border-radius: 8px;"
+                 onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
+        `;
 
         // Clear cart
         cart = [];
@@ -1215,7 +1240,7 @@ function copyText(text) {
 function copyAllCreds() {
     if (!window._credentials) return;
     const text = window._credentials.map((c, i) =>
-        `Tài khoản ${i+1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
+        `Tài khoản ${i + 1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
     ).join('\n\n---\n\n');
     navigator.clipboard.writeText(text).then(() => {
         showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
@@ -1472,11 +1497,10 @@ function initScrollReveal() {
         featGrid.parentElement.classList.add('reveal');
     }
 
-    // Testimonials grid → stagger children
-    const testimGrid = home.querySelector('.testimonials-grid');
-    if (testimGrid) {
-        testimGrid.classList.add('stagger');
-        testimGrid.parentElement.classList.add('reveal');
+    // Testimonials section → reveal
+    const testimSection = home.querySelector('.testimonials-section');
+    if (testimSection) {
+        testimSection.classList.add('reveal');
     }
 
     // Featured product grid → stagger
@@ -1596,3 +1620,89 @@ window.addEventListener('scroll', function () {
 
     lastScrollTop = scrollTop;
 });
+
+/* =============================================
+   TESTIMONIALS CAROUSEL + LIGHTBOX
+   ============================================= */
+function initTestiCarousel() {
+    const track = document.querySelector('.testi-track');
+    const dotsContainer = document.querySelector('.testi-dots');
+    if (!track || !dotsContainer) return;
+
+    const cards = track.querySelectorAll('.testi-card');
+    if (!cards.length) return;
+
+    // Build dots
+    function getVisibleCount() {
+        if (window.innerWidth >= 1024) return 3;
+        if (window.innerWidth >= 601) return 2;
+        return 1;
+    }
+
+    function buildDots() {
+        dotsContainer.innerHTML = '';
+        const visibleCount = getVisibleCount();
+        const dotCount = Math.max(1, cards.length - visibleCount + 1);
+        for (let i = 0; i < dotCount; i++) {
+            const dot = document.createElement('button');
+            dot.className = 'testi-dot' + (i === 0 ? ' active' : '');
+            dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+            dot.addEventListener('click', () => scrollToIndex(i));
+            dotsContainer.appendChild(dot);
+        }
+    }
+
+    function scrollToIndex(index) {
+        const card = cards[index];
+        if (!card) return;
+        track.scrollTo({ left: card.offsetLeft - track.offsetLeft, behavior: 'smooth' });
+    }
+
+    function updateDots() {
+        const dots = dotsContainer.querySelectorAll('.testi-dot');
+        if (!dots.length) return;
+        const scrollLeft = track.scrollLeft;
+        const cardWidth = cards[0].offsetWidth + parseInt(getComputedStyle(track).gap || 20);
+        const activeIndex = Math.round(scrollLeft / cardWidth);
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === activeIndex);
+        });
+    }
+
+    buildDots();
+    track.addEventListener('scroll', updateDots, { passive: true });
+    window.addEventListener('resize', () => {
+        buildDots();
+        updateDots();
+    });
+}
+
+// Lightbox
+function openLightbox(el) {
+    const img = el.querySelector('img');
+    if (!img) return;
+    const lightbox = document.getElementById('testiLightbox');
+    const lbImg = document.getElementById('lightboxImg');
+    if (!lightbox || !lbImg) return;
+    lbImg.src = img.src;
+    lbImg.alt = img.alt;
+    lightbox.classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeLightbox(e) {
+    const lightbox = document.getElementById('testiLightbox');
+    if (!lightbox) return;
+    // Close if clicking backdrop or close button, not the image itself
+    if (e && e.target && e.target.tagName === 'IMG') return;
+    lightbox.classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Close lightbox on Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeLightbox(e);
+});
+
+// Init carousel on DOMContentLoaded
+document.addEventListener('DOMContentLoaded', initTestiCarousel);

@@ -11,6 +11,7 @@
   "workspace": {
     "packageJson": {
       "dependencies": [
+        "npm:@libsql/client@0.17",
         "npm:node-fetch@^2.7.0"
       ]
     }
