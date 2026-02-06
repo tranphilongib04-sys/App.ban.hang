@@ -32,8 +32,12 @@ function extractOrderCode(body) {
     ];
     for (const raw of candidates) {
         if (!raw) continue;
-        const m = String(raw).match(/TBQ\d+/i);
-        if (m) return m[0].toUpperCase();
+        // Match TBQ followed by optional spaces and then digits
+        const m = String(raw).match(/TBQ\s*(\d+)/i);
+        if (m) {
+            // Return normalized format: TBQ12345
+            return 'TBQ' + m[1];
+        }
     }
     return null;
 }

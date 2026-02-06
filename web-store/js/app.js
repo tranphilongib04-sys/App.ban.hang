@@ -1256,9 +1256,9 @@ function startPaymentPolling(orderCode, amount) {
     if (pollingInterval) clearInterval(pollingInterval);
 
     let attempts = 0;
-    const maxAttempts = 100; // ~5 min at 3 s interval
+    const maxAttempts = 240; // 240 * 5s = 20 minutes
 
-    pollingInterval = setInterval(async () => {
+    const check = async () => {
         attempts++;
         if (attempts > maxAttempts) {
             clearInterval(pollingInterval);
@@ -1267,7 +1267,28 @@ function startPaymentPolling(orderCode, amount) {
 
         try {
             // Use check-payment which both checks AND triggers fulfillment
-            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${orderCode}`);
+            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${encodeURIComponent(orderCode)}`);
+
+            // If server returned non-2xx, try to surface the error body.
+            if (!response.ok) {
+                let details = '';
+                try {
+                    const text = await response.text();
+                    details = text;
+                    try {
+                        const j = JSON.parse(text);
+                        details = j.message || j.error || text;
+                    } catch { /* ignore */ }
+                } catch { /* ignore */ }
+
+                console.error('[poll] check-payment non-OK:', response.status, details);
+                // Don't show toast for 429 or transient errors during polling to avoid spamming user
+                if (response.status !== 429) {
+                    // showToast(details || `Lỗi máy chủ (${response.status}).`, 'error');
+                }
+                return;
+            }
+
             const data = await response.json();
 
             // check-payment returns status: 'paid' when successful
@@ -1282,11 +1303,15 @@ function startPaymentPolling(orderCode, amount) {
                     window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
                 }
             }
-            // status: 'pending' means still waiting for payment
         } catch (error) {
             console.error('[poll] check-payment error:', error);
         }
-    }, 5000); // Poll every 5 seconds (less aggressive than before)
+    };
+
+    // Run immediately
+    check();
+    // Then poll every 3 seconds
+    pollingInterval = setInterval(check, 3000);
 }
 
 // Generate QR Code for TP Bank using VietQR API

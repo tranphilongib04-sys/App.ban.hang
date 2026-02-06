@@ -31,7 +31,7 @@ const headers = {
 
 // Keep in sync with reconcile-payments.js for better reliability.
 const SEPAY_LIST_LIMIT = 200;
-const LOOKBACK_MINUTES = 180; // allow delayed posting
+const LOOKBACK_MINUTES = 10080; // 7 days (allow delayed posting or late checks)
 const AMOUNT_TOLERANCE = 0.95;
 
 // Decrypt password (simple base64 decode for now - you should use proper AES-GCM)
@@ -219,10 +219,21 @@ exports.handler = async function (event, context) {
                         const code = orderCode.toUpperCase();
 
                         // STRICT RULE: Content MUST contain the order code
-                        // Match formats: "IBFT TBQ20824761", "MBVCB.xxx.TBQ20824761", "TBQ20824761", "20824761"
-                        const orderCodeNumber = code.replace('TBQ', '');
-                        const isContentMatch = content.includes(code) ||
-                                              (orderCodeNumber.length >= 8 && content.includes(orderCodeNumber));
+                        // Match formats: "IBFT TBQ20824761", "MBVCB.xxx.TBQ 20824761", "TBQ20824761", "20824761"
+                        const orderCodeNumber = code.replace(/^TBQ\s*/i, '');
+
+                        // Check if content has "TBQ" followed by optional space and the number
+                        // OR just the number itself if sufficiently long
+                        const normalizedContent = content.replace(/\s+/g, ''); // Remove all spaces for easier checking
+                        const normalizedCode = code.toUpperCase();
+
+                        const isContentMatch =
+                            // 1. Flexible regex match for TBQ + Number in original content
+                            new RegExp(`TBQ\\s*${orderCodeNumber}`, 'i').test(content) ||
+                            // 2. Exact match in normalized content (no spaces)
+                            normalizedContent.includes(normalizedCode) ||
+                            // 3. Just the number if unique enough
+                            (orderCodeNumber.length >= 6 && content.includes(orderCodeNumber));
 
                         // If content doesn't match order code, reject immediately
                         if (!isContentMatch) {
@@ -239,7 +250,7 @@ exports.handler = async function (event, context) {
                         try {
                             const txTime = new Date(t.transaction_date || t.transactionDate || t.date || t.created_at);
                             const diffMins = (Date.now() - txTime.getTime()) / 60000;
-                            isRecentTx = diffMins < LOOKBACK_MINUTES && diffMins > -10;
+                            isRecentTx = diffMins < LOOKBACK_MINUTES && diffMins > -1440;
                         } catch (e) {
                             isRecentTx = true; // If can't parse date, don't reject
                         }
@@ -270,7 +281,7 @@ exports.handler = async function (event, context) {
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
             const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
-            await ensurePaymentSchema(db);  // DDL must run BEFORE BEGIN (outside transaction)
+            // await ensurePaymentSchema(db); // Optimization: Schema is stable, skip DDL on hot path
 
             // HttpTransaction: implicit transaction; commit() to save, rollback on error
             const tx = await db.transaction('write');

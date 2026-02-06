@@ -47,8 +47,8 @@ exports.handler = async function (event, context) {
             sql: `
                 SELECT * FROM orders 
                 WHERE status = 'pending_payment' 
-                AND created_at > datetime('now', '-1 day')
-                AND created_at < datetime('now', '-2 minutes')
+                AND created_at > datetime('now', '-7 days')
+                AND created_at < datetime('now', '0 minutes')
             `,
             args: []
         });
@@ -81,14 +81,11 @@ exports.handler = async function (event, context) {
             try {
                 const txTime = new Date(txDateRaw);
                 const diffMins = (Date.now() - txTime.getTime()) / 60000;
-                return diffMins >= -10 && diffMins <= LOOKBACK_MINUTES;
+                return diffMins < 10080 && diffMins > -1440;
             } catch {
                 return true; // If parsing fails, don't exclude
             }
         }
-
-        // ensurePaymentSchema once per job run – DDL cannot run inside BEGIN
-        await ensurePaymentSchema(db);
 
         let reconCount = 0;
 
@@ -101,7 +98,21 @@ exports.handler = async function (event, context) {
                 const amount = parseFloat(t.amount_in || t.amount || t.amountIn || 0);
                 const dateOk = isTxWithinLookback(t.transaction_date || t.transactionDate || t.date || t.created_at);
                 const code = orderCode.toUpperCase();
-                const contentMatch = content.includes(code) || content.includes(code.replace('TBQ', ''));
+                const orderCodeNumber = code.replace(/^TBQ\s*/i, '');
+
+                // Check if content has "TBQ" followed by optional space and the number
+                // OR just the number itself if sufficiently long
+                const normalizedContent = content.replace(/\s+/g, ''); // Remove all spaces for easier checking
+                const normalizedCode = code.toUpperCase();
+
+                const contentMatch =
+                    // 1. Flexible regex match for TBQ + Number in original content
+                    new RegExp(`TBQ\\s*${orderCodeNumber}`, 'i').test(content) ||
+                    // 2. Exact match in normalized content (no spaces)
+                    normalizedContent.includes(normalizedCode) ||
+                    // 3. Just the number if unique enough
+                    (orderCodeNumber.length >= 6 && content.includes(orderCodeNumber));
+
                 const amountMatch = amount >= (orderAmount * AMOUNT_TOLERANCE);
                 return dateOk && contentMatch && amountMatch;
             });
