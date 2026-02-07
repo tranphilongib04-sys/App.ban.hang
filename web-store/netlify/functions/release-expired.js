@@ -1,6 +1,8 @@
 /**
  * RELEASE EXPIRED RESERVATIONS - Netlify Function (Cron Job)
  *
+ * V3 UNIFIED: Operates on stock_items (not stock_units/order_allocations).
+ *
  * Can be called manually or scheduled via Netlify Scheduled Functions
  * Runs every 5 minutes to release expired reservations
  *
@@ -42,58 +44,38 @@ exports.handler = async function (event, context) {
         const db = getDbClient();
         const now = new Date().toISOString();
 
-        await db.execute('BEGIN IMMEDIATE');
+        // Use a write transaction for atomicity
+        const tx = await db.transaction('write');
 
         try {
-            // 1. Release expired stock units
-            const releasedUnits = await db.execute({
-                sql: `
-                    UPDATE stock_units
-                    SET status = 'available',
-                        reserved_order_id = NULL,
-                        reserved_until = NULL,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE status = 'reserved'
-                      AND reserved_until IS NOT NULL
-                      AND reserved_until < ?
-                `,
-                args: [now]
-            });
-
-            const unitsReleased = releasedUnits.rowsAffected || 0;
-
-            // 2. Expire pending orders
-            const expiredOrders = await db.execute({
+            // 1. Expire pending orders past their reserved_until
+            const expiredOrders = await tx.execute({
                 sql: `
                     UPDATE orders
-                    SET status = 'expired', updated_at = CURRENT_TIMESTAMP
+                    SET status = 'expired', updated_at = ?
                     WHERE status = 'pending_payment'
                       AND reserved_until IS NOT NULL
                       AND reserved_until < ?
                 `,
-                args: [now]
+                args: [now, now]
             });
-
             const ordersExpired = expiredOrders.rowsAffected || 0;
 
-            // 3. Release allocations for expired orders (allocations may not have reserved_until set)
-            const releasedAllocations = await db.execute({
+            // 2. Release stock_items linked to expired/cancelled orders (V3)
+            const releasedItems = await tx.execute({
                 sql: `
-                    UPDATE order_allocations
-                    SET status = 'released', reserved_until = NULL
+                    UPDATE stock_items
+                    SET status = 'available', order_id = NULL
                     WHERE status = 'reserved'
-                      AND order_line_id IN (
-                          SELECT id FROM order_lines WHERE order_id IN (
-                              SELECT id FROM orders WHERE status = 'expired'
-                          )
+                      AND order_id IN (
+                          SELECT id FROM orders WHERE status IN ('expired', 'cancelled')
                       )
                 `,
                 args: []
             });
+            const itemsReleased = releasedItems.rowsAffected || 0;
 
-            const allocationsReleased = releasedAllocations.rowsAffected || 0;
-
-            await db.execute('COMMIT');
+            await tx.commit();
 
             return {
                 statusCode: 200,
@@ -102,16 +84,15 @@ exports.handler = async function (event, context) {
                     success: true,
                     timestamp: now,
                     released: {
-                        stockUnits: unitsReleased,
-                        orders: ordersExpired,
-                        allocations: allocationsReleased
+                        stockItems: itemsReleased,
+                        orders: ordersExpired
                     },
-                    message: `Released ${unitsReleased} stock units, expired ${ordersExpired} orders`
+                    message: `Released ${itemsReleased} stock items, expired ${ordersExpired} orders`
                 })
             };
 
         } catch (error) {
-            await db.execute('ROLLBACK');
+            try { tx.close(); } catch { /* rollback */ }
             throw error;
         }
 

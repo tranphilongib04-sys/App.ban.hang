@@ -32,15 +32,6 @@ function verifyDeliveryToken(token, orderId, email) {
     return validTokens.includes(token);
 }
 
-// Decrypt password
-function decryptPassword(encrypted, iv) {
-    try {
-        return Buffer.from(encrypted, 'base64').toString('utf8');
-    } catch {
-        return '[ENCRYPTED]';
-    }
-}
-
 // Escape for HTML attribute (prevents XSS and broken onclick when cred contains ' or ")
 function escapeAttr(s) {
     if (s == null) return '';
@@ -166,40 +157,41 @@ exports.handler = async function (event, context) {
             };
         }
 
-        // Get credentials
-        const allocationsResult = await db.execute({
+        // Get credentials from stock_items (V3 unified)
+        const stockItemsResult = await db.execute({
             sql: `
-                SELECT su.content, su.password_encrypted, su.password_iv
-                FROM order_allocations oa
-                JOIN stock_units su ON oa.unit_id = su.id
-                JOIN order_lines ol ON oa.order_line_id = ol.id
-                WHERE ol.order_id = ? AND oa.status = 'sold'
-                ORDER BY oa.id ASC
+                SELECT si.account_info, si.secret_key, si.note, s.sku_code, s.name as sku_name
+                FROM stock_items si
+                JOIN skus s ON si.sku_id = s.id
+                WHERE si.order_id = ? AND si.status = 'sold'
+                ORDER BY si.id ASC
             `,
             args: [orderData.id]
         });
 
         const credentials = [];
-        for (const alloc of allocationsResult.rows) {
-            const password = Buffer.from(alloc.password_encrypted || '', 'base64').toString('utf8');
-            // Parse content as JSON if it contains credentials
-            let username = '';
-            let extraInfo = '';
-            try {
-                const contentObj = JSON.parse(alloc.content || '{}');
-                username = contentObj.username || contentObj.email || alloc.content;
-                extraInfo = contentObj.note || '';
-            } catch {
-                // If not JSON, treat as plain text username
-                username = alloc.content || '';
-            }
-
+        let hasChatGPTPro = false;
+        let hasChatGPTPlus = false;
+        let hasChatGPTGo = false;
+        for (const item of stockItemsResult.rows) {
             credentials.push({
-                username: username,
-                password: password,
-                extraInfo: extraInfo
+                username: item.account_info || '',
+                password: item.secret_key || '',
+                extraInfo: item.note || ''
             });
+            const code = (item.sku_code || '').toLowerCase();
+            const name = (item.sku_name || '').toLowerCase();
+            if (code.includes('chatgpt_pro') || name.includes('chatgpt pro')) {
+                hasChatGPTPro = true;
+            }
+            if (code.includes('chatgpt_plus') || name.includes('chatgpt plus')) {
+                hasChatGPTPlus = true;
+            }
+            if (code.includes('chatgpt_go') || name.includes('chatgpt go')) {
+                hasChatGPTGo = true;
+            }
         }
+        const hasChatGPTWith2FA = hasChatGPTPlus || hasChatGPTGo;
 
         // If JSON format requested, return JSON response
         if (wantsJson) {
@@ -210,7 +202,8 @@ exports.handler = async function (event, context) {
                     success: true,
                     orderCode: order,
                     invoiceNumber: orderData.invoice_number,
-                    credentials: credentials
+                    credentials: credentials,
+                    hasChatGPTPro: hasChatGPTPro
                 })
             };
         }
@@ -400,7 +393,7 @@ exports.handler = async function (event, context) {
                 </div>
                 ${cred.extraInfo ? `
                     <div class="credential-field">
-                        <div class="credential-label">Ghi chú</div>
+                        <div class="credential-label">${hasChatGPTWith2FA ? 'Mã 2FA (dùng trên 2fa.live)' : 'Ghi chú'}</div>
                         <div class="credential-value">${safeExtra}</div>
                     </div>
                 ` : ''}
@@ -409,6 +402,29 @@ exports.handler = async function (event, context) {
         }).join('')}
 
         <button class="copy-all-btn" onclick="copyAllCredentials()">📋 Copy tất cả thông tin</button>
+
+        ${hasChatGPTWith2FA ? `
+        <div class="guide" style="margin-top: 20px;">
+            <h3>🔐 Hướng dẫn đăng nhập ${hasChatGPTPlus && hasChatGPTGo ? 'ChatGPT Plus / ChatGPT Go' : hasChatGPTGo ? 'ChatGPT Go' : 'ChatGPT Plus'}</h3>
+            <p style="margin-bottom: 10px; color: #374151;">Thông tin gồm: <strong>Tài khoản | Mật khẩu | Mã 2FA</strong>.</p>
+            <ol style="margin-left: 20px; color: #166534; line-height: 1.7;">
+                <li>Đăng nhập bằng <strong>Tài khoản</strong> và <strong>Mật khẩu</strong> vào trang chính thức.</li>
+                <li>Khi trang yêu cầu mã 2FA: copy <strong>Mã 2FA</strong> (ô bên trên) → mở <a href="https://2fa.live" target="_blank" rel="noopener">2fa.live</a> → dán mã vào ô → bấm <strong>Submit</strong> → lấy mã 6 số và nhập vào trang đăng nhập.</li>
+            </ol>
+        </div>
+        ` : ''}
+
+        ${hasChatGPTPro ? `
+        <div class="guide" style="margin-top: 20px;">
+            <h3>📩 Đăng nhập (gửi sau khi mua)</h3>
+            <ul>
+                <li>Mở email đã đăng ký</li>
+                <li>Tìm thư mời workspace → <strong>Join workspace</strong></li>
+                <li>Đăng nhập và dùng</li>
+            </ul>
+            <p style="margin: 12px 0 0; padding: 10px; background: #fef3c7; border-radius: 8px; border-left: 3px solid #f59e0b; font-size: 13px; color: #92400e;">⚠️ Không chỉnh sửa cài đặt workspace và không tự ý thêm thành viên. Có lỗi thì nhắn Zalo gửi Gmail.</p>
+        </div>
+        ` : ''}
 
         <div class="guide">
             <h3>📝 Hướng dẫn sử dụng</h3>

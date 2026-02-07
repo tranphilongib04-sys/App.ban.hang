@@ -1,20 +1,23 @@
 /**
- * CREATE ORDER API - Netlify Function (V2 - Transactional)
+ * CREATE ORDER API - Netlify Function (V3 - Single Source of Truth)
  *
  * POST /create-order
- * Body: { customerName, customerEmail, customerPhone, customerNote, productCode, variant, quantity, price }
+ * Body: { customerName, items: [{ productCode, quantity, ... }] }
+ * 
+ * Logic:
+ * 1. Validate SKUs from `skus` table.
+ * 2. Create Order (status='pending_payment').
+ * 3. Reserve Stock (for `auto` items) by linking `stock_items` to `order_id`.
+ * 4. Create Order Lines.
  */
 
 const { createClient } = require('@libsql/client/web');
+const crypto = require('crypto');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
-
-    if (!url) {
-        throw new Error('TURSO_DATABASE_URL not configured');
-    }
-
+    if (!url) throw new Error('TURSO_DATABASE_URL not configured');
     return createClient({ url, authToken });
 }
 
@@ -25,284 +28,228 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
-// Rate Limiting Config
-const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
-const RATE_LIMIT_MAX_REQUESTS = 5;
+const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
+const RATE_LIMIT_MAX_REQUESTS = 10;
 
-// Generate unique order code
 function generateOrderCode() {
-    return 'TBQ' + Date.now().toString().slice(-8);
+    // Crypto-safe: TBQ + 8 random hex chars (4 billion+ combinations)
+    return 'TBQ' + crypto.randomBytes(4).toString('hex').toUpperCase();
 }
 
+// Reuse rate limit logic
 async function checkRateLimit(db, ip) {
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS rate_limits (
-            ip TEXT PRIMARY KEY,
-            count INTEGER DEFAULT 0,
-            reset_at DATETIME
-        )
-    `);
-    const now = new Date();
-    const result = await db.execute({
-        sql: 'SELECT count, reset_at FROM rate_limits WHERE ip = ?',
-        args: [ip]
-    });
+    try {
+        await db.execute(`
+            CREATE TABLE IF NOT EXISTS rate_limits (
+                ip TEXT PRIMARY KEY,
+                count INTEGER DEFAULT 0,
+                reset_at DATETIME
+            )
+        `);
+        const now = new Date();
+        const result = await db.execute({ sql: 'SELECT count, reset_at FROM rate_limits WHERE ip = ?', args: [ip] });
+        let count = 0;
+        let resetAt = new Date(now.getTime() + RATE_LIMIT_WINDOW_MS);
 
-    let count = 0;
-    let resetAt = new Date(now.getTime() + RATE_LIMIT_WINDOW_MS);
-
-    if (result.rows.length > 0) {
-        const row = result.rows[0];
-        const rowResetAt = new Date(row.reset_at);
-        console.log(`[RateLimit] IP: ${ip}, Found Row:`, row);
-
-
-        if (now > rowResetAt) {
-            // Expired, reset
-            count = 1;
-            // resetAt is already set to now + window
+        if (result.rows.length > 0) {
+            const row = result.rows[0];
+            if (now > new Date(row.reset_at)) {
+                count = 1;
+            } else {
+                count = row.count + 1;
+                resetAt = new Date(row.reset_at);
+            }
         } else {
-            // Still in window
-            count = row.count + 1;
-            resetAt = rowResetAt;
+            count = 1;
         }
-    } else {
-        count = 1;
-        console.log(`[RateLimit] IP: ${ip}, New Record`);
+
+        await db.execute({
+            sql: `INSERT INTO rate_limits (ip, count, reset_at) VALUES (?, ?, ?) ON CONFLICT(ip) DO UPDATE SET count = ?, reset_at = ?`,
+            args: [ip, count, resetAt.toISOString(), count, resetAt.toISOString()]
+        });
+        return count <= RATE_LIMIT_MAX_REQUESTS;
+    } catch (e) {
+        console.error("Rate limit error", e);
+        return true;
     }
-
-    console.log(`[RateLimit] IP: ${ip}, Count: ${count}, Allowed: ${count <= RATE_LIMIT_MAX_REQUESTS}`);
-
-    // Update DB
-    await db.execute({
-        sql: `INSERT INTO rate_limits (ip, count, reset_at) VALUES (?, ?, ?) 
-              ON CONFLICT(ip) DO UPDATE SET count = ?, reset_at = ?`,
-        args: [ip, count, resetAt.toISOString(), count, resetAt.toISOString()]
-    });
-
-    return count <= RATE_LIMIT_MAX_REQUESTS;
 }
 
 exports.handler = async function (event, context) {
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    if (event.httpMethod !== 'POST') {
-        return {
-            statusCode: 405,
-            headers,
-            body: JSON.stringify({ error: 'Method not allowed' })
-        };
-    }
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+    if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     let tx = null;
     const db = getDbClient();
 
-    // Ensure schema columns exist (DDL outside transaction)
     try {
-        await db.execute(`ALTER TABLE order_lines ADD COLUMN variant_name TEXT`);
-    } catch (e) { console.log('Notice: variant_name column add skipped', e.message); }
-    try {
-        await db.execute(`ALTER TABLE order_lines ADD COLUMN fulfillment_type TEXT DEFAULT 'auto'`);
-    } catch (e) { console.log('Notice: fulfillment_type column add skipped', e.message); }
-    try {
-        await db.execute(`ALTER TABLE orders ADD COLUMN delivery_token TEXT`);
-    } catch (e) { console.log('Notice: delivery_token column add skipped', e.message); }
-    try {
-        await db.execute(`ALTER TABLE orders ADD COLUMN delivery_token_expires_at DATETIME`);
-    } catch (e) { console.log('Notice: delivery_token_expires_at column add skipped', e.message); }
-    try {
-        await db.execute(`ALTER TABLE orders ADD COLUMN ip_address TEXT`);
-    } catch (e) { console.log('Notice: ip_address column add skipped', e.message); }
-    try {
-        await db.execute(`ALTER TABLE orders ADD COLUMN user_agent TEXT`);
-    } catch (e) { console.log('Notice: user_agent column add skipped', e.message); }
+        await db.execute(`ALTER TABLE order_lines ADD COLUMN sku_id TEXT`);
+    } catch (e) { console.log('Notice: sku_id column add skipped', e.message); }
 
     try {
         const body = JSON.parse(event.body);
-        let {
-            customerName,
-            customerEmail,
-            customerPhone,
-            customerNote,
-            items // New support for multiple items
-        } = body;
+        let { customerName, customerEmail, customerPhone, customerNote, items } = body;
 
-        // Backyard compatibility for old single-item requests
+        // Backward compatibility
         if (!items && body.productCode) {
-            items = [{
-                productCode: body.productCode,
-                variant: body.variant, // not really used for logic, just metadata
-                quantity: body.quantity || 1,
-                price: body.price
-            }];
+            items = [{ productCode: body.productCode, quantity: body.quantity || 1, price: body.price }];
         }
 
-        // Capture metadata
-        const ipAddress = (event.headers['client-ip'] || event.headers['x-forwarded-for'] || 'unknown').split(',')[0].trim();
-        const userAgent = event.headers['user-agent'] || 'unknown';
-
-        // Rate Limit Check
-        const isAllowed = await checkRateLimit(db, ipAddress);
-        if (!isAllowed) {
-            return {
-                statusCode: 429,
-                headers,
-                body: JSON.stringify({ success: false, error: 'Too many requests. Please try again later.' })
-            };
+        const ipAddress = (event.headers['client-ip'] || 'unknown').split(',')[0].trim();
+        if (!(await checkRateLimit(db, ipAddress))) {
+            return { statusCode: 429, headers, body: JSON.stringify({ error: 'Too many requests' }) };
         }
 
-        if (!customerName || !customerEmail || !customerPhone || !items || items.length === 0) {
-            return {
-                statusCode: 400,
-                headers,
-                body: JSON.stringify({ success: false, error: 'Missing required fields' })
-            };
-        }
-
-        // Validate items
-        for (const item of items) {
-            if (item.quantity < 1 || item.quantity > 100) {
-                return { statusCode: 400, headers, body: JSON.stringify({ success: false, error: `Invalid quantity for ${item.productCode}` }) };
-            }
+        if (!customerName || !customerEmail || !items || items.length === 0) {
+            return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing required fields' }) };
         }
 
         const orderCode = generateOrderCode();
         const now = new Date();
-        const expiresAt = new Date(now.getTime() + 30 * 60 * 1000); // 30 minutes
-        const deliveryToken = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-        const deliveryTokenExpiresAt = new Date(now.getTime() + 72 * 60 * 60 * 1000); // 72 hours
+        const expiresAt = new Date(now.getTime() + 30 * 60 * 1000); // 30m
+        const deliveryToken = crypto.randomUUID();
 
-        // Cleanup first
+        // Cleanup expired
         await cleanupExpired(db, now.toISOString());
 
-        // --- START TRANSACTION ---
+        // Helper to get legacy product ID for FK constraints
+        let legacyProductId = 0;
+        try {
+            const legRes = await db.execute("SELECT id FROM products WHERE code = 'V3_LEGACY_PLACEHOLDER'");
+            if (legRes.rows.length > 0) {
+                legacyProductId = legRes.rows[0].id;
+            } else {
+                const ins = await db.execute("INSERT INTO products (code, name, base_price) VALUES ('V3_LEGACY_PLACEHOLDER', 'V3 Legacy Item', 0) RETURNING id");
+                legacyProductId = ins.rows[0].id;
+            }
+        } catch (e) {
+            console.log('Notice: Failed to create legacy placeholder', e.message);
+        }
+        console.log('DEBUG: Legacy Product ID =', legacyProductId);
+
+        // --- TRANSACTION START ---
         tx = await db.transaction('write');
 
+        // VERIFY VISIBILITY
+        if (legacyProductId) {
+            const verify = await tx.execute({ sql: 'SELECT id, code FROM products WHERE id = ?', args: [legacyProductId] });
+            console.log('DEBUG: Verify Legacy Product in TX:', verify.rows);
+        }
+
         let totalAmount = 0;
-        let processedItems = [];
+        const finalItems = [];
 
-        // 1. Process each item (Check & Reserve)
+        // 1. Validation & Pre-calculation
         for (const item of items) {
-            const { productCode, quantity, price, variantName, fulfillmentType } = item;
+            const { productCode, quantity } = item; // productCode maps to sku_code
 
-            // Find product
-            const productResult = await tx.execute({
-                sql: 'SELECT id, name FROM products WHERE code = ? AND is_active = 1 LIMIT 1',
+            // Find SKU
+            const skus = await tx.execute({
+                sql: `SELECT id, name, price, delivery_type FROM skus WHERE sku_code = ? AND is_active = 1`,
                 args: [productCode]
             });
 
-            if (productResult.rows.length === 0) {
+            if (skus.rows.length === 0) {
+                // Fallback: Try old dictionary mapping if sku not found? 
+                // Or assumed user is using new codes.
                 tx.close();
-                return { statusCode: 404, headers, body: JSON.stringify({ success: false, error: `Product not found: ${productCode}` }) };
+                return { statusCode: 404, headers, body: JSON.stringify({ error: `Product not found: ${productCode}` }) };
+            }
+            const sku = skus.rows[0];
+
+            // If Auto Delivery, check stock
+            if (sku.delivery_type === 'auto') {
+                const stock = await tx.execute({
+                    sql: `SELECT COUNT(*) as count FROM stock_items WHERE sku_id = ? AND status = 'available'`,
+                    args: [sku.id]
+                });
+                const available = stock.rows[0].count;
+                if (available < quantity) {
+                    tx.close();
+                    return { statusCode: 409, headers, body: JSON.stringify({ error: 'INSUFFICIENT_STOCK', product: sku.name, available }) };
+                }
             }
 
-            const product = productResult.rows[0];
-            const productId = product.id;
-
-            // Check Stock
-            const stockCheck = await tx.execute({
-                sql: `SELECT COUNT(*) as available_count FROM stock_units WHERE product_id = ? AND status = 'available' AND (reserved_until IS NULL OR reserved_until <= ?)`,
-                args: [productId, now.toISOString()]
-            });
-            const availableCount = stockCheck.rows[0]?.available_count || 0;
-
-            if (availableCount < quantity) {
+            // SECURITY: Always use DB price. Never trust client-submitted price.
+            const unitPrice = sku.price;
+            if (!unitPrice || unitPrice <= 0) {
                 tx.close();
-                return {
-                    statusCode: 409,
-                    headers,
-                    body: JSON.stringify({ success: false, error: 'INSUFFICIENT_STOCK', product: product.name, available: availableCount, requested: quantity })
-                };
+                return { statusCode: 400, headers, body: JSON.stringify({ error: `SKU ${productCode} has no valid price configured` }) };
             }
 
-            // Reserve Stock
-            const reserveResult = await tx.execute({
-                sql: `UPDATE stock_units SET status = 'reserved', reserved_until = ?, updated_at = CURRENT_TIMESTAMP WHERE id IN (SELECT id FROM stock_units WHERE product_id = ? AND status = 'available' AND (reserved_until IS NULL OR reserved_until <= ?) ORDER BY id ASC LIMIT ?) AND status = 'available'`,
-                args: [expiresAt.toISOString(), productId, now.toISOString(), quantity]
-            });
-
-            const rowsAffected = reserveResult.rowsAffected ?? 0;
-            if (rowsAffected < quantity) {
-                tx.close();
-                return { statusCode: 409, headers, body: JSON.stringify({ success: false, error: 'RESERVE_FAILED', message: `Concurrency error for ${product.name}` }) };
-            }
-
-            // Get reserved IDs
-            const reservedUnits = await tx.execute({
-                sql: `SELECT id FROM stock_units WHERE product_id = ? AND status = 'reserved' AND reserved_until = ? ORDER BY id ASC LIMIT ?`,
-                args: [productId, expiresAt.toISOString(), quantity]
-            });
-            const unitIds = reservedUnits.rows.map(r => r.id);
-
-            processedItems.push({
-                productId,
-                productName: product.name,
-                variantName: variantName || null,
-                fulfillmentType: fulfillmentType || 'auto',
+            finalItems.push({
+                skuId: sku.id,
+                skuName: sku.name,
+                deliveryType: sku.delivery_type,
                 quantity,
-                unitPrice: price,
-                subtotal: price * quantity,
-                unitIds
+                unitPrice,
+                subtotal: unitPrice * quantity,
+                legacyProductId // Pass it down
             });
-
-            totalAmount += (price * quantity);
+            totalAmount += (unitPrice * quantity);
         }
 
         // 2. Create Order
-        const orderResult = await tx.execute({
-            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, reserved_until, delivery_token, delivery_token_expires_at, ip_address, user_agent, created_at, updated_at) VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, 'sepay', ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, expiresAt.toISOString(), deliveryToken, deliveryTokenExpiresAt.toISOString(), ipAddress, userAgent, now.toISOString(), now.toISOString()]
+        const orderRes = await tx.execute({
+            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, reserved_until, delivery_token, ip_address, created_at, updated_at) 
+                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, 'sepay', ?, ?, ?, ?, ?) RETURNING id`,
+            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, expiresAt.toISOString(), deliveryToken, ipAddress || null, now.toISOString(), now.toISOString()]
         });
-        const orderId = orderResult.rows[0]?.id || orderResult.lastInsertRowid;
+        const orderId = orderRes.rows[0].id;
 
-        // 3. Create Order Lines & Allocations & Logs
-        for (const pItem of processedItems) {
-            // Create Line with fulfillment_type
-            const orderLineResult = await tx.execute({
-                sql: `INSERT INTO order_lines (order_id, product_id, product_name, variant_name, quantity, unit_price, subtotal, fulfillment_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
-                args: [orderId, pItem.productId, pItem.productName, pItem.variantName, pItem.quantity, pItem.unitPrice, pItem.subtotal, pItem.fulfillmentType]
+        // 3. Process Items (Reserve Stock & Create Lines)
+        for (const item of finalItems) {
+            // Create Line
+            // note: product_id uses legacy placeholder for FK constraint
+            const lineRes = await tx.execute({
+                sql: `INSERT INTO order_lines (order_id, sku_id, product_id, product_name, quantity, unit_price, subtotal, fulfillment_type) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`,
+                args: [orderId, item.skuId, item.legacyProductId, item.skuName, item.quantity, item.unitPrice, item.subtotal, item.deliveryType]
             });
-            const orderLineId = orderLineResult.rows[0]?.id || orderLineResult.lastInsertRowid;
+            const lineId = lineRes.rows[0].id;
 
-            // Link Stock to Order & Create Allocations
-            const unitIds = pItem.unitIds;
+            // Reserve Stock if Auto
+            if (item.deliveryType === 'auto') {
+                // UPDATE LIMIT syntax is tricky in standard SQL/LibSQL.
+                // Using nested SELECT for ID list.
 
-            // Batch update stock units reserved_order_id
-            await tx.execute({
-                sql: `UPDATE stock_units SET reserved_order_id = ? WHERE id IN (${unitIds.map(() => '?').join(',')})`,
-                args: [orderId, ...unitIds]
-            });
-
-            for (const unitId of unitIds) {
-                await tx.execute({
-                    sql: `INSERT INTO order_allocations (order_line_id, unit_id, assigned_at) VALUES (?, ?, ?)`,
-                    args: [orderLineId, unitId, now.toISOString()]
+                // Select IDs to reserve
+                const idsRes = await tx.execute({
+                    sql: `SELECT id FROM stock_items WHERE sku_id = ? AND status = 'available' LIMIT ?`,
+                    args: [item.skuId, item.quantity]
                 });
 
-                // AUDIT LOG: RESERVE
-                await tx.execute({
-                    sql: `INSERT INTO inventory_logs (unit_id, order_id, action, actor, source, previous_status, new_status, payload) VALUES (?, ?, 'RESERVE', 'system', 'web', 'available', 'reserved', ?)`,
-                    args: [unitId, orderId, JSON.stringify({ expiresAt: expiresAt.toISOString() })]
-                });
+                if (idsRes.rows.length < item.quantity) {
+                    throw new Error('Race condition: Stock unavailable during booking');
+                }
+
+                const ids = idsRes.rows.map(r => r.id);
+                // Update specific IDs
+                for (const stockId of ids) {
+                    await tx.execute({
+                        sql: `UPDATE stock_items SET status = 'reserved', order_id = ? WHERE id = ?`,
+                        args: [orderId, stockId]
+                    });
+
+                    // Link allocation (optional but good for tracking)
+                    // We might need an order_allocations table? Or just stick to stock_items.order_id
+                    // Legacy system used order_allocations. Let's create it for consistency.
+                    // But schema V2 used `stock_units`. Now `stock_items`.
+                    // Does `order_allocations` table reference `stock_items`?
+                    // Previous schema: `order_allocations(unit_id)` -> `stock_units`.
+                    // Mixing IDs might be messy if tables different.
+                    // stock_items ID is UUID (TEXT), stock_units was INT.
+                    // check order_allocations table definition.
+                    // If `unit_id` is INTEGER, we can't put UUID there.
+                    // SKIPPING `order_allocations` for now as `stock_items.order_id` is sufficient link.
+                }
             }
         }
 
-        // 4. Create Payment Record (Pending)
+        // 4. Create Payment Record
         await tx.execute({
-            // Normalize provider/status to match DB CHECK constraints + other functions
             sql: `INSERT INTO payments (order_id, provider, amount, status, created_at) VALUES (?, 'sepay', ?, 'initiated', ?)`,
             args: [orderId, totalAmount, now.toISOString()]
         });
 
-        // 5. Sync Event: ORDER_CREATED
-        await tx.execute({
-            sql: `INSERT INTO sync_events (event_type, entity_type, entity_id, source, actor, payload) VALUES ('ORDER_CREATED', 'order', ?, 'web', ?, ?)`,
-            args: [orderId, customerEmail, JSON.stringify({ orderCode, totalAmount, itemsCount: items.length })]
-        });
-
-        // COMMIT
         await tx.commit();
 
         return {
@@ -314,7 +261,7 @@ exports.handler = async function (event, context) {
                 orderId,
                 amount: totalAmount,
                 expiresAt: expiresAt.toISOString(),
-                message: `Đơn hàng đã được tạo. Vui lòng thanh toán trong 30 phút.`,
+                message: 'Order created',
                 paymentInfo: {
                     bankName: 'TP Bank',
                     accountNumber: '00000828511',
@@ -325,57 +272,23 @@ exports.handler = async function (event, context) {
             })
         };
 
-    } catch (error) {
-        console.error('Transaction Error:', error);
-        if (tx) {
-            try { tx.close(); } catch (e) { }
-        }
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({ success: false, error: 'Internal server error', message: error.message, stack: error.stack })
-        };
+    } catch (e) {
+        if (tx) tx.close();
+        console.error('Create Order Error:', e);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
     }
 };
 
 async function cleanupExpired(db, now) {
-    // Release expired reservations
-    await db.execute({
-        sql: `
-            UPDATE stock_units
-            SET status = 'available',
-            reserved_order_id = NULL,
-            reserved_until = NULL,
-            updated_at = CURRENT_TIMESTAMP
-            WHERE status = 'reserved'
-              AND reserved_until < ?
-        `,
-        args: [now]
-    });
-
-    // Expire pending orders
-    await db.execute({
-        sql: `
-            UPDATE orders
-            SET status = 'expired', updated_at = CURRENT_TIMESTAMP
-            WHERE status = 'pending_payment'
-              AND reserved_until < ?
-        `,
-        args: [now]
-    });
-
-    // Release allocations for expired orders (order_allocations.reserved_until may be NULL, so key by order status)
-    await db.execute({
-        sql: `
-                UPDATE order_allocations
-                SET status = 'released'
-                WHERE status = 'reserved'
-                  AND order_line_id IN (
-                      SELECT id FROM order_lines WHERE order_id IN (
-                          SELECT id FROM orders WHERE status = 'expired'
-                      )
-                  )
-            `,
-        args: []
-    });
+    try {
+        await db.execute({
+            sql: `UPDATE orders SET status = 'expired' WHERE status = 'pending_payment' AND reserved_until < ?`,
+            args: [now]
+        });
+        // Release stock linked to expired orders
+        await db.execute({
+            sql: `UPDATE stock_items SET status = 'available', order_id = NULL WHERE status = 'reserved' AND order_id IN (SELECT id FROM orders WHERE status IN ('expired', 'cancelled'))`,
+            args: []
+        });
+    } catch (e) { console.error('Cleanup error', e); }
 }

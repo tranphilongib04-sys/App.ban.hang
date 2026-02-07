@@ -13,14 +13,6 @@ const VALID_TRANSITIONS = {
     refunded:        []
 };
 
-function decryptPassword(encrypted, iv) {
-    try {
-        return Buffer.from(encrypted, 'base64').toString('utf8');
-    } catch {
-        return '[ENCRYPTED]';
-    }
-}
-
 // ---------------------------------------------------------------------------
 // ensurePaymentSchema  – idempotent DDL safety-net.
 // MUST be called OUTSIDE any BEGIN … COMMIT block (DDL auto-commits in SQLite).
@@ -50,29 +42,19 @@ async function ensurePaymentSchema(db) {
         )
     `);
 
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS deliveries (
-            id              INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id        INTEGER NOT NULL,
-            unit_id         INTEGER NOT NULL,
-            delivery_token  TEXT    NOT NULL,
-            delivered_at    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            delivery_note   TEXT,
-            FOREIGN KEY (order_id) REFERENCES orders(id),
-            FOREIGN KEY (unit_id)  REFERENCES stock_units(id)
-        )
-    `);
-
     try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_payments_provider_txn ON payments(provider, transaction_id)`); } catch { /* ok */ }
     try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_invoices_order_id ON invoices(order_id)`); } catch { /* ok */ }
-    try { await db.execute(`CREATE UNIQUE INDEX IF NOT EXISTS idx_deliveries_order_unit ON deliveries(order_id, unit_id)`); } catch { /* ok */ }
 }
 
 function generateDeliveryToken(orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) {
+        console.error('[SECURITY] DELIVERY_SECRET env variable is NOT SET! Using fallback. SET THIS IMMEDIATELY.');
+    }
+    const key = secret || 'default-secret-change-me';
     const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const data = `${orderId}|${email}|${day}`;
-    return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
+    return crypto.createHash('sha256').update(key + data).digest('hex').substring(0, 32);
 }
 
 // ---------------------------------------------------------------------------
@@ -80,6 +62,9 @@ function generateDeliveryToken(orderId, email) {
 //
 // THE single entry-point for "payment confirmed → deliver".
 // Used by: webhook-sepay, check-payment, reconcile-payments.
+//
+// V3 UNIFIED: Reads from `stock_items` table directly (linked via stock_items.order_id).
+//             No longer depends on order_allocations or stock_units.
 //
 // Contract:
 //   • Caller MUST have already called ensurePaymentSchema(db) BEFORE BEGIN.
@@ -110,17 +95,14 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         return { alreadyFulfilled: true, deliveryToken: token, invoiceNumber: inv.rows[0]?.invoice_number || null, credentials: [] };
     }
 
-    // Validate transition from current status → fulfilled
+    // Validate transition from current status → paid
     const allowed = VALID_TRANSITIONS[fresh.status];
     if (!allowed || !allowed.includes('paid')) {
         console.warn(`[finalizeOrder] order ${fresh.id} in status "${fresh.status}" – cannot transition to paid`);
         return { alreadyFulfilled: true, deliveryToken: null, invoiceNumber: null, credentials: [] };
     }
 
-    // ── 2. Record payment (idempotent – skip if confirmed payment already exists) ──
-    //    Partial unique index idx_payments_order_confirmed prevents duplicate confirmed
-    //    rows per order, so we guard with a pre-check instead of relying solely on
-    //    ON CONFLICT(provider, transaction_id).
+    // ── 2. Record payment (idempotent) ────────────────────────────────
     const existingConfirmed = await db.execute({
         sql: `SELECT id FROM payments WHERE order_id = ? AND status = 'confirmed' LIMIT 1`,
         args: [fresh.id]
@@ -140,71 +122,48 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         args: [now, fresh.id]
     });
 
-    // ── 4. Collect allocated credentials ──────────────────────────────
-    const allocationsResult = await db.execute({
-        sql: `SELECT oa.id, oa.unit_id, su.content, su.username, su.extra_info,
-                     su.password_encrypted, su.password_iv
-              FROM order_allocations oa
-              JOIN stock_units su ON oa.unit_id = su.id
-              JOIN order_lines ol ON oa.order_line_id = ol.id
-              WHERE ol.order_id = ? AND oa.status = 'reserved'
-              ORDER BY oa.id ASC`,
+    // ── 4. Collect reserved stock_items (V3 unified) ─────────────────
+    //    stock_items are linked via stock_items.order_id (set during create-order)
+    const stockResult = await db.execute({
+        sql: `SELECT si.id, si.account_info, si.secret_key, si.note
+              FROM stock_items si
+              WHERE si.order_id = ? AND si.status = 'reserved'
+              ORDER BY si.id ASC`,
         args: [fresh.id]
     });
 
     const credentials = [];
-    for (const alloc of allocationsResult.rows) {
-        const password = decryptPassword(alloc.password_encrypted, alloc.password_iv);
-        // stock_units has dedicated username / extra_info columns; fall back to content JSON only if empty
-        let username = alloc.username || '';
-        let extraInfo = alloc.extra_info || '';
-        if (!username && alloc.content) {
-            try {
-                const obj = JSON.parse(alloc.content);
-                username  = obj.username || obj.email || alloc.content;
-                extraInfo = extraInfo || obj.note || '';
-            } catch { username = alloc.content; }
-        }
-        credentials.push({ username, password, extraInfo });
+    for (const item of stockResult.rows) {
+        credentials.push({
+            username: item.account_info || '',
+            password: item.secret_key || '',
+            extraInfo: item.note || ''
+        });
     }
 
-    // ── 5. Allocations reserved → sold ───────────────────────────────
-    await db.execute({
-        sql: `UPDATE order_allocations SET status = 'sold', reserved_until = NULL
-              WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?) AND status = 'reserved'`,
-        args: [fresh.id]
-    });
+    // ── 5. Stock items: reserved → sold ───────────────────────────────
+    if (stockResult.rows.length > 0) {
+        const placeholders = stockResult.rows.map(() => '?').join(',');
+        const stockIds = stockResult.rows.map(r => r.id);
+        await db.execute({
+            sql: `UPDATE stock_items
+                  SET status = 'sold', sold_at = ?
+                  WHERE id IN (${placeholders}) AND status = 'reserved'`,
+            args: [now, ...stockIds]
+        });
+    }
 
-    // ── 6. Stock-units reserved → sold ───────────────────────────────
-    await db.execute({
-        sql: `UPDATE stock_units
-              SET status = 'sold', sold_order_id = ?, sold_at = ?,
-                  reserved_order_id = NULL, reserved_until = NULL, updated_at = CURRENT_TIMESTAMP
-              WHERE id IN (
-                  SELECT unit_id FROM order_allocations
-                  WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?) AND status = 'sold'
-              )`,
-        args: [fresh.id, now, fresh.id]
-    });
-
-    // ── 7. Transition: paid → fulfilled (CAS on 'paid') ──────────────
+    // ── 6. Transition: paid → fulfilled (CAS on 'paid') ──────────────
     await db.execute({
         sql: `UPDATE orders SET status = 'fulfilled', reserved_until = NULL, updated_at = ?
               WHERE id = ? AND status = 'paid'`,
         args: [now, fresh.id]
     });
 
-    // ── 8. Delivery token + per-unit delivery log ────────────────────
+    // ── 7. Delivery token ──────────────────────────────────────────────
     const deliveryToken = generateDeliveryToken(fresh.id, fresh.customer_email);
-    for (const alloc of allocationsResult.rows) {
-        await db.execute({
-            sql: `INSERT INTO deliveries (order_id, unit_id, delivery_token, delivered_at)
-                  VALUES (?, ?, ?, ?) ON CONFLICT(order_id, unit_id) DO NOTHING`,
-            args: [fresh.id, alloc.unit_id, deliveryToken, now]
-        });
-    }
 
-    // ── 9. Invoice (idempotent) ───────────────────────────────────────
+    // ── 8. Invoice (idempotent) ───────────────────────────────────────
     const invoiceNumber = `TBQ-${new Date().getFullYear()}${String(new Date().getMonth() + 1).padStart(2, '0')}-${String(Date.now() % 100000).padStart(5, '0')}`;
     await db.execute({
         sql: `INSERT INTO invoices (order_id, invoice_number, issued_at, status)
@@ -214,7 +173,7 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     const invRow = await db.execute({ sql: 'SELECT invoice_number FROM invoices WHERE order_id = ?', args: [fresh.id] });
     const finalInvoiceNumber = invRow.rows[0]?.invoice_number || invoiceNumber;
 
-    // ── 10. Audit trail ───────────────────────────────────────────────
+    // ── 9. Audit trail ───────────────────────────────────────────────
     await db.execute({
         sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?,?,?,?,?,?)`,
         args: ['PAYMENT_CONFIRMED', 'payment', fresh.id, 'system', source,
@@ -223,16 +182,19 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     await db.execute({
         sql: `INSERT INTO audit_logs (event_type, entity_type, entity_id, actor, source, payload) VALUES (?,?,?,?,?,?)`,
         args: ['ORDER_FULFILLED', 'order', fresh.id, 'system', source,
-            JSON.stringify({ invoice_number: finalInvoiceNumber, units_delivered: allocationsResult.rows.map(a => a.unit_id), delivery_token: deliveryToken })]
+            JSON.stringify({
+                invoice_number: finalInvoiceNumber,
+                stock_items_delivered: stockResult.rows.map(a => a.id),
+                delivery_token: deliveryToken
+            })]
     });
 
-    console.log(`[finalizeOrder] order ${fresh.id} fulfilled via ${source}`);
+    console.log(`[finalizeOrder] order ${fresh.id} fulfilled via ${source} | ${stockResult.rows.length} items delivered`);
     return { alreadyFulfilled: false, deliveryToken, invoiceNumber: finalInvoiceNumber, credentials };
 }
 
 // ---------------------------------------------------------------------------
 // fulfillOrder – thin wrapper kept for backward compat.
-// Delegates entirely to finalizeOrder.
 // ---------------------------------------------------------------------------
 async function fulfillOrder(db, order, transaction, skipSchemaCheck = false) {
     if (!skipSchemaCheck) await ensurePaymentSchema(db);
