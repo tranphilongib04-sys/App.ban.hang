@@ -123,7 +123,7 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     });
 
     // ── 4. Collect reserved stock_items (V3 unified) ─────────────────
-    //    stock_items are linked via stock_items.order_id (set during create-order)
+    //    Giao liền (auto) mới có reserved items. Giao sau 5-10' (owner_upgrade) không có → rows rỗng.
     const stockResult = await db.execute({
         sql: `SELECT si.id, si.account_info, si.secret_key, si.note
               FROM stock_items si

@@ -163,17 +163,17 @@ exports.handler = async function (event, context) {
                     });
                     const fulfillmentType = lineResult.rows[0]?.fulfillment_type || 'auto';
 
+                    const isPreorder = fulfillmentType === 'owner_upgrade';
                     const response = {
                         status: 'paid',
                         alreadyProcessed: true,
                         fulfillmentType: fulfillmentType,
-                        message: fulfillmentType === 'upgrade_request'
-                            ? 'Đơn hàng đã thanh toán. Vui lòng gửi thông tin tài khoản để được nâng cấp.'
-                            : 'Đơn hàng đã được xử lý. Vui lòng kiểm tra email hoặc liên hệ hỗ trợ.'
+                        hasPreorderItems: isPreorder,
+                        message: isPreorder
+                            ? 'Đơn hàng đã thanh toán. Vui lòng gửi bill qua Zalo để nhận tài khoản.'
+                            : 'Đơn hàng đã được xử lý.'
                     };
-
-                    // Only include deliveryToken for auto fulfillment
-                    if (fulfillmentType !== 'upgrade_request') {
+                    if (!isPreorder) {
                         response.deliveryToken = generateDeliveryToken(order.id, order.customer_email);
                     }
 
@@ -280,29 +280,43 @@ exports.handler = async function (event, context) {
 
         // If payment found, process delivery
         if (paidTransaction && db && order && order.status === 'pending_payment') {
-            const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
-            // await ensurePaymentSchema(db); // Optimization: Schema is stable, skip DDL on hot path
+            const { finalizeOrder } = require('./utils/fulfillment');
+            const linesResult = await db.execute({
+                sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ?`,
+                args: [order.id]
+            });
+            const hasAnyPreorder = linesResult.rows.some(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
+            const allPreorder = linesResult.rows.length > 0 && linesResult.rows.every(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
 
-            // HttpTransaction: implicit transaction; commit() to save, rollback on error
             const tx = await db.transaction('write');
             try {
                 const result = await finalizeOrder(tx, order, paidTransaction, 'check-payment');
-                await tx.commit();   // explicitly commit
+                await tx.commit();
 
+                if (allPreorder) {
+                    return {
+                        statusCode: 200,
+                        headers,
+                        body: JSON.stringify({
+                            status: 'paid',
+                            fulfillmentType: 'owner_upgrade',
+                            hasPreorderItems: true,
+                            message: 'Thanh toán thành công! Gửi bill qua Zalo để nhận tài khoản.',
+                            invoiceNumber: result.invoiceNumber
+                        })
+                    };
+                }
                 return {
                     statusCode: 200,
                     headers,
                     body: JSON.stringify({
                         status: 'paid',
-                        transaction: {
-                            id: paidTransaction.id,
-                            amount: paidTransaction.amount_in,
-                            date: paidTransaction.transaction_date
-                        },
+                        fulfillmentType: 'auto',
+                        hasPreorderItems: hasAnyPreorder,
                         deliveryToken: result.deliveryToken,
                         invoiceNumber: result.invoiceNumber,
-                        message: 'Thanh toán thành công! Đơn hàng đã được giao tự động.',
-                        redirectUrl: `/delivery?token=${result.deliveryToken}&order=${orderCode}`
+                        message: 'Thanh toán thành công!',
+                        redirectUrl: `/.netlify/functions/delivery?token=${result.deliveryToken}&order=${orderCode}`
                     })
                 };
             } catch (error) {

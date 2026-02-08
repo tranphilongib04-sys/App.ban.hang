@@ -1,29 +1,17 @@
 /**
- * INVENTORY API - Netlify Function (V3 - Google Sheets + Turso Fallback)
+ * INVENTORY API (V3 - Database Centric)
  *
  * Endpoints:
- * - GET /inventory?service=chatgpt&variant=... - Get available stock count
- * - GET /inventory/all - Get all products with stock counts
- * 
- * Data Source Priority:
- * 1. Google Sheets (if GOOGLE_SHEETS_ID configured)
- * 2. Turso DB (fallback)
+ * - GET /inventory?service=chatgpt&variant=plus-1m  -> Checks availability
+ * - GET /inventory?action=all -> Returns all SKUs with available counts
  */
 
 const { createClient } = require('@libsql/client/web');
-const { fetchInventoryFromSheets, getInventorySummary, getAvailableStock } = require('./utils/google-sheets');
-
-// Check if Google Sheets is configured
-const USE_GOOGLE_SHEETS = !!process.env.GOOGLE_SHEETS_ID;
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
     const authToken = process.env.TURSO_AUTH_TOKEN;
-
-    if (!url) {
-        return null; // Allow running without DB if using Google Sheets
-    }
-
+    if (!url) return null;
     return createClient({ url, authToken });
 }
 
@@ -35,196 +23,136 @@ const headers = {
 };
 
 exports.handler = async function (event, context) {
-    if (event.httpMethod === 'OPTIONS') {
-        return { statusCode: 200, headers, body: '' };
-    }
-
-    if (event.httpMethod !== 'GET') {
-        return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
-    }
+    if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
+    if (event.httpMethod !== 'GET') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     try {
+        const db = getDbClient();
+        if (!db) throw new Error('Database not configured');
+
+        // Cleanup expired reservations
+        await cleanupExpired(db);
+
         const { service, variant, action } = event.queryStringParameters || {};
 
-        // === Google Sheets Mode ===
-        if (USE_GOOGLE_SHEETS) {
-            console.log('[Inventory] Using Google Sheets as data source');
-
-            if (action === 'all') {
-                const summary = await getInventorySummary();
-                return {
-                    statusCode: 200,
-                    headers,
-                    body: JSON.stringify({
-                        success: true,
-                        source: 'google-sheets',
-                        inventory: summary
-                    })
-                };
-            }
-
-            if (service) {
-                const productCode = variant
-                    ? `${service}_${variant.replace(/-/g, '_')}`
-                    : service;
-                const count = await getAvailableStock(productCode);
-
-                return {
-                    statusCode: 200,
-                    headers,
-                    body: JSON.stringify({
-                        success: true,
-                        source: 'google-sheets',
-                        service,
-                        variant: variant || 'all',
-                        available: count,
-                        inStock: count > 0
-                    })
-                };
-            }
-
-            const summary = await getInventorySummary();
-            return {
-                statusCode: 200,
-                headers,
-                body: JSON.stringify({
-                    success: true,
-                    source: 'google-sheets',
-                    summary
-                })
-            };
-        }
-
-        // === Turso DB Mode (Fallback) ===
-        console.log('[Inventory] Using Turso DB as data source');
-        const db = getDbClient();
-        if (!db) {
-            throw new Error('No data source configured. Set GOOGLE_SHEETS_ID or TURSO_DATABASE_URL');
-        }
-
-        // Clean up expired reservations first
-        const now = new Date().toISOString();
-        await cleanupExpired(db, now);
-
+        // 1. Get All Inventory (Public Summary)
         if (action === 'all') {
-            // Get all products with stock counts from VIEW
-            const result = await db.execute(`SELECT * FROM stock_summary`);
+            const sql = `
+                SELECT
+                    s.sku_code,
+                    s.name,
+                    s.price,
+                    s.delivery_type,
+                    SUM(CASE WHEN si.status='available' THEN 1 ELSE 0 END) AS available,
+                    COUNT(si.id) AS total
+                FROM skus s
+                LEFT JOIN stock_items si ON si.sku_id = s.id
+                WHERE s.is_active = 1
+                GROUP BY s.id, s.sku_code, s.name, s.price, s.delivery_type
+                ORDER BY s.category, s.name
+            `;
+            const result = await db.execute(sql);
+            // Giao sau 5-10' (owner_upgrade) không cần tồn kho → luôn coi là còn hàng.
+            const inventory = result.rows.map(row => {
+                const isPreorder = (row.delivery_type || 'auto') === 'owner_upgrade';
+                return {
+                    sku: row.sku_code,
+                    product_code: row.sku_code,
+                    name: row.name,
+                    price: row.price,
+                    delivery_type: row.delivery_type,
+                    available: isPreorder ? 999 : Number(row.available || 0),
+                    total: Number(row.total || 0),
+                    inStock: isPreorder ? true : Number(row.available || 0) > 0
+                };
+            });
 
             return {
                 statusCode: 200,
                 headers,
-                body: JSON.stringify({
-                    success: true,
-                    source: 'turso-db',
-                    inventory: result.rows
-                })
+                body: JSON.stringify({ success: true, source: 'database', inventory })
             };
         }
 
-        if (service) { // Legacy param map 'service' -> product code component if loose match
-            // But simplest is to match 'productCode' or 'service' against p.code
-            // The old 'service' + 'variant' logic was fuzzy. 
-            // New schema uses 'code' like 'chatgpt_plus_1m'.
-            // Let's try to map "service" if it doesn't look like a full code.
+        // 2. Check Specific Availability
+        if (service) {
+            // Construct SKU Code: service + "_" + variant
+            // e.g. service="chatgpt", variant="plus-1m" -> "chatgpt_plus_1m"
+            // e.g. service="chatgpt_plus_1m", variant=null -> "chatgpt_plus_1m"
 
-            let searchCode = service;
+            let skuCode = service;
             if (variant) {
-                // Try to construct code or search loosely?
-                // Current test sends service='chatgpt', variant='plus-1m'.
-                // Seeded data is 'chatgpt_plus_1m'.
-                // So we can try `LIKE` match?
-                // Or just assume `chatgpt` is prefix.
+                skuCode = `${service}_${variant.replace(/-/g, '_')}`;
             }
 
-            // We can check if stock exists for this "product category" or specific variant
-            // Let's implement a smart search
+            // Fuzzy match or exact? New system prefers exact.
+            // Try exact first.
+            let sql = `
+                SELECT COUNT(*) as count 
+                FROM stock_items si
+                JOIN skus s ON si.sku_id = s.id
+                WHERE s.sku_code = ? AND si.status = 'available'
+            `;
+            let result = await db.execute({ sql, args: [skuCode] });
+            let count = Number(result.rows[0]?.count || 0);
 
-            let query = `
-                SELECT COUNT(s.id) as count
-                FROM stock_units s
-                JOIN products p ON s.product_id = p.id
-                WHERE s.status = 'available'
-             `;
-            const params = [];
-
-            if (variant) {
-                // Exactish match attempt: service + "_" + variant (normalized)
-                // e.g. chatgpt_plus_1m
-                const possibleCode = `${service}_${variant.replace(/-/g, '_')}`;
-                query += " AND (p.code = ? OR p.code LIKE ?)";
-                params.push(possibleCode, `${service}%${variant}%`);
-            } else {
-                // Category search 'chatgpt'
-                query += " AND p.code LIKE ?";
-                params.push(`${service}%`);
+            // If 0, maybe partial match or category search? (Old logic supported this)
+            // If they searched just 'chatgpt', result should sum up all chatgpt?
+            if (count === 0 && !variant) {
+                sql = `
+                    SELECT COUNT(*) as count 
+                    FROM stock_items si
+                    JOIN skus s ON si.sku_id = s.id
+                    WHERE s.sku_code LIKE ? AND si.status = 'available'
+                `;
+                result = await db.execute({ sql, args: [`${skuCode}%`] });
+                count = Number(result.rows[0]?.count || 0);
             }
-
-            const result = await db.execute({ sql: query, args: params });
-            const count = result.rows[0]?.count || 0;
 
             return {
                 statusCode: 200,
                 headers,
                 body: JSON.stringify({
                     success: true,
+                    source: 'database',
                     service,
                     variant: variant || 'all',
+                    product_code: skuCode,
                     available: count,
                     inStock: count > 0
                 })
             };
         }
 
-        // Default summary joined from VIEW
-        const result = await db.execute(`SELECT code, available_units as available FROM stock_summary`);
-
-        return {
-            statusCode: 200,
-            headers,
-            body: JSON.stringify({
-                success: true,
-                summary: result.rows
-            })
-        };
+        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing parameters' }) };
 
     } catch (error) {
-        console.error('Inventory API error:', error);
-        return {
-            statusCode: 500,
-            headers,
-            body: JSON.stringify({
-                error: 'Internal server error',
-                message: error.message
-            })
-        };
+        console.error('Inventory API Error:', error);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Internal server error' }) };
     }
 };
 
-async function cleanupExpired(db, now) {
+async function cleanupExpired(db) {
     try {
-        // Release reserved stock units
+        const now = new Date().toISOString();
+
+        // 1. Mark Orders as Expired
         await db.execute({
-            sql: `
-                UPDATE stock_units
-                SET status = 'available',
-                reserved_until = NULL,
-                reserved_order_id = NULL
-                WHERE status = 'reserved'
-                AND reserved_until < ?
-            `,
+            sql: `UPDATE orders SET status = 'expired' WHERE status = 'pending_payment' AND reserved_until < ?`,
             args: [now]
         });
 
-        // Cancel pending orders that expired
+        // 2. Release Stock Items linked to Expired/Cancelled orders
         await db.execute({
             sql: `
-                UPDATE orders
-                SET status = 'cancelled'
-                WHERE status = 'pending_payment'
-                AND reserved_until < ?
+                UPDATE stock_items 
+                SET status = 'available', order_id = NULL 
+                WHERE status = 'reserved' 
+                AND order_id IN (SELECT id FROM orders WHERE status IN ('expired', 'cancelled'))
             `,
-            args: [now]
+            args: []
         });
+
     } catch (e) {
         console.error('Cleanup failed:', e);
     }

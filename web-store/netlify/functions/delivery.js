@@ -174,24 +174,78 @@ exports.handler = async function (event, context) {
         let hasChatGPTPlus = false;
         let hasChatGPTGo = false;
         for (const item of stockItemsResult.rows) {
+            const code = (item.sku_code || '').toLowerCase();
+            const isLinkDelivery = code.includes('chatgpt_code') || code.includes('_code_');
             credentials.push({
                 username: item.account_info || '',
                 password: item.secret_key || '',
-                extraInfo: item.note || ''
+                extraInfo: item.note || '',
+                isLink: isLinkDelivery
             });
-            const code = (item.sku_code || '').toLowerCase();
+            const codeForFlags = code;
             const name = (item.sku_name || '').toLowerCase();
-            if (code.includes('chatgpt_pro') || name.includes('chatgpt pro')) {
+            if (codeForFlags.includes('chatgpt_pro') || name.includes('chatgpt pro')) {
                 hasChatGPTPro = true;
             }
-            if (code.includes('chatgpt_plus') || name.includes('chatgpt plus')) {
+            if (codeForFlags.includes('chatgpt_plus') || name.includes('chatgpt plus')) {
                 hasChatGPTPlus = true;
             }
-            if (code.includes('chatgpt_go') || name.includes('chatgpt go')) {
+            if (codeForFlags.includes('chatgpt_go') || name.includes('chatgpt go')) {
                 hasChatGPTGo = true;
             }
         }
         const hasChatGPTWith2FA = hasChatGPTPlus || hasChatGPTGo;
+
+        // Pre-order order: no stock_items, show Zalo instructions
+        if (credentials.length === 0) {
+            const lineCheck = await db.execute({
+                sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ? LIMIT 1`,
+                args: [orderData.id]
+            });
+            const ft = lineCheck.rows[0]?.fulfillment_type;
+            if (ft === 'owner_upgrade') {
+                const zaloHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhận hàng - TBQ Homie</title>
+<style>body{font-family:-apple-system,sans-serif;background:#f5f5f7;color:#1d1d1f;padding:20px;text-align:center;}
+.container{max-width:500px;margin:0 auto;background:white;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.success-icon{font-size:48px;margin-bottom:16px;} h1{font-size:24px;margin-bottom:8px;}
+.order-code{color:#6e6e73;margin-bottom:24px;} .steps{text-align:left;margin:24px 0;}
+.step{margin:12px 0;display:flex;align-items:center;gap:12px;}
+.zalo-btn{display:inline-block;background:#0068FF;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:16px;}
+.zalo-btn:hover{background:#0052cc;}</style></head>
+<body><div class="container">
+<div class="success-icon">&#128337;</div>
+<h1>Đơn hàng đặt trước</h1>
+<p class="order-code">Mã đơn: <strong>${order}</strong></p>
+<p>Đơn hàng của bạn sẽ được giao qua Zalo trong 5-10 phút.</p>
+<div class="steps">
+<div class="step"><span>1.</span> Chụp màn hình hóa đơn / xác nhận thanh toán</div>
+<div class="step"><span>2.</span> Gửi qua Zalo để nhận tài khoản</div>
+<div class="step"><span>3.</span> Nhận tài khoản trong 5-10 phút</div>
+</div>
+<a href="https://zalo.me/0988428496" target="_blank" class="zalo-btn">Chat Zalo - 0988 428 496</a>
+</div></body></html>`;
+                if (wantsJson) {
+                    return {
+                        statusCode: 200,
+                        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+                        body: JSON.stringify({
+                            success: true,
+                            orderCode: order,
+                            fulfillmentType: 'owner_upgrade',
+                            message: 'Đơn hàng sẽ được giao qua Zalo. Gửi bill để nhận tài khoản.'
+                        })
+                    };
+                }
+                return {
+                    statusCode: 200,
+                    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+                    body: zaloHtml
+                };
+            }
+        }
 
         // If JSON format requested, return JSON response
         if (wantsJson) {
@@ -370,6 +424,30 @@ exports.handler = async function (event, context) {
             const safeUser = escapeAttr(cred.username);
             const safePass = escapeAttr(cred.password);
             const safeExtra = escapeAttr(cred.extraInfo);
+            const isLink = cred.isLink === true;
+            const isUrl = cred.username && /^https?:\/\//i.test(cred.username);
+            if (isLink) {
+                return `
+            <div class="credential-card">
+                <div class="credential-header">
+                    <div class="credential-title">Code / Link ${idx + 1}</div>
+                </div>
+                <div class="credential-field">
+                    <div class="credential-label">Link kích hoạt</div>
+                    <div class="credential-value">
+                        ${isUrl ? `<a href="${escapeAttr(cred.username)}" target="_blank" rel="noopener" style="color: #0066cc; word-break: break-all;">${escapeAttr(cred.username)}</a>` : escapeAttr(cred.username)}
+                        <button class="copy-btn" onclick="copyToClipboard(this.dataset.value)" data-value="${safeUser}" style="margin-left: 10px;">Copy</button>
+                    </div>
+                </div>
+                ${cred.extraInfo ? `
+                    <div class="credential-field">
+                        <div class="credential-label">Hướng dẫn &amp; lưu ý</div>
+                        <div class="credential-value" style="white-space: pre-wrap;">${safeExtra}</div>
+                    </div>
+                ` : ''}
+            </div>
+        `;
+            }
             return `
             <div class="credential-card">
                 <div class="credential-header">

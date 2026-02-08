@@ -3,11 +3,14 @@
  *
  * POST /create-order
  * Body: { customerName, items: [{ productCode, quantity, ... }] }
- * 
+ *
+ * Logic chung: Sản phẩm GIAO SAU (5-10 phút, delivery_type=owner_upgrade) KHÔNG cần tồn kho.
+ * Chỉ sản phẩm GIAO LIỀN (delivery_type=auto) mới check & reserve stock_items.
+ *
  * Logic:
  * 1. Validate SKUs from `skus` table.
  * 2. Create Order (status='pending_payment').
- * 3. Reserve Stock (for `auto` items) by linking `stock_items` to `order_id`.
+ * 3. Reserve Stock CHỈ cho `auto` items. owner_upgrade không đụng stock.
  * 4. Create Order Lines.
  */
 
@@ -156,7 +159,7 @@ exports.handler = async function (event, context) {
             }
             const sku = skus.rows[0];
 
-            // If Auto Delivery, check stock
+            // Chỉ sản phẩm GIAO LIỀN (auto) cần tồn kho. Giao sau 5-10' (owner_upgrade) KHÔNG cần stock.
             if (sku.delivery_type === 'auto') {
                 const stock = await tx.execute({
                     sql: `SELECT COUNT(*) as count FROM stock_items WHERE sku_id = ? AND status = 'available'`,
@@ -206,7 +209,7 @@ exports.handler = async function (event, context) {
             });
             const lineId = lineRes.rows[0].id;
 
-            // Reserve Stock if Auto
+            // Chỉ reserve stock cho giao liền. Giao sau (owner_upgrade) không dùng stock_items.
             if (item.deliveryType === 'auto') {
                 // UPDATE LIMIT syntax is tricky in standard SQL/LibSQL.
                 // Using nested SELECT for ID list.
@@ -252,6 +255,7 @@ exports.handler = async function (event, context) {
 
         await tx.commit();
 
+        const hasPreorderItems = finalItems.some(item => item.deliveryType !== 'auto');
         return {
             statusCode: 200,
             headers,
@@ -261,6 +265,7 @@ exports.handler = async function (event, context) {
                 orderId,
                 amount: totalAmount,
                 expiresAt: expiresAt.toISOString(),
+                hasPreorderItems,
                 message: 'Order created',
                 paymentInfo: {
                     bankName: 'TP Bank',

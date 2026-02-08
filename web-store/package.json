@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "dev": "cd .. && npx netlify dev --offline --dir web-store",
     "test": "echo \"Error: no test specified\" && exit 1",
     "migrate": "node scripts/fix_db_schema.js",
     "generate-secret": "node scripts/setup-helper.js generate-secret",

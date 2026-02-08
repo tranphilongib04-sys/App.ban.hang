@@ -4,6 +4,7 @@ const products = {
         id: 'chatgpt',
         name: 'ChatGPT',
         category: 'AI',
+        deliveryType: 'instant',
         description: 'Trợ lý AI thông minh nhất hiện nay, hỗ trợ viết lách, code, và nhiều tác vụ khác',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
         featured: true,
@@ -13,7 +14,8 @@ const products = {
             { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '' },
             { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo' },
             { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit' },
-            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng' }
+            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng' },
+            { name: 'Code ChatGPT 1 tháng (IP Việt Nam)', price: 30000, duration: '1 tháng', note: '1 code/link, giao liền', productCode: 'chatgpt_code_1m_vn' }
         ],
         tabs: {
             description: `
@@ -35,6 +37,7 @@ const products = {
                     <li><strong>ChatGPT Plus gia hạn:</strong> Bảo hành đến hết tháng</li>
                     <li><strong>ChatGPT Pro:</strong> Hỗ trợ bảo hành khi hết credit</li>
                     <li><strong>ChatGPT Go:</strong> Bảo hành 1 tháng</li>
+                    <li><strong>Code ChatGPT 1 tháng (IP VN):</strong> Giao link kích hoạt, dùng theo hướng dẫn</li>
                 </ul>
                 <p>Nếu có bất kỳ vấn đề gì, vui lòng liên hệ Zalo: 0988428496 để được hỗ trợ ngay lập tức.</p>
             `,
@@ -52,11 +55,20 @@ const products = {
                     <li>Chờ admin gia hạn (15-30 phút)</li>
                     <li>Nhận thông báo khi hoàn tất</li>
                 </ul>
+                <p><strong>Đối với Code ChatGPT 1 tháng (IP Việt Nam):</strong></p>
+                <ul>
+                    <li>Sau khi thanh toán, bạn nhận ngay <strong>đường link kích hoạt</strong> trên màn hình (giao liền)</li>
+                    <li>Dùng <strong>tài khoản OpenAI mới</strong>, chưa từng nâng cấp ChatGPT Plus</li>
+                    <li>Thêm <strong>thẻ thanh toán Việt Nam</strong> (VNPay, thẻ nội địa) khi kích hoạt</li>
+                    <li><strong>Nhớ hủy gói (cancel subscription)</strong> trước khi hết 1 tháng để không bị trừ tiền kỳ tiếp theo</li>
+                </ul>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
                 <p><strong>Q: Tài khoản có bị khóa không?</strong></p>
                 <p>A: Tài khoản được đảm bảo an toàn, có chính sách bảo hành rõ ràng.</p>
+                <p><strong>Q: Code ChatGPT (IP VN) dùng thế nào?</strong></p>
+                <p>A: Mở link nhận được → đăng nhập bằng tài khoản OpenAI mới (chưa từng Plus) → thêm thẻ VN → kích hoạt. Nhớ hủy gói trước khi hết tháng.</p>
                 <p><strong>Q: Có thể đổi mật khẩu không?</strong></p>
                 <p>A: Với gói cấp TK mới, bạn có thể đổi mật khẩu tự do.</p>
                 <p><strong>Q: Thanh toán như thế nào?</strong></p>
@@ -68,6 +80,7 @@ const products = {
         id: 'netflix',
         name: 'Netflix',
         category: 'Giải trí',
+        deliveryType: 'instant',
         description: 'Xem phim và chương trình truyền hình không giới hạn với chất lượng HD/4K',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
@@ -94,12 +107,13 @@ const products = {
                     <li>Bảo hành trong suốt thời gian sử dụng</li>
                     <li>Hỗ trợ đổi tài khoản nếu có vấn đề</li>
                     <li>Cam kết xem được từ 1-2 thiết bị đồng thời</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
                 </ul>
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
                 <ul>
-                    <li>Nhận tài khoản/mật khẩu qua Zalo sau khi thanh toán</li>
+                    <li>Sau khi thanh toán, nhắn Zalo: 0988428496 để nhận tài khoản</li>
                     <li>Đăng nhập tại netflix.com hoặc app Netflix</li>
                     <li>Tạo profile riêng của bạn</li>
                     <li>Bắt đầu xem phim yêu thích</li>
@@ -112,6 +126,8 @@ const products = {
                 <p>A: Gói Extra cho phép xem từ 1-2 thiết bị đồng thời.</p>
                 <p><strong>Q: Có thể download phim không?</strong></p>
                 <p>A: Có, bạn có thể download để xem offline trên app.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Nhắn Zalo sau khi thanh toán, nhận tài khoản trong 5-10 phút.</p>
             `
         }
     },
@@ -119,6 +135,7 @@ const products = {
         id: 'spotify',
         name: 'Spotify Premium',
         category: 'Giải trí',
+        deliveryType: 'instant',
         description: 'Nghe nhạc không giới hạn với chất lượng cao, không quảng cáo',
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
@@ -146,20 +163,26 @@ const products = {
                 <ul>
                     <li>Bảo hành trong suốt thời gian sử dụng</li>
                     <li>Hỗ trợ 24/7 khi có vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
                 </ul>
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
                 <ul>
-                    <li>Cung cấp email Spotify của bạn</li>
-                    <li>Admin sẽ nâng cấp lên Premium</li>
-                    <li>Đăng nhập và thưởng thức âm nhạc</li>
+                    <li>Cung cấp email Spotify của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ nâng cấp lên Premium trong 5-10 phút</li>
+                    <li>Đăng nhập app Spotify và thưởng thức âm nhạc</li>
                 </ul>
+                <p><strong>Lưu ý:</strong> Không thay đổi email hoặc mật khẩu tài khoản.</p>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
                 <p><strong>Q: Có mất dữ liệu không?</strong></p>
                 <p>A: Không, playlist và thư viện của bạn vẫn được giữ nguyên.</p>
+                <p><strong>Q: Dùng được trên bao nhiêu thiết bị?</strong></p>
+                <p>A: Không giới hạn thiết bị, nhưng chỉ phát 1 thiết bị cùng lúc.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Nhắn Zalo sau khi thanh toán, nhận trong 5-10 phút.</p>
             `
         }
     },
@@ -167,6 +190,7 @@ const products = {
         id: 'adobe',
         name: 'Adobe Creative Cloud',
         category: 'Thiết kế',
+        deliveryType: 'preorder',
         description: 'Bộ công cụ thiết kế chuyên nghiệp với Photoshop, Illustrator, Premiere Pro...',
         image: 'https://www.adobe.com/content/dam/cc/icons/Adobe_Corporate_Horizontal_Red_HEX.svg',
         featured: true,
@@ -196,21 +220,32 @@ const products = {
                     <li><strong>Gói 4 tháng KBH:</strong> Không bảo hành</li>
                     <li><strong>Gói 1 năm Log Ultraview:</strong> Bảo hành trong thời gian sử dụng</li>
                     <li><strong>Gói 1 năm cấp TK/MK:</strong> Bảo hành đầy đủ</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
                 </ul>
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
                 <p><strong>Gói cấp TK/MK:</strong></p>
                 <ul>
-                    <li>Nhận tài khoản sau khi thanh toán</li>
-                    <li>Đăng nhập tại adobe.com</li>
-                    <li>Download ứng dụng cần thiết</li>
+                    <li>Nhắn Zalo: 0988428496 sau khi thanh toán</li>
+                    <li>Nhận tài khoản/mật khẩu trong 5-10 phút</li>
+                    <li>Đăng nhập tại adobe.com và download ứng dụng</li>
+                </ul>
+                <p><strong>Gói Log Ultraview:</strong></p>
+                <ul>
+                    <li>Admin gửi link đăng nhập qua Zalo</li>
+                    <li>Mở link và đăng nhập trực tiếp</li>
+                    <li>Không cần nhập TK/MK</li>
                 </ul>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
                 <p><strong>Q: Có đầy đủ tất cả ứng dụng không?</strong></p>
                 <p>A: Có, bạn có thể sử dụng toàn bộ bộ Adobe Creative Cloud.</p>
+                <p><strong>Q: Gói Log Ultraview là gì?</strong></p>
+                <p>A: Đăng nhập qua link, không cần nhập tài khoản/mật khẩu.</p>
+                <p><strong>Q: Gói 4 tháng KBH là gì?</strong></p>
+                <p>A: Gói giá rẻ, không bảo hành nếu tài khoản bị mất.</p>
             `
         }
     },
@@ -218,6 +253,7 @@ const products = {
         id: 'youtube',
         name: 'YouTube Premium',
         category: 'Giải trí',
+        deliveryType: 'preorder',
         description: 'Xem YouTube không quảng cáo, nghe nhạc nền và download video',
         image: 'https://www.gstatic.com/youtube/img/branding/youtubelogo/svg/youtubelogo.svg',
         featured: true,
@@ -242,20 +278,26 @@ const products = {
                 <ul>
                     <li>Full bảo hành trong tháng</li>
                     <li>Hỗ trợ 24/7</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
                 </ul>
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
                 <ul>
-                    <li>Gửi địa chỉ Gmail của bạn qua Zalo</li>
-                    <li>Admin sẽ thêm vào Family plan</li>
+                    <li>Gửi địa chỉ Gmail của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ thêm vào Family plan trong 5-10 phút</li>
                     <li>Nhận thông báo và bắt đầu sử dụng</li>
                 </ul>
+                <p><strong>Lưu ý:</strong> Không rời khỏi Family plan, nếu không sẽ mất Premium.</p>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
                 <p><strong>Q: Có ảnh hưởng đến tài khoản Gmail không?</strong></p>
                 <p>A: Không, hoàn toàn an toàn.</p>
+                <p><strong>Q: Có được YouTube Music Premium không?</strong></p>
+                <p>A: Có, bạn được cả YouTube Premium và YouTube Music.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Nhắn Zalo sau khi thanh toán, được thêm vào Family trong 5-10 phút.</p>
             `
         }
     },
@@ -263,8 +305,9 @@ const products = {
         id: 'duolingo',
         name: 'Duolingo Plus',
         category: 'Học tập',
+        deliveryType: 'preorder',
         description: 'Học ngoại ngữ hiệu quả với Duolingo Premium',
-        image: 'https://d35aaqx5ub95lt.cloudfront.net/images/duolingo-logo-horizontal.svg',
+        image: 'images/duolingo-logo.png',
         featured: false,
         rating: 4.7,
         reviewCount: 15,
@@ -282,15 +325,39 @@ const products = {
                     <li>Kiểm tra tiến độ chi tiết</li>
                 </ul>
             `,
-            warranty: `<h3>Chính sách bảo hành</h3><p>Full bảo hành 1 năm</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Cung cấp email Duolingo để nâng cấp</p>`,
-            faq: `<h3>FAQ</h3><p>An toàn tuyệt đối cho tài khoản</p>`
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Full bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu có vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Cung cấp email Duolingo của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ nâng cấp lên Duolingo Plus trong 5-10 phút</li>
+                    <li>Đăng nhập app Duolingo và bắt đầu học</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Không thay đổi email hoặc mật khẩu tài khoản.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Có mất dữ liệu học tập không?</strong></p>
+                <p>A: Không, toàn bộ tiến độ học và streak của bạn được giữ nguyên.</p>
+                <p><strong>Q: Dùng được trên bao nhiêu thiết bị?</strong></p>
+                <p>A: Dùng được trên tất cả thiết bị đã đăng nhập email.</p>
+                <p><strong>Q: Thanh toán như thế nào?</strong></p>
+                <p>A: Chuyển khoản ngân hàng, sau đó nhắn Zalo gửi bill.</p>
+            `
         }
     },
     ms365: {
         id: 'ms365',
         name: 'Microsoft 365',
         category: 'Công cụ',
+        deliveryType: 'preorder',
         description: 'Bộ công cụ văn phòng Microsoft Office với Word, Excel, PowerPoint...',
         image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png',
         featured: false,
@@ -310,17 +377,41 @@ const products = {
                     <li>Cài đặt trên 5 thiết bị</li>
                 </ul>
             `,
-            warranty: `<h3>Chính sách bảo hành</h3><p>Full bảo hành 1 năm</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Cung cấp email để kích hoạt</p>`,
-            faq: `<h3>FAQ</h3><p>Sử dụng được trên Windows và Mac</p>`
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Full bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ kích hoạt lại nếu bị mất quyền</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Cung cấp email Microsoft của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ kích hoạt MS 365 trong 5-10 phút</li>
+                    <li>Đăng nhập tại office.com và download ứng dụng</li>
+                    <li>Cài đặt trên tối đa 5 thiết bị</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Dùng được trên Windows và Mac không?</strong></p>
+                <p>A: Có, hỗ trợ cả Windows, Mac, iOS và Android.</p>
+                <p><strong>Q: Có được 1TB OneDrive không?</strong></p>
+                <p>A: Có, bạn sẽ được 1TB lưu trữ đám mây OneDrive.</p>
+                <p><strong>Q: Download ứng dụng ở đâu?</strong></p>
+                <p>A: Đăng nhập office.com → Install Office → Download bộ cài.</p>
+            `
         }
     },
     quizlet: {
         id: 'quizlet',
         name: 'Quizlet',
         category: 'Học tập',
+        deliveryType: 'preorder',
         description: 'Ứng dụng học tập với flashcard và công cụ ghi nhớ hiệu quả',
-        image: 'https://assets.quizlet.com/a/i/logos/quizlet-logo-resizable-400-x.png',
+        image: 'images/quizlet-logo.png',
         featured: false,
         rating: 4.5,
         reviewCount: 12,
@@ -339,17 +430,41 @@ const products = {
                     <li>Không quảng cáo</li>
                 </ul>
             `,
-            warranty: `<h3>Chính sách bảo hành</h3><p>Bảo hành trong 1 năm</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Gửi TK/MK Quizlet qua Zalo</p>`,
-            faq: `<h3>FAQ</h3><p>Hỗ trợ đa nền tảng</p>`
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu có vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Gửi TK/MK Quizlet của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ nâng cấp trong 5-10 phút</li>
+                    <li>Đăng nhập app Quizlet và bắt đầu học</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Không thay đổi mật khẩu sau khi được nâng cấp.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Quizlet Plus và Unlimited khác gì?</strong></p>
+                <p>A: Unlimited có thêm tính năng AI, giải thích chuyên sâu hơn.</p>
+                <p><strong>Q: Dùng được trên bao nhiêu thiết bị?</strong></p>
+                <p>A: Không giới hạn thiết bị, đăng nhập cùng TK/MK.</p>
+                <p><strong>Q: Có mất flashcard đã tạo không?</strong></p>
+                <p>A: Không, toàn bộ dữ liệu giữ nguyên.</p>
+            `
         }
     },
     canva: {
         id: 'canva',
         name: 'Canva Pro',
         category: 'Thiết kế',
+        deliveryType: 'preorder',
         description: 'Công cụ thiết kế đồ họa online dễ sử dụng với hàng triệu template',
-        image: 'https://static.canva.com/web/images/8439b51bb7a19f6e65ce1064bc37c197.svg',
+        image: 'images/canva-logo.png',
         featured: false,
         variants: [
             { name: 'Canva Edu 1 năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_edu_1y' },
@@ -367,22 +482,48 @@ const products = {
                     <li>Export chất lượng cao</li>
                 </ul>
             `,
-            warranty: `<h3>Chính sách bảo hành</h3><p>Full bảo hành 1 năm</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Cung cấp email Canva để nâng cấp</p>`,
-            faq: `<h3>FAQ</h3><p>Phù hợp cho mọi người, không cần kỹ năng thiết kế</p>`
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Full bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu bị mất quyền</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Cung cấp email Canva của bạn qua Zalo: 0988428496</li>
+                    <li>Admin sẽ nâng cấp trong 5-10 phút</li>
+                    <li>Đăng nhập canva.com và sử dụng ngay</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Không thay đổi email hoặc mật khẩu tài khoản.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Canva Edu và Canva Pro khác gì?</strong></p>
+                <p>A: Cùng tính năng, Edu rẻ hơn nhưng chỉ dành cho email giáo dục.</p>
+                <p><strong>Q: Có mất thiết kế đã tạo không?</strong></p>
+                <p>A: Không, toàn bộ thiết kế giữ nguyên.</p>
+                <p><strong>Q: Dùng được trên điện thoại không?</strong></p>
+                <p>A: Có, dùng được trên web, iOS và Android.</p>
+            `
         }
     },
     capcut: {
         id: 'capcut',
         name: 'CapCut Pro',
         category: 'Thiết kế',
+        deliveryType: 'instant',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
-        image: 'images/capcut-logo.svg',
+        image: 'images/capcut-logo.png',
         featured: true,
         variants: [
-            { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Nâng cấp chính chủ' },
-            { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Nâng cấp chính chủ' },
-            { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Nâng cấp chính chủ' }
+            { name: 'CapCut 7 ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
+            { name: 'CapCut 14 ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
+            { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Giao trong 5-10 phút', productCode: 'capcut_6m', deliveryType: 'preorder' },
+            { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Giao trong 5-10 phút', productCode: 'capcut_pro_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -396,15 +537,97 @@ const products = {
                     <li>Chỉnh sửa khuôn mặt, cơ thể</li>
                 </ul>
             `,
-            warranty: `<h3>Chính sách bảo hành</h3><p>Full bảo hành trong thời gian sử dụng</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Cung cấp email/ID CapCut để nâng cấp</p>`,
-            faq: `<h3>FAQ</h3><p>Dùng được trên cả điện thoại và máy tính</p>`
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Full bảo hành trong suốt thời gian sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu có vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <p><strong>⚡ Gói Giao liền (14 ngày, Pro 1 tháng):</strong></p>
+                <ul>
+                    <li>Sau khi thanh toán, bạn nhận ngay TK/MK trên màn hình</li>
+                    <li>Đăng nhập app CapCut và sử dụng ngay</li>
+                </ul>
+                <p><strong>🕐 Gói Giao sau (7 ngày, 6 tháng, 1 năm):</strong></p>
+                <ul>
+                    <li>Sau khi thanh toán, nhắn Zalo: 0988428496</li>
+                    <li>Nhận tài khoản trong 5-10 phút</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Dùng được trên điện thoại và máy tính không?</strong></p>
+                <p>A: Có, CapCut Pro dùng được trên cả điện thoại và máy tính.</p>
+                <p><strong>Q: Tại sao gói 7 ngày lại là Giao sau?</strong></p>
+                <p>A: Gói 7 ngày cần admin xử lý thủ công, mất 5-10 phút qua Zalo.</p>
+                <p><strong>Q: Có được xuất video 4K không?</strong></p>
+                <p>A: Có, CapCut Pro hỗ trợ xuất video 4K sắc nét.</p>
+            `
+        }
+    },
+    grok: {
+        id: 'grok',
+        name: 'Grok',
+        category: 'AI',
+        deliveryType: 'instant',
+        description: 'AI của xAI (Elon Musk), truy cập real-time, trả lời sắc bén và cập nhật tin tức',
+        image: 'images/grok-logo.png',
+        featured: true,
+        rating: 4.6,
+        reviewCount: 12,
+        variants: [
+            { name: 'Grok 7 ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Grok</h3>
+                <p>Grok là mô hình AI do xAI phát triển, tích hợp trên nền tảng X (Twitter). Grok có khả năng:</p>
+                <ul>
+                    <li>Truy cập thông tin real-time từ internet</li>
+                    <li>Trả lời câu hỏi với phong cách thẳng thắn, hài hước</li>
+                    <li>Cập nhật tin tức và xu hướng mới nhất</li>
+                    <li>Hỗ trợ viết lách, phân tích, và trò chuyện thông minh</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong 7 ngày sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu lỗi đăng nhập</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <p><strong>Sau khi thanh toán:</strong></p>
+                <ul>
+                    <li>Bạn sẽ nhận ngay <strong>Tài khoản / Mật khẩu</strong> trên màn hình (giao liền)</li>
+                    <li>Đăng nhập trên app X (Twitter) hoặc x.ai</li>
+                    <li>Vào mục Grok để trò chuyện với AI</li>
+                    <li>Không đổi mật khẩu hoặc email để tránh mất quyền truy cập</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Tài khoản dùng chung, vui lòng không thay đổi thông tin.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Grok khác gì ChatGPT?</strong></p>
+                <p>A: Grok được kết nối real-time với X (Twitter), cập nhật tin tức và có phong cách trả lời riêng.</p>
+                <p><strong>Q: Dùng được trên điện thoại không?</strong></p>
+                <p>A: Có, đăng nhập app X (Twitter) và vào mục Grok.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Giao liền – bạn xem ngay TK/MK trên trang sau khi thanh toán thành công.</p>
+            `
         }
     },
     test_payment: {
         id: 'test_payment',
         name: 'Testing Payment',
         category: 'Testing',
+        deliveryType: 'instant',
         description: 'Sản phẩm dùng để kiểm tra quy trình thanh toán',
         image: 'https://placehold.co/400x400?text=Test+Product',
         featured: false,
@@ -534,7 +757,6 @@ window.onload = function () {
     // Listen for hash change explicitly (better than popstate for hash routing)
     window.addEventListener('hashchange', handleRoute);
 };
-
 // HANDLE ROUTING (Consolidated Logic + page-transition)
 function handleRoute() {
     closeCart();
@@ -554,8 +776,21 @@ function handleRoute() {
     }
 
     doRoute(page, parts, showPage);
+    updateActiveNavLink(page);
 
     window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// Update active nav link
+function updateActiveNavLink(currentPage) {
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.classList.remove('active');
+        const href = link.getAttribute('href') || '';
+        const linkPage = href.replace('#', '').split('/')[0] || 'home';
+        if (linkPage === currentPage || (currentPage === 'product' && linkPage === 'products')) {
+            link.classList.add('active');
+        }
+    });
 }
 
 // helper: resolve target page element id
@@ -603,7 +838,9 @@ function doRoute(page, parts, showPage) {
 // RENDER FEATURED PRODUCTS
 function renderFeaturedProducts() {
     const container = document.getElementById('featuredProducts');
-    const featured = Object.values(products).filter(p => p.featured);
+    const featured = Object.values(products)
+        .filter(p => p.featured)
+        .sort((a, b) => ((a.deliveryType || 'instant') === 'instant' ? 0 : 1) - ((b.deliveryType || 'instant') === 'instant' ? 0 : 1));
 
     container.innerHTML = featured.map(product => `
         <div class="product-card" onclick="window.location.hash='product/${product.id}'">
@@ -611,9 +848,12 @@ function renderFeaturedProducts() {
                 <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
             <div class="product-info product-info-simple">
+                <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
+                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ Giao liền' : '🕐 Giao sau'}
+                </span>
                 <h3 class="product-name">${product.name}</h3>
                 <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
-                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem</a>
+                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
     `).join('');
@@ -622,11 +862,12 @@ function renderFeaturedProducts() {
 // RENDER ALL PRODUCTS
 function renderAllProducts(filter = 'all') {
     const container = document.getElementById('allProducts');
-    let productsToShow = Object.values(products);
+    let productsToShow = Object.values(products).filter(p => p.category !== 'Testing');
 
     if (filter !== 'all') {
         productsToShow = productsToShow.filter(p => p.category === filter);
     }
+    productsToShow.sort((a, b) => ((a.deliveryType || 'instant') === 'instant' ? 0 : 1) - ((b.deliveryType || 'instant') === 'instant' ? 0 : 1));
 
     container.innerHTML = productsToShow.map(product => `
         <div class="product-card" onclick="window.location.hash='product/${product.id}'">
@@ -634,9 +875,12 @@ function renderAllProducts(filter = 'all') {
                 <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
             </div>
             <div class="product-info product-info-simple">
+                <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
+                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ Giao liền' : '🕐 Giao sau'}
+                </span>
                 <h3 class="product-name">${product.name}</h3>
                 <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
-                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem</a>
+                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
     `).join('');
@@ -645,7 +889,7 @@ function renderAllProducts(filter = 'all') {
 // RENDER FILTER LIST
 function renderFilterList() {
     const container = document.getElementById('filterList');
-    const categories = [...new Set(Object.values(products).map(p => p.category))];
+    const categories = [...new Set(Object.values(products).filter(p => p.category !== 'Testing').map(p => p.category))];
 
     // Clean UI - No icons as requested
     const allItem = '<li class="active" onclick="filterProducts(this, \'all\')">Tất cả</li>';
@@ -661,6 +905,22 @@ function filterProducts(element, category) {
     document.querySelectorAll('.filter-list li').forEach(li => li.classList.remove('active'));
     element.classList.add('active');
     renderAllProducts(category);
+}
+
+// Map duration text to CSS class (same duration = same style)
+function getDurationClass(duration) {
+    if (!duration) return 'duration-other';
+    const d = String(duration).toLowerCase().trim();
+    if (d.includes('năm') || d.includes('nam')) return 'duration-year';
+    if (d.includes('1 tháng') || d === '1 tháng' || d.includes('1 thang')) return 'duration-1m';
+    if (d.includes('3 tháng') || d.includes('3 thang')) return 'duration-3m';
+    if (d.includes('4 tháng') || d.includes('4 thang')) return 'duration-4m';
+    if (d.includes('6 tháng') || d.includes('6 thang')) return 'duration-6m';
+    if (d.includes('7 ngày') || d.includes('7 ngay')) return 'duration-7d';
+    if (d.includes('14 ngày') || d.includes('14 ngay')) return 'duration-14d';
+    if (d.includes('tháng') || d.includes('thang')) return 'duration-month';
+    if (d.includes('lần') || d.includes('lan')) return 'duration-once';
+    return 'duration-other';
 }
 
 // SHOW PRODUCT DETAIL (Rendering only)
@@ -681,24 +941,29 @@ function showProductDetail(productId) {
             <div class="product-details">
                 <h1>${product.name}</h1>
                 <p class="product-description">${product.description}</p>
-                
+                <div class="delivery-info-box ${product.id === 'capcut' ? 'delivery-mixed' : (product.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">
+                    ${product.id === 'capcut'
+            ? '<div class="delivery-simple"><span class="delivery-line instant">⚡ <strong>Giao liền</strong> = Nhận ngay sau thanh toán</span><span class="delivery-line preorder">🕐 <strong>Giao sau</strong> = Nhận qua Zalo sau thanh toán</span></div>'
+            : (product.deliveryType || 'instant') === 'instant'
+                ? '<span class="delivery-line instant">⚡ <strong>Giao liền</strong> — Nhận ngay sau thanh toán</span>'
+                : '<span class="delivery-line preorder">🕐 <strong>Giao sau</strong> — Nhận qua Zalo sau thanh toán</span>'}
+                </div>
                 <div class="variant-selector">
                     <div class="variant-label">Chọn gói dịch vụ:</div>
                     <div class="variant-options" id="variantOptions">
                         ${product.variants.map((variant, index) => `
-                            <label class="variant-option ${index === 0 ? 'selected' : ''}">
+                            <label class="variant-option ${index === 0 ? 'selected' : ''} variant-${(variant.deliveryType || 'instant') === 'instant' ? 'instant' : 'preorder'}">
                                 <div class="variant-select-circle">
                                     <input type="radio" name="variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})">
                                 </div>
                                 <div class="variant-info">
                                     <div class="variant-header">
                                         <div class="variant-name">${variant.name}</div>
-                                    </div>
-                                    ${variant.note ? `<div class="variant-note">${variant.note}</div>` : ''}
-                                    <div class="variant-meta-row">
-                                        <span class="variant-duration-text ${(variant.duration || '').includes('năm') ? 'duration-year' : 'duration-month'}">${variant.duration}</span>
-                                        <span class="variant-separator"></span>
                                         <span class="variant-price-text">${formatPrice(variant.price)}</span>
+                                    </div>
+                                    <div class="variant-meta-row">
+                                        <span class="variant-duration-text duration-badge ${getDurationClass(variant.duration)}">${variant.duration}</span>
+                                        <span class="variant-delivery-badge ${(variant.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">${(variant.deliveryType || 'instant') === 'instant' ? 'Giao liền' : 'Giao sau'}</span>
                                     </div>
                                 </div>
                             </label>
@@ -778,7 +1043,8 @@ function addToCart(productId) {
             price: variant.price,
             unitPrice: variant.price,
             quantity: 1,
-            image: product.image
+            image: product.image,
+            deliveryType: (variant.deliveryType || product.deliveryType || 'instant')
         };
         cart.push(cartItem);
     }
@@ -804,7 +1070,7 @@ function getProductCode(productId, variantName) {
         const variant = product.variants.find(v => v.name === variantName);
         if (variant && variant.productCode) return variant.productCode;
     }
-    const codeMap = { chatgpt: 'chatgpt', netflix: 'netflix', spotify: 'spotify', adobe: 'adobe', youtube: 'youtube', duolingo: 'duolingo', ms365: 'ms365', quizlet: 'quizlet', canva: 'canva', capcut: 'capcut' };
+    const codeMap = { chatgpt: 'chatgpt', netflix: 'netflix', spotify: 'spotify', adobe: 'adobe', youtube: 'youtube', duolingo: 'duolingo', ms365: 'ms365', quizlet: 'quizlet', canva: 'canva', capcut: 'capcut', grok: 'grok' };
     const prefix = codeMap[productId] || productId;
     const variantCode = variantName.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
     return `${prefix}_${variantCode}`;
@@ -916,6 +1182,15 @@ function renderCheckoutSummary() {
     `;
     }).join('');
 
+    const hasPreorder = cart.some(item => (item.deliveryType || 'instant') === 'preorder');
+    if (hasPreorder) {
+        container.innerHTML += `
+        <div class="checkout-delivery-note">
+            <span>&#128337;</span> Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút sau thanh toán.
+        </div>
+        `;
+    }
+
     document.getElementById('checkoutTotal').textContent = formatPrice(total);
 }
 
@@ -955,7 +1230,8 @@ async function placeOrder() {
     const items = cart.map(item => ({
         productCode: getProductCode(item.productId, item.variantName),
         quantity: item.quantity || 1,
-        price: item.unitPrice || item.price
+        price: item.unitPrice || item.price,
+        deliveryType: item.deliveryType || 'instant'
     }));
 
     const total = cart.reduce((sum, item) => sum + (item.unitPrice || item.price) * (item.quantity || 1), 0);
@@ -1093,6 +1369,7 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
         }
 
         const credentials = data.credentials || [];
+        const hasChatGPTPro = !!data.hasChatGPTPro;
 
         // Hide pending, show success
         pendingState.style.display = 'none';
@@ -1124,7 +1401,26 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
                     </svg>
                     Thông tin đăng nhập dịch vụ
                 </h3>
-                ${credentials.map((cred, idx) => `
+                ${credentials.map((cred, idx) => {
+            const isLink = cred.isLink === true;
+            const isUrl = cred.username && /^https?:\/\//.test(cred.username);
+            if (isLink) {
+                return `
+                    <div class="conf-credential-item">
+                        <div class="conf-credential-field">
+                            <label class="conf-credential-label">Link kích hoạt</label>
+                            <div class="conf-credential-value-wrap">
+                                ${isUrl ? `<a href="${escapeHtml(cred.username)}" target="_blank" rel="noopener" class="conf-credential-value" style="color:#0066cc;word-break:break-all;">${escapeHtml(cred.username)}</a>` : `<span class="conf-credential-value">${escapeHtml(cred.username)}</span>`}
+                                <button class="conf-action-btn" onclick="copyText('${escapeAttr(cred.username)}')" title="Sao chép">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                                </button>
+                            </div>
+                        </div>
+                        ${cred.extraInfo ? `<p class="conf-credential-note" style="font-size:12px;color:#6b7280;margin-top:8px;white-space:pre-wrap;">${escapeHtml(cred.extraInfo)}</p>` : ''}
+                    </div>
+                `;
+            }
+            return `
                     <div class="conf-credential-item">
                         <div class="conf-credential-field">
                             <label class="conf-credential-label">Tên đăng nhập</label>
@@ -1149,12 +1445,26 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
                         </div>
                         ${cred.extraInfo ? `<p class="conf-credential-note" style="font-size:12px;color:#6b7280;margin-top:8px;">${escapeHtml(cred.extraInfo)}</p>` : ''}
                     </div>
-                `).join('')}
+                `;
+        }).join('')}
                 <button class="conf-copy-all-btn" onclick="copyAllCreds()">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                     Sao chép toàn bộ thông tin đăng nhập
                 </button>
             </div>
+
+            ${hasChatGPTPro ? `
+            <!-- ChatGPT Pro: Hướng dẫn đăng nhập workspace -->
+            <div class="conf-chatgpt-pro-login">
+                <h3 class="conf-chatgpt-pro-login-title">📩 Đăng nhập (gửi sau khi mua)</h3>
+                <ul class="conf-chatgpt-pro-login-steps">
+                    <li>Mở email đã đăng ký</li>
+                    <li>Tìm thư mời workspace → <strong>Join workspace</strong></li>
+                    <li>Đăng nhập và dùng</li>
+                </ul>
+                <p class="conf-chatgpt-pro-login-warn">⚠️ Không chỉnh sửa cài đặt workspace và không tự ý thêm thành viên. Có lỗi thì nhắn Zalo gửi Gmail.</p>
+            </div>
+            ` : ''}
 
             <!-- Next Steps -->
             <div class="conf-steps-section">
@@ -1239,12 +1549,63 @@ function copyText(text) {
 
 function copyAllCreds() {
     if (!window._credentials) return;
-    const text = window._credentials.map((c, i) =>
-        `Tài khoản ${i + 1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`
-    ).join('\n\n---\n\n');
+    const text = window._credentials.map((c, i) => {
+        if (c.isLink) return `Code/Link ${i + 1}:\nLink kích hoạt: ${c.username}${c.extraInfo ? '\nHướng dẫn & lưu ý: ' + c.extraInfo : ''}`;
+        return `Tài khoản ${i + 1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`;
+    }).join('\n\n---\n\n');
     navigator.clipboard.writeText(text).then(() => {
         showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
     });
+}
+
+// Pre-order success: show Zalo instructions (no credentials)
+function showPreorderSuccess(orderCode, invoiceNumber) {
+    const pendingState = document.getElementById('pendingPaymentState');
+    const successState = document.getElementById('successPaymentState');
+    if (!pendingState || !successState) return;
+    pendingState.style.display = 'none';
+    successState.style.display = 'block';
+    successState.innerHTML = `
+        <div class="conf-success-header">
+            <div class="conf-success-icon">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h1 class="conf-success-title">Thanh toán hoàn tất!</h1>
+            <p class="conf-success-subtitle">
+                Mã đơn hàng: <strong>${escapeHtml(orderCode)}</strong>
+            </p>
+        </div>
+        <div class="conf-preorder-instructions">
+            <div class="conf-preorder-icon">
+                <span style="font-size: 48px;">&#128337;</span>
+            </div>
+            <h3>Hướng dẫn nhận tài khoản</h3>
+            <div class="conf-preorder-steps">
+                <div class="conf-preorder-step">
+                    <span class="conf-step-number">1</span>
+                    <span>Chụp màn hình hóa đơn / xác nhận thanh toán</span>
+                </div>
+                <div class="conf-preorder-step">
+                    <span class="conf-step-number">2</span>
+                    <span>Gửi qua Zalo để nhận tài khoản</span>
+                </div>
+                <div class="conf-preorder-step">
+                    <span class="conf-step-number">3</span>
+                    <span>Nhận tài khoản trong 5-10 phút</span>
+                </div>
+            </div>
+            <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">
+                Chat Zalo ngay - 0988 428 496
+            </a>
+        </div>
+        <div class="conf-security-note">
+            Lưu lại mã đơn hàng <strong>${escapeHtml(orderCode)}</strong> để được hỗ trợ nhanh hơn.
+        </div>
+        <a href="#home" class="conf-back-home">Về trang chủ</a>
+    `;
+    showToast('Thanh toán thành công! Gửi bill qua Zalo để nhận tài khoản.', 'success');
 }
 
 // POLL PAYMENT STATUS – uses lightweight order-status endpoint (read-only).
@@ -1295,11 +1656,28 @@ function startPaymentPolling(orderCode, amount) {
             if (data.status === 'paid' || data.status === 'fulfilled') {
                 clearInterval(pollingInterval);
 
-                // Show success UI with credentials
-                if (data.deliveryToken) {
+                const isPreorder = data.fulfillmentType === 'owner_upgrade' || data.fulfillmentType === 'preorder';
+                const hasPreorderItems = data.hasPreorderItems === true;
+
+                if (isPreorder && !data.deliveryToken) {
+                    showPreorderSuccess(orderCode, data.invoiceNumber);
+                } else if (data.deliveryToken) {
                     await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
+                    if (hasPreorderItems) {
+                        const successState = document.getElementById('successPaymentState');
+                        if (successState) {
+                            const zaloSection = `
+                                <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
+                                    <h3>San pham dat truoc</h3>
+                                    <p style="margin: 0.5rem 0;">Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút.</p>
+                                    <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
+                                </div>
+                            `;
+                            const backHome = successState.querySelector('.conf-back-home');
+                            if (backHome) backHome.insertAdjacentHTML('beforebegin', zaloSection);
+                        }
+                    }
                 } else {
-                    // Fallback: redirect to delivery page
                     window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
                 }
             }

@@ -55,12 +55,52 @@ exports.handler = async function (event, context) {
         const db = getDbClient();
 
         if (event.httpMethod === 'GET') {
+            const { status, limit = 50, action, order_code } = event.queryStringParameters || {};
+
+            // Order detail with credentials
+            if (action === 'order_detail' && order_code) {
+                const orderRes = await db.execute({
+                    sql: 'SELECT * FROM orders WHERE order_code = ?',
+                    args: [order_code]
+                });
+                if (!orderRes.rows[0]) {
+                    return { statusCode: 404, headers, body: JSON.stringify({ error: 'Order not found' }) };
+                }
+                const ord = orderRes.rows[0];
+                const linesRes = await db.execute({
+                    sql: `SELECT ol.*, s.sku_code, s.name as sku_name, s.delivery_type
+                          FROM order_lines ol
+                          LEFT JOIN skus s ON ol.sku_id = s.id
+                          WHERE ol.order_id = ?`,
+                    args: [ord.id]
+                });
+                const credsRes = await db.execute({
+                    sql: `SELECT si.account_info, si.secret_key, si.note, si.status as stock_status,
+                                 s.sku_code, s.name as sku_name
+                          FROM stock_items si
+                          JOIN skus s ON si.sku_id = s.id
+                          WHERE si.order_id = ?
+                          ORDER BY si.id ASC`,
+                    args: [ord.id]
+                });
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        order: ord,
+                        lines: linesRes.rows,
+                        credentials: credsRes.rows
+                    })
+                };
+            }
+
             // Get orders with optional filters
-            const { status, limit = 50 } = event.queryStringParameters || {};
 
             let sql = `
                 SELECT
                     o.*,
+                    ol.product_name,
                     ii.secret_masked,
                     ii.status as inventory_status
                 FROM orders o
@@ -88,6 +128,7 @@ exports.handler = async function (event, context) {
                     SUM(CASE WHEN status = 'paid' THEN 1 ELSE 0 END) as paid,
                     SUM(CASE WHEN status = 'fulfilled' THEN 1 ELSE 0 END) as delivered,
                     SUM(CASE WHEN status = 'expired' THEN 1 ELSE 0 END) as expired,
+                    SUM(CASE WHEN status IN ('failed','cancelled','refunded') THEN 1 ELSE 0 END) as error_count,
                     SUM(CASE WHEN status = 'fulfilled' THEN amount_total ELSE 0 END) as total_revenue
                 FROM orders
             `);
