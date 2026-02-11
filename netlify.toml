@@ -1,6 +1,7 @@
 [build]
   base = "web-store"
   publish = "."
+  functions = "web-store/netlify/functions"
   command = "# no build needed"
 
 [[redirects]]

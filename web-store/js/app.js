@@ -11,10 +11,10 @@ const products = {
         rating: 4.8,
         reviewCount: 34,
         variants: [
-            { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '' },
-            { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo' },
-            { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit' },
-            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng' },
+            { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '', productCode: 'chatgpt_plus_cap_tk' },
+            { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
+            { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_pro_1m', deliveryType: 'preorder' },
+            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' },
             { name: 'Code ChatGPT 1 tháng (IP Việt Nam)', price: 30000, duration: '1 tháng', note: '1 code/link, giao liền', productCode: 'chatgpt_code_1m_vn' }
         ],
         tabs: {
@@ -142,9 +142,9 @@ const products = {
         rating: 4.6,
         reviewCount: 18,
         variants: [
-            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_1m' },
-            { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_4m' },
-            { name: 'Spotify Premium 1 năm', price: 300000, duration: '1 năm', note: '', productCode: 'spotify_1y' }
+            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m' },
+            { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m' },
+            { name: 'Spotify Premium 1 năm', price: 300000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y' }
         ],
         tabs: {
             description: `
@@ -197,9 +197,9 @@ const products = {
         rating: 4.9,
         reviewCount: 39,
         variants: [
-            { name: 'Adobe 4 tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành' },
-            { name: 'Adobe 1 năm Log Ultraview', price: 400000, duration: '1 năm', note: '' },
-            { name: 'Adobe 1 năm cấp TK/MK', price: 500000, duration: '1 năm', note: '' }
+            { name: 'Adobe 4 tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành', productCode: 'adobe_4m_kbh' },
+            { name: 'Adobe 1 năm Log Ultraview', price: 400000, duration: '1 năm', note: '', productCode: 'adobe_1y_ultraview' },
+            { name: 'Adobe 1 năm cấp TK/MK', price: 500000, duration: '1 năm', note: '', productCode: 'adobe_1y_tkmk' }
         ],
         tabs: {
             description: `
@@ -260,7 +260,7 @@ const products = {
         rating: 4.5,
         reviewCount: 22,
         variants: [
-            { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành', productCode: 'youtube_1m' }
+            { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành', productCode: 'youtube_premium_1m' }
         ],
         tabs: {
             description: `
@@ -312,7 +312,7 @@ const products = {
         rating: 4.7,
         reviewCount: 15,
         variants: [
-            { name: 'Duolingo Plus 1 năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành' }
+            { name: 'Duolingo Plus 1 năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành', productCode: 'duolingo_plus_1y' }
         ],
         tabs: {
             description: `
@@ -364,7 +364,7 @@ const products = {
         rating: 4.8,
         reviewCount: 21,
         variants: [
-            { name: 'MS 365 1 năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành' }
+            { name: 'MS 365 1 năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành', productCode: 'ms365_1y' }
         ],
         tabs: {
             description: `
@@ -416,8 +416,8 @@ const products = {
         rating: 4.5,
         reviewCount: 12,
         variants: [
-            { name: 'Quizlet Plus 1 năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK' },
-            { name: 'Quizlet Unlimited 1 năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK' }
+            { name: 'Quizlet Plus 1 năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_plus_1y' },
+            { name: 'Quizlet Unlimited 1 năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_unlimited_1y' }
         ],
         tabs: {
             description: `
@@ -623,6 +623,307 @@ const products = {
             `
         }
     },
+    autocad: {
+        id: 'autocad',
+        name: 'AutoCAD',
+        category: 'Thiết kế',
+        deliveryType: 'preorder',
+        description: 'Phần mềm thiết kế 2D/3D chuyên nghiệp hàng đầu cho kỹ sư và kiến trúc sư',
+        image: 'images/autocad-logo.svg',
+        featured: false,
+        rating: 4.7,
+        reviewCount: 8,
+        variants: [
+            { name: 'AutoCAD nâng cấp mail chính chủ 1 năm', price: 170000, ctvPrice: 150000, duration: '1 năm', note: 'Chỉ cần cung cấp địa chỉ mail', productCode: 'autocad_1y' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về AutoCAD</h3>
+                <p>AutoCAD là phần mềm thiết kế CAD hàng đầu thế giới:</p>
+                <ul>
+                    <li>Thiết kế bản vẽ 2D và 3D chuyên nghiệp</li>
+                    <li>Công cụ mạnh mẽ cho kỹ sư, kiến trúc sư</li>
+                    <li>Hỗ trợ nhiều định dạng file (DWG, DXF...)</li>
+                    <li>Dùng trên máy tính và web</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ kích hoạt lại nếu có vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Cung cấp địa chỉ email qua Zalo: 0988428496</li>
+                    <li>Admin sẽ add mail vào team trong 5-10 phút</li>
+                    <li>Đăng nhập Autodesk và sử dụng AutoCAD</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Dùng được trên máy nào?</strong></p>
+                <p>A: Windows và Mac đều được.</p>
+                <p><strong>Q: Có cần gửi mật khẩu không?</strong></p>
+                <p>A: Không, chỉ cần cung cấp địa chỉ email.</p>
+            `
+        }
+    },
+    linkedin: {
+        id: 'linkedin',
+        name: 'LinkedIn Business',
+        category: 'Công cụ',
+        deliveryType: 'preorder',
+        description: 'Nâng cấp LinkedIn Premium Business/Career cho tài khoản chính chủ',
+        image: 'images/linkedin-logo.png',
+        featured: false,
+        rating: 4.6,
+        reviewCount: 10,
+        variants: [
+            { name: 'LinkedIn Business 3 tháng', price: 530000, ctvPrice: 480000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_3m' },
+            { name: 'LinkedIn Business 1 năm', price: 1750000, ctvPrice: 1700000, duration: '1 năm', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_1y' },
+            { name: 'LinkedIn Career 3 tháng', price: 500000, ctvPrice: 450000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_career_3m' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về LinkedIn Premium</h3>
+                <p>Nâng cấp tài khoản LinkedIn chính chủ của bạn:</p>
+                <ul>
+                    <li><strong>Business:</strong> InMail không giới hạn, xem ai đã ghé thăm, insights ngành</li>
+                    <li><strong>Career:</strong> Nổi bật với nhà tuyển dụng, so sánh ứng viên</li>
+                    <li>Nâng cấp trực tiếp trên tài khoản của bạn</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Chỉ bảo hành các vấn đề liên quan đến gói đăng ký (mất sub/mất gói)</li>
+                    <li><strong>Không bảo hành:</strong> TK chưa xác thực SĐT, CCCD không khớp, TK bị ban do login nhiều IP</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Gửi tài khoản, mật khẩu LinkedIn qua Zalo: 0988428496</li>
+                    <li>Cần cung cấp mã OTP khi admin yêu cầu</li>
+                    <li>Admin nâng cấp trong 10-30 phút</li>
+                    <li>Nhận thông báo khi hoàn tất</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Có an toàn không?</strong></p>
+                <p>A: Nâng cấp trực tiếp trên TK chính chủ, bạn giữ toàn quyền.</p>
+                <p><strong>Q: Business và Career khác gì?</strong></p>
+                <p>A: Business cho người kinh doanh, Career cho người tìm việc.</p>
+            `
+        }
+    },
+    gamma: {
+        id: 'gamma',
+        name: 'Gamma AI',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'Tạo slide, tài liệu, trang web đẹp mắt bằng AI trong vài giây',
+        image: 'images/gamma-logo.svg',
+        featured: false,
+        rating: 4.5,
+        reviewCount: 6,
+        variants: [
+            { name: 'Gamma Plus chính chủ 1 tháng', price: 150000, duration: '1 tháng', note: 'Gói 10$, cần tên đăng nhập + mật khẩu', productCode: 'gamma_plus_1m' },
+            { name: 'Gamma Pro hình chủ 1 tháng', price: 220000, duration: '1 tháng', note: 'Cần tên đăng nhập + mật khẩu', productCode: 'gamma_pro_1m' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Gamma AI</h3>
+                <p>Gamma là công cụ AI tạo nội dung trình bày tuyệt đẹp:</p>
+                <ul>
+                    <li>Tạo slide thuyết trình chuyên nghiệp bằng AI</li>
+                    <li>Tạo tài liệu, báo cáo đẹp mắt</li>
+                    <li>Tạo trang web đơn giản</li>
+                    <li>Nhiều template chuyên nghiệp</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong thời gian sử dụng</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Thời gian xử lý có thể lâu, khách hàng/CTV vui lòng kiên nhẫn chờ.</p>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Gửi tên đăng nhập và mật khẩu Gamma qua Zalo: 0988428496</li>
+                    <li>Admin nâng cấp (có thể mất thời gian)</li>
+                    <li>Nhận thông báo khi hoàn tất</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Plus và Pro khác gì?</strong></p>
+                <p>A: Pro có nhiều tính năng AI hơn và không giới hạn export.</p>
+                <p><strong>Q: Mất bao lâu để nâng cấp?</strong></p>
+                <p>A: Có thể mất lâu hơn các sản phẩm khác, vui lòng kiên nhẫn.</p>
+            `
+        }
+    },
+    sketchup: {
+        id: 'sketchup',
+        name: 'SketchUp EDU',
+        category: 'Thiết kế',
+        deliveryType: 'preorder',
+        description: 'Phần mềm thiết kế 3D trực quan, phổ biến trong kiến trúc và nội thất',
+        image: 'images/sketchup-logo.svg',
+        featured: false,
+        rating: 4.6,
+        reviewCount: 5,
+        variants: [
+            { name: 'SketchUp EDU cấp sẵn 1 năm', price: 350000, duration: '1 năm', note: 'Cấp TK riêng, đăng nhập bằng Gmail', productCode: 'sketchup_edu_1y' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về SketchUp EDU</h3>
+                <p>SketchUp là phần mềm thiết kế 3D trực quan:</p>
+                <ul>
+                    <li>Thiết kế kiến trúc, nội thất 3D</li>
+                    <li>Giao diện dễ sử dụng</li>
+                    <li>Kho model 3D phong phú</li>
+                    <li>Hỗ trợ render chất lượng cao</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Chỉ bảo hành gói đăng ký, không bảo hành dữ liệu Gmail</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Nhận tài khoản Gmail + mật khẩu sau khi thanh toán</li>
+                    <li>Đăng nhập SketchUp bằng Gmail được cấp</li>
+                    <li>Dùng riêng, không chia sẻ</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Có dùng được SketchUp Pro không?</strong></p>
+                <p>A: Đây là gói EDU, tính năng tương đương Pro.</p>
+            `
+        }
+    },
+    figma: {
+        id: 'figma',
+        name: 'Figma',
+        category: 'Thiết kế',
+        deliveryType: 'preorder',
+        description: 'Công cụ thiết kế UI/UX hàng đầu, cộng tác real-time',
+        image: 'images/figma-logo.png',
+        featured: false,
+        rating: 4.8,
+        reviewCount: 14,
+        variants: [
+            { name: 'Figma Pro chính chủ 1 tháng', price: 200000, duration: '1 tháng', note: 'Nâng cấp chính chủ, cần tên đăng nhập + mật khẩu', productCode: 'figma_pro_1m' },
+            { name: 'Figma Edu 1 năm (cấp TK)', price: 280000, duration: '1 năm', note: 'Cấp sẵn TK/MK, lấy về nhập và dùng', productCode: 'figma_edu_1y' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Figma</h3>
+                <p>Figma là công cụ thiết kế UI/UX hàng đầu:</p>
+                <ul>
+                    <li>Thiết kế giao diện web và mobile</li>
+                    <li>Cộng tác real-time với team</li>
+                    <li>Prototyping tương tác</li>
+                    <li>Kho plugin và component phong phú</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li><strong>Figma Pro chính chủ:</strong> Bảo hành 1 tháng</li>
+                    <li><strong>Figma Edu:</strong> Bảo hành trong thời gian sử dụng</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <p><strong>Figma Pro chính chủ:</strong></p>
+                <ul>
+                    <li>Gửi tên đăng nhập + mật khẩu Figma qua Zalo</li>
+                    <li>Admin nâng cấp trong 5-10 phút</li>
+                </ul>
+                <p><strong>Figma Edu:</strong></p>
+                <ul>
+                    <li>Nhận TK/MK sau thanh toán</li>
+                    <li>Đăng nhập figma.com và sử dụng ngay</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Pro và Edu khác gì?</strong></p>
+                <p>A: Pro nâng cấp trên TK chính chủ. Edu cấp TK mới với tính năng tương đương.</p>
+            `
+        }
+    },
+    autodesk: {
+        id: 'autodesk',
+        name: 'Autodesk Full App',
+        category: 'Thiết kế',
+        deliveryType: 'preorder',
+        description: 'Trọn bộ ứng dụng Autodesk: AutoCAD, Revit, 3ds Max, Maya...',
+        image: 'images/autodesk-logo.svg',
+        featured: false,
+        rating: 4.7,
+        reviewCount: 7,
+        variants: [
+            { name: 'Autodesk lẻ 1 app 1 năm', price: 170000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_1app_1y' },
+            { name: 'Autodesk lẻ 2 app 1 năm', price: 250000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_2app_1y' },
+            { name: 'Autodesk chính chủ full app 1 năm', price: 370000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_full_1y' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Autodesk Full App</h3>
+                <p>Trọn bộ phần mềm Autodesk chuyên nghiệp:</p>
+                <ul>
+                    <li>AutoCAD - Thiết kế 2D/3D</li>
+                    <li>Revit - Thiết kế kiến trúc BIM</li>
+                    <li>3ds Max - Dựng hình 3D</li>
+                    <li>Maya - Animation chuyên nghiệp</li>
+                    <li>Và nhiều ứng dụng khác</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt 1 năm sử dụng</li>
+                    <li>Hỗ trợ kích hoạt lại nếu mất quyền</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Cung cấp địa chỉ email qua Zalo: 0988428496</li>
+                    <li>Admin add mail vào team trong 5-10 phút</li>
+                    <li>Đăng nhập Autodesk và download ứng dụng</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Lẻ 1 app là chọn app nào?</strong></p>
+                <p>A: Bạn chọn 1 app bất kỳ (AutoCAD, Revit, 3ds Max...).</p>
+                <p><strong>Q: Full app gồm những gì?</strong></p>
+                <p>A: Toàn bộ ứng dụng Autodesk (AutoCAD, Revit, 3ds Max, Maya, Inventor...).</p>
+            `
+        }
+    },
     test_payment: {
         id: 'test_payment',
         name: 'Testing Payment',
@@ -658,10 +959,86 @@ function loadCart() {
             cart = [];
         }
     }
+    normalizeCartItems();
 }
 
 // CART
 let cart = [];
+
+// DISCOUNT CODE STATE
+let appliedDiscount = null; // { code, discountAmount, finalTotal }
+
+// CTV MODE
+const CTV_CODE = 'CTV2026';
+let ctvMode = localStorage.getItem('tbq_ctv_mode') === '1';
+
+function setCtvMode(enable) {
+    ctvMode = !!enable;
+    localStorage.setItem('tbq_ctv_mode', ctvMode ? '1' : '0');
+    cart = cart.map(item => {
+        const publicPrice = item.publicPrice ?? item.unitPrice ?? item.price;
+        const ctvPrice = item.ctvPrice ?? publicPrice;
+        const unitPrice = ctvMode ? ctvPrice : publicPrice;
+        return { ...item, publicPrice, ctvPrice, unitPrice, price: unitPrice * (item.quantity || 1) };
+    });
+    saveCart();
+    updateCartUI();
+    renderCheckoutSummary(true);
+    renderFeaturedProducts();
+    renderAllProducts();
+    const hash = window.location.hash || '#home';
+    if (hash.startsWith('#product/')) {
+        const productId = hash.split('/')[1];
+        if (productId) showProductDetail(productId);
+    }
+}
+
+function getVariantPrice(variant, tier = 'public') {
+    if (tier === 'ctv') return variant.ctvPrice ?? variant.price;
+    return variant.price;
+}
+
+function getItemUnitPrice(item, tier = 'public') {
+    if (tier === 'ctv') return item.ctvPrice ?? item.unitPrice ?? item.price;
+    return item.publicPrice ?? item.unitPrice ?? item.price;
+}
+
+function getCartTotal(tier = 'public') {
+    return cart.reduce((sum, item) => {
+        const qty = item.quantity || 1;
+        return sum + (getItemUnitPrice(item, tier) * qty);
+    }, 0);
+}
+
+function renderPriceStack(publicPrice, ctvPrice, publicClass = 'product-price', wrapTag = 'p') {
+    if (ctvMode && ctvPrice !== null && ctvPrice !== undefined && ctvPrice !== publicPrice) {
+        return `
+            <div class="price-stack">
+                <span class="${publicClass}">${formatPrice(publicPrice)}</span>
+                <span class="price-ctv">Giá CTV: ${formatPrice(ctvPrice)}</span>
+            </div>
+        `;
+    }
+    return `<${wrapTag} class="${publicClass}">${formatPrice(publicPrice)}</${wrapTag}>`;
+}
+
+function renderPriceInline(publicPrice, ctvPrice, prefix = '') {
+    if (ctvMode && ctvPrice !== null && ctvPrice !== undefined && ctvPrice !== publicPrice) {
+        return `${prefix}${formatPrice(publicPrice)} · CTV ${formatPrice(ctvPrice)}`;
+    }
+    return `${prefix}${formatPrice(publicPrice)}`;
+}
+
+function normalizeCartItems() {
+    cart = cart.map(item => {
+        const product = products[item.productId];
+        const variant = product?.variants?.find(v => v.name === item.variantName);
+        const publicPrice = item.publicPrice ?? variant?.price ?? item.unitPrice ?? item.price;
+        const ctvPrice = item.ctvPrice ?? variant?.ctvPrice ?? publicPrice;
+        const unitPrice = ctvMode ? ctvPrice : publicPrice;
+        return { ...item, publicPrice, ctvPrice, unitPrice, price: unitPrice * (item.quantity || 1) };
+    });
+}
 
 // SEARCH FUNCTIONALITY
 let searchTimeout;
@@ -691,7 +1068,13 @@ function handleSearch(query) {
                     <div class="search-result-icon">${getProductEmoji(product.id)}</div>
                     <div class="search-result-info">
                         <div class="search-result-name">${product.name}</div>
-                        <div class="search-result-price">Từ ${formatPrice(Math.min(...product.variants.map(v => v.price)))}</div>
+                        <div class="search-result-price">
+                            ${renderPriceInline(
+                                Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+                                Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv'))),
+                                'Từ '
+                            )}
+                        </div>
                     </div>
                 </a>
             `).join('');
@@ -819,9 +1202,14 @@ function doRoute(page, parts, showPage) {
         // re-trigger stagger on product grid
         triggerStagger(document.getElementById('allProducts'));
     } else if (page === 'confirmation') {
+        // Only show confirmation if there's an active order, otherwise redirect home
+        const orderCodeEl = document.getElementById('orderCode');
+        if (!orderCodeEl || !orderCodeEl.textContent || orderCodeEl.textContent === '') {
+            showPage(document.getElementById('homePage'));
+            startObserver();
+            return;
+        }
         showPage(document.getElementById('confirmationPage'));
-        // launch confetti after a short delay
-        setTimeout(launchConfetti, 400);
     } else if (page === 'contact') {
         showPage(document.getElementById('homePage'));
         setTimeout(() => {
@@ -849,10 +1237,13 @@ function renderFeaturedProducts() {
             </div>
             <div class="product-info product-info-simple">
                 <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
-                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ Giao liền' : '🕐 Giao sau'}
+                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ GIAO LIỀN' : '🕐 GIAO SAU'}
                 </span>
                 <h3 class="product-name">${product.name}</h3>
-                <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
+                ${renderPriceStack(
+                    Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+                    Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
+                )}
                 <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
@@ -876,10 +1267,13 @@ function renderAllProducts(filter = 'all') {
             </div>
             <div class="product-info product-info-simple">
                 <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
-                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ Giao liền' : '🕐 Giao sau'}
+                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ GIAO LIỀN' : '🕐 GIAO SAU'}
                 </span>
                 <h3 class="product-name">${product.name}</h3>
-                <p class="product-price">${formatPrice(Math.min(...product.variants.map(v => v.price)))}</p>
+                ${renderPriceStack(
+                    Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+                    Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
+                )}
                 <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
@@ -912,12 +1306,7 @@ function getDurationClass(duration) {
     if (!duration) return 'duration-other';
     const d = String(duration).toLowerCase().trim();
     if (d.includes('năm') || d.includes('nam')) return 'duration-year';
-    if (d.includes('1 tháng') || d === '1 tháng' || d.includes('1 thang')) return 'duration-1m';
-    if (d.includes('3 tháng') || d.includes('3 thang')) return 'duration-3m';
-    if (d.includes('4 tháng') || d.includes('4 thang')) return 'duration-4m';
-    if (d.includes('6 tháng') || d.includes('6 thang')) return 'duration-6m';
-    if (d.includes('7 ngày') || d.includes('7 ngay')) return 'duration-7d';
-    if (d.includes('14 ngày') || d.includes('14 ngay')) return 'duration-14d';
+    if (d.includes('ngày') || d.includes('ngay')) return 'duration-day';
     if (d.includes('tháng') || d.includes('thang')) return 'duration-month';
     if (d.includes('lần') || d.includes('lan')) return 'duration-once';
     return 'duration-other';
@@ -943,10 +1332,10 @@ function showProductDetail(productId) {
                 <p class="product-description">${product.description}</p>
                 <div class="delivery-info-box ${product.id === 'capcut' ? 'delivery-mixed' : (product.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">
                     ${product.id === 'capcut'
-            ? '<div class="delivery-simple"><span class="delivery-line instant">⚡ <strong>Giao liền</strong> = Nhận ngay sau thanh toán</span><span class="delivery-line preorder">🕐 <strong>Giao sau</strong> = Nhận qua Zalo sau thanh toán</span></div>'
+            ? '<div class="delivery-simple"><span class="delivery-line instant">⚡ <strong>GIAO LIỀN</strong> = Nhận ngay sau thanh toán</span><span class="delivery-line preorder">🕐 <strong>GIAO SAU</strong> = Nhận qua Zalo sau thanh toán</span></div>'
             : (product.deliveryType || 'instant') === 'instant'
-                ? '<span class="delivery-line instant">⚡ <strong>Giao liền</strong> — Nhận ngay sau thanh toán</span>'
-                : '<span class="delivery-line preorder">🕐 <strong>Giao sau</strong> — Nhận qua Zalo sau thanh toán</span>'}
+                ? '<span class="delivery-line instant">⚡ <strong>GIAO LIỀN</strong> — Nhận ngay sau thanh toán</span>'
+                : '<span class="delivery-line preorder">🕐 <strong>GIAO SAU</strong> — Nhận qua Zalo sau thanh toán</span>'}
                 </div>
                 <div class="variant-selector">
                     <div class="variant-label">Chọn gói dịch vụ:</div>
@@ -959,11 +1348,11 @@ function showProductDetail(productId) {
                                 <div class="variant-info">
                                     <div class="variant-header">
                                         <div class="variant-name">${variant.name}</div>
-                                        <span class="variant-price-text">${formatPrice(variant.price)}</span>
+                                        ${renderPriceStack(getVariantPrice(variant, 'public'), getVariantPrice(variant, 'ctv'), 'variant-price-text', 'span')}
                                     </div>
                                     <div class="variant-meta-row">
                                         <span class="variant-duration-text duration-badge ${getDurationClass(variant.duration)}">${variant.duration}</span>
-                                        <span class="variant-delivery-badge ${(variant.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">${(variant.deliveryType || 'instant') === 'instant' ? 'Giao liền' : 'Giao sau'}</span>
+                                        <span class="variant-delivery-badge ${(variant.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">${(variant.deliveryType || 'instant') === 'instant' ? 'GIAO LIỀN' : 'GIAO SAU'}</span>
                                     </div>
                                 </div>
                             </label>
@@ -1032,16 +1421,28 @@ function addToCart(productId) {
     if (existingIndex >= 0) {
         // Increase quantity
         cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
-        cart[existingIndex].price = variant.price * cart[existingIndex].quantity;
+        const unitPrice = cart[existingIndex].unitPrice || variant.price;
+        if (cart[existingIndex].publicPrice === undefined) {
+            cart[existingIndex].publicPrice = getVariantPrice(variant, 'public');
+        }
+        if (cart[existingIndex].ctvPrice === undefined) {
+            cart[existingIndex].ctvPrice = getVariantPrice(variant, 'ctv');
+        }
+        cart[existingIndex].price = unitPrice * cart[existingIndex].quantity;
     } else {
         // Add new item
+        const publicPrice = getVariantPrice(variant, 'public');
+        const ctvPrice = getVariantPrice(variant, 'ctv');
+        const unitPrice = ctvMode ? ctvPrice : publicPrice;
         const cartItem = {
             productId: productId,
             productName: product.name,
             variantName: variant.name,
             variantIndex: selectedVariantIndex,
-            price: variant.price,
-            unitPrice: variant.price,
+            price: unitPrice,
+            unitPrice: unitPrice,
+            publicPrice: publicPrice,
+            ctvPrice: ctvPrice,
             quantity: 1,
             image: product.image,
             deliveryType: (variant.deliveryType || product.deliveryType || 'instant')
@@ -1095,7 +1496,7 @@ function updateCartUI() {
 
         cartItems.innerHTML = cart.map((item, index) => {
             const qty = item.quantity || 1;
-            const unitPrice = item.unitPrice || item.price;
+            const unitPrice = getItemUnitPrice(item, ctvMode ? 'ctv' : 'public');
             return `
             <div class="cart-item">
                 <div class="cart-item-image">
@@ -1116,11 +1517,7 @@ function updateCartUI() {
         `;
         }).join('');
 
-        const total = cart.reduce((sum, item) => {
-            const qty = item.quantity || 1;
-            const unitPrice = item.unitPrice || item.price;
-            return sum + (unitPrice * qty);
-        }, 0);
+        const total = getCartTotal(ctvMode ? 'ctv' : 'public');
         cartTotal.textContent = formatPrice(total);
         cartFooter.style.display = 'block';
     }
@@ -1133,7 +1530,9 @@ function updateCartQuantity(index, delta) {
 
     const newQty = Math.max(1, (item.quantity || 1) + delta);
     item.quantity = newQty;
-    item.price = (item.unitPrice || item.price) * newQty;
+    const unitPrice = getItemUnitPrice(item, ctvMode ? 'ctv' : 'public');
+    item.unitPrice = unitPrice;
+    item.price = unitPrice * newQty;
 
     updateCartUI();
 }
@@ -1158,13 +1557,9 @@ function closeCart() {
 }
 
 // RENDER CHECKOUT SUMMARY (V2 - with quantity)
-function renderCheckoutSummary() {
+function renderCheckoutSummary(skipDiscountReset = false) {
     const container = document.getElementById('checkoutSummary');
-    const total = cart.reduce((sum, item) => {
-        const qty = item.quantity || 1;
-        const unitPrice = item.unitPrice || item.price;
-        return sum + (unitPrice * qty);
-    }, 0);
+    const total = getCartTotal(ctvMode ? 'ctv' : 'public');
 
     if (cart.length === 0) {
         container.innerHTML = '<div style="text-align:center; padding: 20px;">Vui lòng thêm sản phẩm vào giỏ</div>';
@@ -1173,7 +1568,7 @@ function renderCheckoutSummary() {
 
     container.innerHTML = cart.map(item => {
         const qty = item.quantity || 1;
-        const unitPrice = item.unitPrice || item.price;
+        const unitPrice = getItemUnitPrice(item, ctvMode ? 'ctv' : 'public');
         return `
         <div class="summary-item">
             <span>${item.productName} - ${item.variantName}${qty > 1 ? ` (x${qty})` : ''}</span>
@@ -1192,6 +1587,132 @@ function renderCheckoutSummary() {
     }
 
     document.getElementById('checkoutTotal').textContent = formatPrice(total);
+
+    // Reset discount when cart changes
+    if (appliedDiscount && !skipDiscountReset) {
+        if (appliedDiscount.codeType !== 'ctv') {
+            clearDiscount();
+        } else {
+            const publicTotal = getCartTotal('public');
+            const ctvTotal = getCartTotal('ctv');
+            const discountAmount = Math.max(0, publicTotal - ctvTotal);
+            document.getElementById('discountLine').style.display = 'flex';
+            document.getElementById('discountCodeDisplay').textContent = CTV_CODE;
+            document.getElementById('discountAmountDisplay').textContent = formatPrice(discountAmount);
+            document.getElementById('checkoutTotal').textContent = formatPrice(ctvTotal);
+        }
+    }
+}
+
+// ── DISCOUNT CODE ──
+async function applyDiscountCode() {
+    const input = document.getElementById('discountCodeInput');
+    const feedback = document.getElementById('discountFeedback');
+    const btn = document.getElementById('discountApplyBtn');
+    const code = input.value.trim();
+
+    if (!code) {
+        feedback.textContent = '';
+        feedback.className = 'discount-feedback';
+        return;
+    }
+
+    // Build items from cart
+    const items = cart.map(item => ({
+        productCode: getProductCode(item.productId, item.variantName),
+        quantity: item.quantity || 1
+    }));
+
+    if (items.length === 0) {
+        feedback.textContent = 'Vui lòng thêm sản phẩm vào giỏ trước';
+        feedback.className = 'discount-feedback error';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+        const response = await fetch('/.netlify/functions/validate-discount', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, items })
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+            appliedDiscount = {
+                code: data.code,
+                discountAmount: data.discountAmount,
+                finalTotal: data.finalTotal,
+                codeType: data.codeType || 'discount'
+            };
+
+            feedback.textContent = data.message;
+            feedback.className = 'discount-feedback success';
+            input.readOnly = true;
+            btn.textContent = 'Xoá';
+            btn.disabled = false;
+            btn.onclick = function() { clearDiscount(); };
+
+            // Show discount line
+            document.getElementById('discountLine').style.display = 'flex';
+            document.getElementById('discountCodeDisplay').textContent = data.code;
+            document.getElementById('discountAmountDisplay').textContent = formatPrice(data.discountAmount);
+
+            // Update total + CTV mode if applicable
+            if (data.codeType === 'ctv') {
+                setCtvMode(true);
+                document.getElementById('checkoutTotal').textContent = formatPrice(getCartTotal('ctv'));
+            } else {
+                setCtvMode(false);
+                document.getElementById('checkoutTotal').textContent = formatPrice(data.finalTotal);
+            }
+        } else {
+            feedback.textContent = data.error || 'Mã giảm giá không hợp lệ';
+            feedback.className = 'discount-feedback error';
+            appliedDiscount = null;
+            if (ctvMode) setCtvMode(false);
+            btn.disabled = false;
+            btn.textContent = 'Áp dụng';
+        }
+    } catch (err) {
+        feedback.textContent = 'Không thể kiểm tra mã giảm giá. Thử lại sau.';
+        feedback.className = 'discount-feedback error';
+        btn.disabled = false;
+        btn.textContent = 'Áp dụng';
+    }
+}
+
+function clearDiscount() {
+    appliedDiscount = null;
+    const input = document.getElementById('discountCodeInput');
+    const feedback = document.getElementById('discountFeedback');
+    const btn = document.getElementById('discountApplyBtn');
+
+    if (input) {
+        input.readOnly = false;
+        input.value = '';
+    }
+    if (feedback) {
+        feedback.textContent = '';
+        feedback.className = 'discount-feedback';
+    }
+    if (btn) {
+        btn.textContent = 'Áp dụng';
+        btn.disabled = false;
+        btn.onclick = function() { applyDiscountCode(); };
+    }
+
+    const discountLine = document.getElementById('discountLine');
+    if (discountLine) discountLine.style.display = 'none';
+
+    setCtvMode(false);
+    // Recalculate original total
+    const total = getCartTotal('public');
+    const checkoutTotal = document.getElementById('checkoutTotal');
+    if (checkoutTotal) checkoutTotal.textContent = formatPrice(total);
 }
 
 // PLACE ORDER (V2 - calls new API with quantity support)
@@ -1230,11 +1751,11 @@ async function placeOrder() {
     const items = cart.map(item => ({
         productCode: getProductCode(item.productId, item.variantName),
         quantity: item.quantity || 1,
-        price: item.unitPrice || item.price,
+        price: getItemUnitPrice(item, ctvMode ? 'ctv' : 'public'),
         deliveryType: item.deliveryType || 'instant'
     }));
 
-    const total = cart.reduce((sum, item) => sum + (item.unitPrice || item.price) * (item.quantity || 1), 0);
+    const total = getCartTotal(ctvMode ? 'ctv' : 'public');
 
     // Show loading
     showToast('Đang tạo đơn hàng...', 'info');
@@ -1250,7 +1771,8 @@ async function placeOrder() {
                 customerPhone: phone,
                 customerNote: note,
                 items: items,
-                price: total
+                price: total,
+                discountCode: appliedDiscount ? appliedDiscount.code : null
             })
         });
 
@@ -1306,6 +1828,17 @@ async function placeOrder() {
             total: data.amount || total
         };
 
+        // Reset confirmation page state for new order
+        // (fixes bug: 2nd order shows old order's success instead of new QR)
+        if (pollingInterval) clearInterval(pollingInterval);
+        const pendingState = document.getElementById('pendingPaymentState');
+        const successState = document.getElementById('successPaymentState');
+        if (pendingState) pendingState.style.display = 'block';
+        if (successState) {
+            successState.style.display = 'none';
+            successState.innerHTML = '';
+        }
+
         // Update UI elements
         document.getElementById('orderCode').textContent = orderCode;
         document.getElementById('transferContent').textContent = orderCode;
@@ -1315,13 +1848,14 @@ async function placeOrder() {
         const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
         qrContainer.innerHTML = `
-            <img src="${qrCodeUrl}" alt="Mã QR thanh toán" 
+            <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
                  style="max-width: 220px; border-radius: 8px;"
                  onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
         `;
 
-        // Clear cart
+        // Clear cart & discount
         cart = [];
+        appliedDiscount = null;
         updateCartUI();
 
         // Navigate to confirmation page
@@ -1836,7 +2370,8 @@ function generateInvoice() {
 
     lastOrder.items.forEach(item => {
         // Remove dong/vnd for safe rendering
-        const price = formatPrice(item.price).replace('₫', ' VND');
+        const unitPrice = item.unitPrice || item.price;
+        const price = formatPrice(unitPrice).replace('₫', ' VND');
         // Remove vietnamese accents for safety if font missing
         const name = item.productName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         const variant = item.variantName.normalize("NFD").replace(/[\u0300-\u036f]/g, "");

@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="adg1" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1F9C7A"/>
+      <stop offset="100%" stop-color="#0D7F63"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="48" fill="url(#adg1)"/>
+  <g transform="translate(200,175)">
+    <!-- Stylized "A" shape for Autodesk -->
+    <path d="M0,-100 L75,70 L50,70 L35,25 L-35,25 L-50,70 L-75,70 Z M0,-40 L-20,5 L20,5 Z" fill="white" opacity="0.95"/>
+  </g>
+  <text x="200" y="340" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="38" font-weight="700" fill="rgba(255,255,255,0.9)" letter-spacing="3">AUTODESK</text>
+</svg>

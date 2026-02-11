@@ -16,6 +16,7 @@
 
 const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
+const CTV_CODE = 'CTV2026';
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -82,7 +83,16 @@ exports.handler = async function (event, context) {
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     let tx = null;
-    const db = getDbClient();
+        const db = getDbClient();
+
+        async function hasCtvPriceColumn(conn) {
+            try {
+                const res = await conn.execute(`PRAGMA table_info(skus)`);
+                return res.rows.some(r => r.name === 'ctv_price');
+            } catch {
+                return false;
+            }
+        }
 
     try {
         await db.execute(`ALTER TABLE order_lines ADD COLUMN sku_id TEXT`);
@@ -90,7 +100,9 @@ exports.handler = async function (event, context) {
 
     try {
         const body = JSON.parse(event.body);
-        let { customerName, customerEmail, customerPhone, customerNote, items } = body;
+        let { customerName, customerEmail, customerPhone, customerNote, items, discountCode } = body;
+        const codeUpper = (discountCode || '').trim().toUpperCase();
+        const isCtvCode = codeUpper === CTV_CODE;
 
         // Backward compatibility
         if (!items && body.productCode) {
@@ -131,6 +143,7 @@ exports.handler = async function (event, context) {
 
         // --- TRANSACTION START ---
         tx = await db.transaction('write');
+        const hasCtv = await hasCtvPriceColumn(tx);
 
         // VERIFY VISIBILITY
         if (legacyProductId) {
@@ -139,6 +152,8 @@ exports.handler = async function (event, context) {
         }
 
         let totalAmount = 0;
+        let publicTotal = 0;
+        let ctvTotal = 0;
         const finalItems = [];
 
         // 1. Validation & Pre-calculation
@@ -147,7 +162,9 @@ exports.handler = async function (event, context) {
 
             // Find SKU
             const skus = await tx.execute({
-                sql: `SELECT id, name, price, delivery_type FROM skus WHERE sku_code = ? AND is_active = 1`,
+                sql: hasCtv
+                    ? `SELECT id, name, price, COALESCE(ctv_price, price) as ctv_price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`
+                    : `SELECT id, name, price, price as ctv_price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`,
                 args: [productCode]
             });
 
@@ -173,7 +190,7 @@ exports.handler = async function (event, context) {
             }
 
             // SECURITY: Always use DB price. Never trust client-submitted price.
-            const unitPrice = sku.price;
+            const unitPrice = isCtvCode ? sku.ctv_price : sku.price;
             if (!unitPrice || unitPrice <= 0) {
                 tx.close();
                 return { statusCode: 400, headers, body: JSON.stringify({ error: `SKU ${productCode} has no valid price configured` }) };
@@ -183,19 +200,64 @@ exports.handler = async function (event, context) {
                 skuId: sku.id,
                 skuName: sku.name,
                 deliveryType: sku.delivery_type,
+                durationDays: sku.duration_days || 30,
                 quantity,
                 unitPrice,
                 subtotal: unitPrice * quantity,
                 legacyProductId // Pass it down
             });
+            publicTotal += (sku.price * quantity);
+            ctvTotal += (sku.ctv_price * quantity);
             totalAmount += (unitPrice * quantity);
+        }
+
+        // ── DISCOUNT CODE PROCESSING ──
+        let discountAmount = 0;
+        let appliedDiscountCode = null;
+
+        if (isCtvCode) {
+            appliedDiscountCode = CTV_CODE;
+            discountAmount = Math.max(0, publicTotal - ctvTotal);
+            totalAmount = Math.max(0, ctvTotal);
+        } else if (discountCode && discountCode.trim()) {
+            const codeUpper = discountCode.trim().toUpperCase();
+
+            // Lookup code in DB
+            const codeResult = await tx.execute({
+                sql: `SELECT id, code, discount_amount FROM discount_codes WHERE code = ? AND is_active = 1`,
+                args: [codeUpper]
+            });
+
+            if (codeResult.rows.length === 0) {
+                tx.close();
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã giảm giá không hợp lệ' }) };
+            }
+
+            const discountRow = codeResult.rows[0];
+            const fullDiscount = discountRow.discount_amount;    // e.g. 10000
+            const halfDiscount = Math.floor(fullDiscount / 2);   // e.g. 5000
+
+            // >= 30 days: full discount (10k), < 30 days only: half discount (5k)
+            let hasLongTerm = false;
+            for (const item of finalItems) {
+                if (item.durationDays >= 30) { hasLongTerm = true; break; }
+            }
+
+            if (hasLongTerm) {
+                discountAmount = Math.min(fullDiscount, totalAmount);
+            } else {
+                discountAmount = Math.min(halfDiscount, totalAmount);
+            }
+
+            appliedDiscountCode = codeUpper;
+            totalAmount = Math.max(0, totalAmount - discountAmount);
         }
 
         // 2. Create Order
         const orderRes = await tx.execute({
-            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, reserved_until, delivery_token, ip_address, created_at, updated_at) 
-                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, 'sepay', ?, ?, ?, ?, ?) RETURNING id`,
-            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, expiresAt.toISOString(), deliveryToken, ipAddress || null, now.toISOString(), now.toISOString()]
+            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, discount_code, discount_amount, payment_method, reserved_until, delivery_token, ip_address, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?, 'sepay', ?, ?, ?, ?, ?) RETURNING id`,
+            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, appliedDiscountCode, discountAmount, expiresAt.toISOString(), deliveryToken, ipAddress || null, now.toISOString(), now.toISOString()]
         });
         const orderId = orderRes.rows[0].id;
 
@@ -264,6 +326,8 @@ exports.handler = async function (event, context) {
                 orderCode,
                 orderId,
                 amount: totalAmount,
+                discountCode: appliedDiscountCode,
+                discountAmount: discountAmount,
                 expiresAt: expiresAt.toISOString(),
                 hasPreorderItems,
                 message: 'Order created',

@@ -340,6 +340,21 @@
                 <div class="order-summary">
                     <h3>Đơn hàng của bạn</h3>
                     <div id="checkoutSummary"></div>
+
+                    <!-- Discount Code -->
+                    <div class="discount-section" id="discountSection">
+                        <div class="discount-input-group">
+                            <input type="text" id="discountCodeInput" placeholder="Nhập mã CTV / mã giảm giá" maxlength="30" autocomplete="off">
+                            <button type="button" class="discount-apply-btn" id="discountApplyBtn" onclick="applyDiscountCode()">Áp dụng</button>
+                        </div>
+                        <div id="discountFeedback" class="discount-feedback"></div>
+                    </div>
+
+                    <div class="summary-discount" id="discountLine" style="display: none;">
+                        <span>Giảm giá (<span id="discountCodeDisplay"></span>)</span>
+                        <span class="discount-amount-display">-<span id="discountAmountDisplay">0₫</span></span>
+                    </div>
+
                     <div class="summary-total">
                         <span>Tổng cộng</span>
                         <span id="checkoutTotal">0₫</span>

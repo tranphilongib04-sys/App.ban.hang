@@ -72,6 +72,79 @@ exports.handler = async function (event, context) {
             };
         }
 
+        if (action === 'sku_details') {
+            const { sku } = event.queryStringParameters || {};
+            if (!sku) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing sku parameter' }) };
+            }
+
+            const sql = `
+                SELECT 
+                    si.id, 
+                    si.account_info, 
+                    si.secret_key, 
+                    si.note, 
+                    si.status, 
+                    si.created_at, 
+                    si.order_id,
+                    o.order_code
+                FROM stock_items si
+                JOIN skus s ON si.sku_id = s.id
+                LEFT JOIN orders o ON si.order_id = o.id
+                WHERE s.sku_code = ?
+                ORDER BY 
+                    CASE WHEN si.status = 'available' THEN 1 ELSE 2 END,
+                    si.created_at DESC
+            `;
+
+            const result = await db.execute({ sql, args: [sku] });
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({
+                    success: true,
+                    items: result.rows
+                })
+            };
+        }
+
+        if (action === 'delete_item') {
+            if (event.httpMethod !== 'POST') {
+                return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
+            }
+            const body = JSON.parse(event.body || '{}');
+            const { id } = body;
+
+            if (!id) {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing item id' }) };
+            }
+
+            // Check if item is available before deleting
+            const check = await db.execute({
+                sql: `SELECT status FROM stock_items WHERE id = ?`,
+                args: [id]
+            });
+
+            if (check.rows.length === 0) {
+                return { statusCode: 404, headers, body: JSON.stringify({ error: 'Item not found' }) };
+            }
+
+            if (check.rows[0].status !== 'available') {
+                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Only available items can be deleted' }) };
+            }
+
+            await db.execute({
+                sql: `DELETE FROM stock_items WHERE id = ?`,
+                args: [id]
+            });
+
+            return {
+                statusCode: 200,
+                headers,
+                body: JSON.stringify({ success: true })
+            };
+        }
+
         // Check if skus table exists first (sanity check)
 
         const sql = `
