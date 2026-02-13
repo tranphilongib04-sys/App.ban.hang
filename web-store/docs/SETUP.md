@@ -13,18 +13,7 @@ Hệ thống bán tài khoản số với các tính năng:
 
 ### 1. Database Migration
 
-Chạy migration script để tạo schema mới:
-
-```bash
-cd tbq-homie-deployment
-node netlify/functions/migrate-schema.js
-```
-
-Hoặc gọi qua Netlify Function (nếu đã deploy):
-
-```bash
-curl https://<your-site>.netlify.app/.netlify/functions/migrate-schema
-```
+Schema đã được migrate sẵn trên Turso cloud database. Không cần chạy migration thủ công.
 
 ### 2. Environment Variables (Netlify)
 

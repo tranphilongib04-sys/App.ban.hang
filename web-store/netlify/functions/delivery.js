@@ -19,7 +19,8 @@ function getDbClient() {
 
 // Verify delivery token
 function verifyDeliveryToken(token, orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) throw new Error('DELIVERY_SECRET not configured');
     // Token is valid for 7 days
     const validTokens = [];
     for (let i = 0; i < 7; i++) {
@@ -81,13 +82,13 @@ exports.handler = async function (event, context) {
     try {
         const db = getDbClient();
 
-        // Get order
+        // Get order — accept both paid and fulfilled
         const orderResult = await db.execute({
             sql: `
                 SELECT o.*, i.invoice_number
                 FROM orders o
                 LEFT JOIN invoices i ON o.id = i.order_id
-                WHERE o.order_code = ? AND o.status = 'fulfilled'
+                WHERE o.order_code = ? AND o.status IN ('fulfilled', 'paid')
             `,
             args: [order]
         });

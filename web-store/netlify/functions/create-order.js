@@ -83,16 +83,16 @@ exports.handler = async function (event, context) {
     if (event.httpMethod !== 'POST') return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     let tx = null;
-        const db = getDbClient();
+    const db = getDbClient();
 
-        async function hasCtvPriceColumn(conn) {
-            try {
-                const res = await conn.execute(`PRAGMA table_info(skus)`);
-                return res.rows.some(r => r.name === 'ctv_price');
-            } catch {
-                return false;
-            }
+    async function hasCtvPriceColumn(conn) {
+        try {
+            const res = await conn.execute(`PRAGMA table_info(skus)`);
+            return res.rows.some(r => r.name === 'ctv_price');
+        } catch {
+            return false;
         }
+    }
 
     try {
         await db.execute(`ALTER TABLE order_lines ADD COLUMN sku_id TEXT`);
@@ -114,7 +114,7 @@ exports.handler = async function (event, context) {
             return { statusCode: 429, headers, body: JSON.stringify({ error: 'Too many requests' }) };
         }
 
-        if (!customerName || !customerEmail || !items || items.length === 0) {
+        if (!customerName || !items || items.length === 0) {
             return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing required fields' }) };
         }
 
@@ -214,6 +214,8 @@ exports.handler = async function (event, context) {
         // ── DISCOUNT CODE PROCESSING ──
         let discountAmount = 0;
         let appliedDiscountCode = null;
+        let appliedCouponCode = null;
+        let appliedCouponPercent = 0;
 
         if (isCtvCode) {
             appliedDiscountCode = CTV_CODE;
@@ -222,42 +224,92 @@ exports.handler = async function (event, context) {
         } else if (discountCode && discountCode.trim()) {
             const codeUpper = discountCode.trim().toUpperCase();
 
-            // Lookup code in DB
-            const codeResult = await tx.execute({
-                sql: `SELECT id, code, discount_amount FROM discount_codes WHERE code = ? AND is_active = 1`,
+            // ── Check coupons table first (percentage-based) ──
+            const couponResult = await tx.execute({
+                sql: `SELECT id, code, discount_percent, expires_at, max_uses, used_count, sku_codes FROM coupons WHERE code = ? AND is_active = 1`,
                 args: [codeUpper]
             });
 
-            if (codeResult.rows.length === 0) {
-                tx.close();
-                return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã giảm giá không hợp lệ' }) };
-            }
+            if (couponResult.rows.length > 0) {
+                const coupon = couponResult.rows[0];
 
-            const discountRow = codeResult.rows[0];
-            const fullDiscount = discountRow.discount_amount;    // e.g. 10000
-            const halfDiscount = Math.floor(fullDiscount / 2);   // e.g. 5000
+                // Validate expiry
+                if (new Date(coupon.expires_at) < new Date()) {
+                    tx.close();
+                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết hạn' }) };
+                }
 
-            // >= 30 days: full discount (10k), < 30 days only: half discount (5k)
-            let hasLongTerm = false;
-            for (const item of finalItems) {
-                if (item.durationDays >= 30) { hasLongTerm = true; break; }
-            }
+                // Validate usage
+                if (coupon.used_count >= coupon.max_uses) {
+                    tx.close();
+                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết lượt sử dụng' }) };
+                }
 
-            if (hasLongTerm) {
-                discountAmount = Math.min(fullDiscount, totalAmount);
+                // Parse SKU restrictions
+                const allowedSkus = coupon.sku_codes ? coupon.sku_codes.split(',').map(s => s.trim()) : null;
+
+                // Calculate discount only on matching SKUs
+                let discountableTotal = 0;
+                for (const item of finalItems) {
+                    // Find sku_code for this item
+                    const skuCodeResult = await tx.execute({
+                        sql: `SELECT sku_code FROM skus WHERE id = ?`,
+                        args: [item.skuId]
+                    });
+                    const skuCode = skuCodeResult.rows.length > 0 ? skuCodeResult.rows[0].sku_code : null;
+
+                    if (!allowedSkus || (skuCode && allowedSkus.includes(skuCode))) {
+                        discountableTotal += item.subtotal;
+                    }
+                }
+
+                discountAmount = Math.round(discountableTotal * coupon.discount_percent / 100);
+                totalAmount = Math.max(0, totalAmount - discountAmount);
+                appliedCouponCode = codeUpper;
+                appliedCouponPercent = coupon.discount_percent;
+
+                // Mark coupon as used (increment counter)
+                await tx.execute({
+                    sql: `UPDATE coupons SET used_count = used_count + 1 WHERE id = ?`,
+                    args: [coupon.id]
+                });
             } else {
-                discountAmount = Math.min(halfDiscount, totalAmount);
-            }
+                // ── Fall back to discount_codes (CTV fixed-amount) ──
+                const codeResult = await tx.execute({
+                    sql: `SELECT id, code, discount_amount FROM discount_codes WHERE code = ? AND is_active = 1`,
+                    args: [codeUpper]
+                });
 
-            appliedDiscountCode = codeUpper;
-            totalAmount = Math.max(0, totalAmount - discountAmount);
+                if (codeResult.rows.length === 0) {
+                    tx.close();
+                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã giảm giá không hợp lệ' }) };
+                }
+
+                const discountRow = codeResult.rows[0];
+                const fullDiscount = discountRow.discount_amount;
+                const halfDiscount = Math.floor(fullDiscount / 2);
+
+                let hasLongTerm = false;
+                for (const item of finalItems) {
+                    if (item.durationDays >= 30) { hasLongTerm = true; break; }
+                }
+
+                if (hasLongTerm) {
+                    discountAmount = Math.min(fullDiscount, totalAmount);
+                } else {
+                    discountAmount = Math.min(halfDiscount, totalAmount);
+                }
+
+                appliedDiscountCode = codeUpper;
+                totalAmount = Math.max(0, totalAmount - discountAmount);
+            }
         }
 
         // 2. Create Order
         const orderRes = await tx.execute({
-            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, discount_code, discount_amount, payment_method, reserved_until, delivery_token, ip_address, created_at, updated_at)
-                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?, 'sepay', ?, ?, ?, ?, ?) RETURNING id`,
-            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, appliedDiscountCode, discountAmount, expiresAt.toISOString(), deliveryToken, ipAddress || null, now.toISOString(), now.toISOString()]
+            sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, discount_code, discount_amount, coupon_code, coupon_discount_percent, payment_method, reserved_until, delivery_token, ip_address, created_at, updated_at)
+                  VALUES (?, ?, ?, ?, ?, 'pending_payment', ?, ?, ?, ?, ?, 'sepay', ?, ?, ?, ?, ?) RETURNING id`,
+            args: [orderCode, customerEmail, customerName, customerPhone, customerNote || null, totalAmount, appliedDiscountCode || appliedCouponCode, discountAmount, appliedCouponCode, appliedCouponPercent, expiresAt.toISOString(), deliveryToken, ipAddress || null, now.toISOString(), now.toISOString()]
         });
         const orderId = orderRes.rows[0].id;
 

@@ -109,7 +109,7 @@ curl -X POST "http://localhost:8888/.netlify/functions/import-stock" \
 
 ### C. Script Node (test)
 
-Trong thư mục `web-store` có thể chạy script test (xem `test-inventory-v2.js`) hoặc tự gọi:
+Có thể gọi API trực tiếp:
 
 ```js
 const res = await fetch('http://localhost:8888/.netlify/functions/import-stock', {
@@ -149,4 +149,4 @@ Danh sách đầy đủ nằm trong bảng `skus` (xem qua admin Inventory hoặ
 - Vào **Admin → Inventory**: xem số **Có sẵn** tăng đúng.
 - Tạo đơn thử (sản phẩm giao liền) → thanh toán → kiểm tra trang delivery có đúng TK/MK hoặc link + ghi chú.
 
-Nếu lỗi **SKU not found**: chạy migration/seed (vd: `migrate-schema-v3.js`) để tạo đủ SKU trước khi nhập.
+Nếu lỗi **SKU not found**: kiểm tra bảng `skus` trong database để đảm bảo SKU đã tồn tại trước khi nhập kho.

@@ -48,10 +48,8 @@ async function ensurePaymentSchema(db) {
 
 function generateDeliveryToken(orderId, email) {
     const secret = process.env.DELIVERY_SECRET;
-    if (!secret) {
-        console.error('[SECURITY] DELIVERY_SECRET env variable is NOT SET! Using fallback. SET THIS IMMEDIATELY.');
-    }
-    const key = secret || 'default-secret-change-me';
+    if (!secret) throw new Error('DELIVERY_SECRET not configured');
+    const key = secret;
     const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const data = `${orderId}|${email}|${day}`;
     return crypto.createHash('sha256').update(key + data).digest('hex').substring(0, 32);

@@ -1,16 +1,19 @@
 /**
- * @deprecated Use admin-web /api/admin/orders instead.
- * Kept alive for backward compat until PR 10 cleanup.
- *
  * ADMIN ORDERS API - Netlify Function
  *
- * GET /admin-orders - Get all public orders (requires auth)
- * POST /admin-orders - Manual delivery or status update
+ * GET  /admin-orders                    - Get all public orders (requires auth)
+ * GET  /admin-orders?action=order_detail - Get order detail with credentials
+ * POST /admin-orders  action=deliver     - Manual delivery
+ * POST /admin-orders  action=update_status - Update order status
+ * POST /admin-orders  action=create_manual - Create manual order (admin)
+ * POST /admin-orders  action=update_full   - Full update order fields
+ * POST /admin-orders  action=delete        - Delete order
  *
  * Auth: Bearer token from ADMIN_API_TOKEN env
  */
 
 const { createClient } = require('@libsql/client/web');
+const crypto = require('crypto');
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -22,7 +25,7 @@ function getDbClient() {
 const headers = {
     'Access-Control-Allow-Origin': '*',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Content-Type': 'application/json'
 };
 
@@ -31,7 +34,7 @@ function checkAuth(event) {
     const authHeader = event.headers.authorization || event.headers.Authorization;
     const adminToken = process.env.ADMIN_API_TOKEN;
 
-    if (!adminToken) return true; // No auth configured = open
+    if (!adminToken) return false;
     if (!authHeader) return false;
 
     const token = authHeader.replace('Bearer ', '');
@@ -95,8 +98,13 @@ exports.handler = async function (event, context) {
                 };
             }
 
-            // Get orders with optional filters
+            // List SKUs for dropdowns
+            if (action === 'list_skus') {
+                const skuRes = await db.execute(`SELECT id, sku_code, name, price, delivery_type FROM skus WHERE is_active = 1 ORDER BY category, name`);
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, skus: skuRes.rows }) };
+            }
 
+            // Get orders with optional filters
             let sql = `
                 SELECT
                     o.*,
@@ -147,6 +155,110 @@ exports.handler = async function (event, context) {
         if (event.httpMethod === 'POST') {
             const body = JSON.parse(event.body);
             const { action, orderCode, deliveryContent, newStatus } = body;
+
+            // ── CREATE MANUAL ORDER ──
+            if (action === 'create_manual') {
+                const { customerName, customerEmail, customerPhone, customerNote, skuCode, quantity, price } = body;
+                if (!customerName) {
+                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Thiếu tên khách hàng' }) };
+                }
+
+                const now = new Date().toISOString();
+                const ordCode = 'TBQ' + crypto.randomBytes(4).toString('hex').toUpperCase();
+                const deliveryToken = crypto.randomUUID();
+
+                // Determine amount
+                let amountTotal = parseInt(price) || 0;
+                let skuId = null;
+                let skuName = 'Đơn thủ công';
+
+                if (skuCode) {
+                    const skuRes = await db.execute({ sql: `SELECT id, name, price FROM skus WHERE sku_code = ?`, args: [skuCode] });
+                    if (skuRes.rows.length > 0) {
+                        skuId = skuRes.rows[0].id;
+                        skuName = skuRes.rows[0].name;
+                        if (!amountTotal) amountTotal = skuRes.rows[0].price * (parseInt(quantity) || 1);
+                    }
+                }
+
+                // Insert order as fulfilled (manual = already done)
+                const orderRes = await db.execute({
+                    sql: `INSERT INTO orders (order_code, customer_email, customer_name, customer_phone, customer_note, status, amount_total, payment_method, delivery_token, created_at, updated_at)
+                          VALUES (?, ?, ?, ?, ?, 'fulfilled', ?, 'manual', ?, ?, ?) RETURNING id`,
+                    args: [ordCode, customerEmail, customerName, customerPhone || null, customerNote || null, amountTotal, deliveryToken, now, now]
+                });
+                const orderId = orderRes.rows[0].id;
+
+                // Get legacy product placeholder
+                let legacyProductId = 0;
+                try {
+                    const legRes = await db.execute("SELECT id FROM products WHERE code = 'V3_LEGACY_PLACEHOLDER'");
+                    if (legRes.rows.length > 0) legacyProductId = legRes.rows[0].id;
+                } catch (e) { /* ignore */ }
+
+                // Insert order line
+                if (skuId) {
+                    await db.execute({
+                        sql: `INSERT INTO order_lines (order_id, sku_id, product_id, product_name, quantity, unit_price, subtotal, fulfillment_type) VALUES (?, ?, ?, ?, ?, ?, ?, 'manual')`,
+                        args: [orderId, skuId, legacyProductId, skuName, parseInt(quantity) || 1, amountTotal / (parseInt(quantity) || 1), amountTotal]
+                    });
+                }
+
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Đã tạo đơn ' + ordCode, orderCode: ordCode }) };
+            }
+
+            // ── UPDATE FULL ORDER ──
+            if (action === 'update_full') {
+                const { customerName, customerEmail, customerPhone, customerNote, status: newSt, amountTotal } = body;
+                if (!orderCode) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing orderCode' }) };
+
+                const now = new Date().toISOString();
+                const orderResult = await db.execute({ sql: 'SELECT id FROM orders WHERE order_code = ?', args: [orderCode] });
+                if (!orderResult.rows[0]) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Order not found' }) };
+                const orderId = orderResult.rows[0].id;
+
+                // Build dynamic update
+                const sets = [];
+                const updArgs = [];
+                if (customerName !== undefined) { sets.push('customer_name = ?'); updArgs.push(customerName); }
+                if (customerEmail !== undefined) { sets.push('customer_email = ?'); updArgs.push(customerEmail); }
+                if (customerPhone !== undefined) { sets.push('customer_phone = ?'); updArgs.push(customerPhone); }
+                if (customerNote !== undefined) { sets.push('customer_note = ?'); updArgs.push(customerNote); }
+                if (newSt !== undefined) { sets.push('status = ?'); updArgs.push(newSt); }
+                if (amountTotal !== undefined) { sets.push('amount_total = ?'); updArgs.push(parseInt(amountTotal)); }
+                sets.push('updated_at = ?'); updArgs.push(now);
+                updArgs.push(orderId);
+
+                await db.execute({ sql: `UPDATE orders SET ${sets.join(', ')} WHERE id = ?`, args: updArgs });
+
+                // If cancelled/expired, release stock
+                if (newSt && ['cancelled', 'expired'].includes(newSt)) {
+                    await db.execute({ sql: `UPDATE stock_items SET status = 'available', order_id = NULL WHERE order_id = ? AND status = 'reserved'`, args: [orderId] });
+                }
+
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Đã cập nhật đơn ' + orderCode }) };
+            }
+
+            // ── DELETE ORDER ──
+            if (action === 'delete') {
+                if (!orderCode) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing orderCode' }) };
+
+                const orderResult = await db.execute({ sql: 'SELECT id FROM orders WHERE order_code = ?', args: [orderCode] });
+                if (!orderResult.rows[0]) return { statusCode: 404, headers, body: JSON.stringify({ error: 'Order not found' }) };
+                const orderId = orderResult.rows[0].id;
+
+                // Release reserved stock
+                await db.execute({ sql: `UPDATE stock_items SET status = 'available', order_id = NULL WHERE order_id = ? AND status = 'reserved'`, args: [orderId] });
+
+                // Delete related records (order_lines, payments, deliveries, order_allocations)
+                try { await db.execute({ sql: `DELETE FROM order_allocations WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?)`, args: [orderId] }); } catch (e) { /* table may not exist */ }
+                try { await db.execute({ sql: `DELETE FROM deliveries WHERE order_id = ?`, args: [orderId] }); } catch (e) { /* ignore */ }
+                try { await db.execute({ sql: `DELETE FROM payments WHERE order_id = ?`, args: [orderId] }); } catch (e) { /* ignore */ }
+                await db.execute({ sql: `DELETE FROM order_lines WHERE order_id = ?`, args: [orderId] });
+                await db.execute({ sql: `DELETE FROM orders WHERE id = ?`, args: [orderId] });
+
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Đã xoá đơn ' + orderCode }) };
+            }
 
             if (action === 'deliver') {
                 // Manual delivery
@@ -217,33 +329,33 @@ exports.handler = async function (event, context) {
 
                 // If cancelled/expired, release allocated inventory
                 if (['cancelled', 'expired'].includes(newStatus)) {
-                    const allocResult = await db.execute({
-                        sql: `SELECT oa.unit_id FROM order_allocations oa
-                              JOIN order_lines ol ON ol.id = oa.order_line_id
-                              WHERE ol.order_id = ?`,
-                        args: [orderId]
-                    });
-
-                    for (const alloc of allocResult.rows) {
-                        await db.execute({
-                            sql: `
-                                UPDATE inventory_items
-                                SET status = 'available',
-                                    reserved_by = NULL,
-                                    reserved_at = NULL,
-                                    reservation_expires = NULL
-                                WHERE id = ? AND status = 'reserved'
-                            `,
-                            args: [alloc.unit_id]
-                        });
-                    }
-
-                    // Clear allocation status
+                    // Release stock_items (V3 schema)
                     await db.execute({
-                        sql: `UPDATE order_allocations SET status = 'released'
-                              WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?)`,
+                        sql: `UPDATE stock_items SET status = 'available', order_id = NULL WHERE order_id = ? AND status = 'reserved'`,
                         args: [orderId]
                     });
+
+                    // Also try legacy tables
+                    try {
+                        const allocResult = await db.execute({
+                            sql: `SELECT oa.unit_id FROM order_allocations oa
+                                  JOIN order_lines ol ON ol.id = oa.order_line_id
+                                  WHERE ol.order_id = ?`,
+                            args: [orderId]
+                        });
+
+                        for (const alloc of allocResult.rows) {
+                            await db.execute({
+                                sql: `UPDATE inventory_items SET status = 'available', reserved_by = NULL, reserved_at = NULL, reservation_expires = NULL WHERE id = ? AND status = 'reserved'`,
+                                args: [alloc.unit_id]
+                            });
+                        }
+
+                        await db.execute({
+                            sql: `UPDATE order_allocations SET status = 'released' WHERE order_line_id IN (SELECT id FROM order_lines WHERE order_id = ?)`,
+                            args: [orderId]
+                        });
+                    } catch (e) { /* legacy tables may not exist */ }
                 }
 
                 return {

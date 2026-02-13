@@ -32,7 +32,7 @@ function checkAuth(event) {
     const authHeader = event.headers.authorization || event.headers.Authorization;
     const adminToken = process.env.ADMIN_API_TOKEN;
 
-    if (!adminToken) return true;
+    if (!adminToken) return false;
     if (!authHeader) return false;
 
     const token = authHeader.replace('Bearer ', '');

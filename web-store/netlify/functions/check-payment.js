@@ -45,7 +45,8 @@ function decryptPassword(encrypted, iv) {
 
 // Generate delivery token (for secure access) — must match delivery.js verifyDeliveryToken (day-based, 7-day window)
 function generateDeliveryToken(orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) throw new Error('DELIVERY_SECRET not configured');
     const day = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
     const data = `${orderId}|${email}|${day}`;
     return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);

@@ -18,7 +18,8 @@ function getDbClient() {
 
 // Verify delivery token (same as delivery.js)
 function verifyDeliveryToken(token, orderId, email) {
-    const secret = process.env.DELIVERY_SECRET || 'default-secret-change-me';
+    const secret = process.env.DELIVERY_SECRET;
+    if (!secret) throw new Error('DELIVERY_SECRET not configured');
     const validTokens = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date();
@@ -331,8 +332,8 @@ exports.handler = async function (event, context) {
         <div class="customer-info">
             <h3>Thông tin khách hàng</h3>
             <p><strong>${orderData.customer_name || 'N/A'}</strong></p>
-            <p>${orderData.customer_email}</p>
-            ${orderData.customer_phone ? `<p>${orderData.customer_phone}</p>` : ''}
+            ${orderData.customer_phone ? `<p>SĐT: ${orderData.customer_phone}</p>` : ''}
+            ${orderData.customer_email ? `<p>Email: ${orderData.customer_email}</p>` : ''}
         </div>
 
         <table>

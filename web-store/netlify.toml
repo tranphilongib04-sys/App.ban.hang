@@ -14,11 +14,6 @@
   to = "/admin.html"
   status = 200
 
-[[redirects]]
-  from = "/admin_debug.html"
-  to = "/admin_debug.html"
-  status = 200
-
 # SPA fallback - redirect all non-file requests to index.html
 [[redirects]]
   from = "/*"
