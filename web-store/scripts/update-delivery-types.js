@@ -1,7 +1,7 @@
 /**
  * One-time: Set delivery_type on existing SKUs for two-tier delivery.
- * Pre-order (owner_upgrade): Adobe, Canva, YouTube, Microsoft, Duolingo, Quizlet
- * Instant (auto): Netflix, Spotify, ChatGPT, CapCut
+ * Pre-order (owner_upgrade): Adobe, Canva, YouTube, Microsoft, Duolingo, Quizlet, CapCut 7d
+ * Instant (auto): Netflix, Spotify, ChatGPT, CapCut 14d/1m/6m/1y
  *
  * Run from web-store: node -e "require('./scripts/update-delivery-types').run().then(()=>process.exit(0))"
  * Or with env: TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... node scripts/update-delivery-types.js
@@ -30,8 +30,8 @@ async function run() {
         { like: 'chatgpt%', type: 'auto' },
         { like: 'grok%', type: 'auto' },
         { like: 'capcut_7d', type: 'owner_upgrade' },
-        { like: 'capcut_6m', type: 'owner_upgrade' },
-        { like: 'capcut_pro_1y', type: 'owner_upgrade' },
+        { like: 'capcut_6m', type: 'auto' },
+        { like: 'capcut_pro_1y', type: 'auto' },
         { like: 'capcut_14d', type: 'auto' },
         { like: 'capcut_1m', type: 'auto' },
     ];

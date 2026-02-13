@@ -522,8 +522,8 @@ const products = {
             { name: 'CapCut 7 ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
             { name: 'CapCut 14 ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
             { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Giao trong 5-10 phút', productCode: 'capcut_6m', deliveryType: 'preorder' },
-            { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Giao trong 5-10 phút', productCode: 'capcut_pro_1y', deliveryType: 'preorder' }
+            { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
         ],
         tabs: {
             description: `
@@ -547,12 +547,12 @@ const products = {
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
-                <p><strong>⚡ Gói Giao liền (14 ngày, Pro 1 tháng):</strong></p>
+                <p><strong>⚡ Gói Giao liền (14 ngày, 1 tháng, 6 tháng, 1 năm):</strong></p>
                 <ul>
                     <li>Sau khi thanh toán, bạn nhận ngay TK/MK trên màn hình</li>
                     <li>Đăng nhập app CapCut và sử dụng ngay</li>
                 </ul>
-                <p><strong>🕐 Gói Giao sau (7 ngày, 6 tháng, 1 năm):</strong></p>
+                <p><strong>🕐 Gói Giao sau (7 ngày):</strong></p>
                 <ul>
                     <li>Sau khi thanh toán, nhắn Zalo: 0988428496</li>
                     <li>Nhận tài khoản trong 5-10 phút</li>
@@ -729,7 +729,7 @@ const products = {
         category: 'AI',
         deliveryType: 'preorder',
         description: 'Tạo slide, tài liệu, trang web đẹp mắt bằng AI trong vài giây',
-        image: 'images/gamma-logo.svg',
+        image: 'images/gamma-new.png',
         featured: false,
         rating: 4.5,
         reviewCount: 6,
@@ -924,24 +924,6 @@ const products = {
             `
         }
     },
-    test_payment: {
-        id: 'test_payment',
-        name: 'Testing Payment',
-        category: 'Testing',
-        deliveryType: 'instant',
-        description: 'Sản phẩm dùng để kiểm tra quy trình thanh toán',
-        image: 'https://placehold.co/400x400?text=Test+Product',
-        featured: false,
-        variants: [
-            { name: 'Test Pay 2k', price: 2000, duration: '1 lần', note: 'Không hoàn tiền', productCode: 'test_pay_2k' }
-        ],
-        tabs: {
-            description: `<h3>Testing</h3><p>Đây là sản phẩm test.</p>`,
-            warranty: `<h3>Bảo hành</h3><p>Không bảo hành.</p>`,
-            guide: `<h3>Hướng dẫn</h3><p>Thanh toán và kiểm tra mã đơn hàng.</p>`,
-            faq: `<h3>FAQ</h3><p>Chỉ dùng cho mục đích kiểm thử.</p>`
-        }
-    }
 };
 
 // V2: Cart Persistence
@@ -1070,10 +1052,10 @@ function handleSearch(query) {
                         <div class="search-result-name">${product.name}</div>
                         <div class="search-result-price">
                             ${renderPriceInline(
-                                Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
-                                Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv'))),
-                                'Từ '
-                            )}
+                Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+                Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv'))),
+                'Từ '
+            )}
                         </div>
                     </div>
                 </a>
@@ -1164,14 +1146,26 @@ function handleRoute() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// Update active nav link
+// Update active nav link (desktop + mobile)
 function updateActiveNavLink(currentPage) {
+    // Desktop nav
     document.querySelectorAll('.nav-links a').forEach(link => {
         link.classList.remove('active');
         const href = link.getAttribute('href') || '';
         const linkPage = href.replace('#', '').split('/')[0] || 'home';
         if (linkPage === currentPage || (currentPage === 'product' && linkPage === 'products')) {
             link.classList.add('active');
+        }
+    });
+    // Mobile bottom nav
+    document.querySelectorAll('.mobile-nav-item').forEach(item => {
+        item.classList.remove('active');
+        const itemPage = item.getAttribute('data-page') || '';
+        if (itemPage === currentPage || (currentPage === 'product' && itemPage === 'products') || (currentPage === 'home' && itemPage === 'contact')) {
+            // 'contact' scrolls to footer on home page, so keep home active for contact
+        }
+        if (itemPage === currentPage || (currentPage === 'product' && itemPage === 'products')) {
+            item.classList.add('active');
         }
     });
 }
@@ -1182,6 +1176,7 @@ function getTargetPageId(page, parts) {
     if (page === 'checkout') return 'checkoutPage';
     if (page === 'products') return 'productsPage';
     if (page === 'confirmation') return 'confirmationPage';
+    if (page === 'lookup') return 'orderLookupPage';
     return 'homePage';
 }
 
@@ -1192,6 +1187,22 @@ function doRoute(page, parts, showPage) {
     } else if (page === 'checkout') {
         showPage(document.getElementById('checkoutPage'));
         renderCheckoutSummary();
+        // Auto-fill coupon from URL hash (e.g. #checkout?coupon=TBQ-XKRN-7M2P)
+        try {
+            const hashQuery = window.location.hash.split('?')[1];
+            if (hashQuery) {
+                const params = new URLSearchParams(hashQuery);
+                const couponCode = params.get('coupon');
+                if (couponCode) {
+                    const discountInput = document.getElementById('discountCodeInput');
+                    if (discountInput && !discountInput.readOnly) {
+                        discountInput.value = couponCode;
+                        // Auto-apply after a short delay to ensure DOM is ready
+                        setTimeout(() => { applyDiscountCode(); }, 300);
+                    }
+                }
+            }
+        } catch (e) { console.warn('Coupon auto-fill:', e); }
         // animate checkout form fields
         setTimeout(() => {
             const form = document.querySelector('.checkout-form');
@@ -1210,6 +1221,15 @@ function doRoute(page, parts, showPage) {
             return;
         }
         showPage(document.getElementById('confirmationPage'));
+    } else if (page === 'lookup') {
+        showPage(document.getElementById('orderLookupPage'));
+        var phoneInput = document.getElementById('lookupPhoneInput');
+        if (phoneInput) {
+            phoneInput.focus();
+            phoneInput.addEventListener('keydown', function (e) {
+                if (e.key === 'Enter') lookupOrders();
+            });
+        }
     } else if (page === 'contact') {
         showPage(document.getElementById('homePage'));
         setTimeout(() => {
@@ -1241,9 +1261,9 @@ function renderFeaturedProducts() {
                 </span>
                 <h3 class="product-name">${product.name}</h3>
                 ${renderPriceStack(
-                    Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
-                    Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
-                )}
+        Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+        Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
+    )}
                 <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
@@ -1271,9 +1291,9 @@ function renderAllProducts(filter = 'all') {
                 </span>
                 <h3 class="product-name">${product.name}</h3>
                 ${renderPriceStack(
-                    Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
-                    Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
-                )}
+        Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
+        Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
+    )}
                 <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
             </div>
         </div>
@@ -1654,7 +1674,7 @@ async function applyDiscountCode() {
             input.readOnly = true;
             btn.textContent = 'Xoá';
             btn.disabled = false;
-            btn.onclick = function() { clearDiscount(); };
+            btn.onclick = function () { clearDiscount(); };
 
             // Show discount line
             document.getElementById('discountLine').style.display = 'flex';
@@ -1702,7 +1722,7 @@ function clearDiscount() {
     if (btn) {
         btn.textContent = 'Áp dụng';
         btn.disabled = false;
-        btn.onclick = function() { applyDiscountCode(); };
+        btn.onclick = function () { applyDiscountCode(); };
     }
 
     const discountLine = document.getElementById('discountLine');
@@ -1723,14 +1743,12 @@ async function placeOrder() {
     }
 
     const name = document.getElementById('customerName').value;
-    const email = document.getElementById('customerEmail').value;
     const phone = document.getElementById('customerPhone').value;
     const note = document.getElementById('customerNote')?.value || '';
 
-    if (!name || !email || !phone) {
+    if (!name || !phone) {
         showToast('Vui lòng điền đầy đủ thông tin!', 'error');
         validateInput(document.getElementById('customerName'));
-        validateInput(document.getElementById('customerEmail'));
         validateInput(document.getElementById('customerPhone'));
         return;
     }
@@ -1767,7 +1785,7 @@ async function placeOrder() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 customerName: name,
-                customerEmail: email,
+                customerEmail: '',
                 customerPhone: phone,
                 customerNote: note,
                 items: items,
@@ -1823,7 +1841,7 @@ async function placeOrder() {
         lastOrder = {
             code: orderCode,
             date: new Date().toLocaleString('vi-VN'),
-            customer: { name, email, phone },
+            customer: { name, phone },
             items: [...cart],
             total: data.amount || total
         };
@@ -2322,7 +2340,7 @@ function validateInput(input) {
 document.addEventListener('DOMContentLoaded', function () {
     // Add input event listeners to clear errors while typing
     document.addEventListener('input', function (e) {
-        if (e.target.matches('#customerName, #customerEmail, #customerPhone')) {
+        if (e.target.matches('#customerName, #customerPhone')) {
             validateInput(e.target);
         }
     });
@@ -2362,8 +2380,7 @@ function generateInvoice() {
 
     doc.text("KHACH HANG:", 20, 70);
     doc.text(`Ten: ${lastOrder.customer.name}`, 30, 80);
-    doc.text(`Email: ${lastOrder.customer.email}`, 30, 90);
-    doc.text(`SĐT: ${lastOrder.customer.phone}`, 30, 100);
+    doc.text(`SĐT: ${lastOrder.customer.phone}`, 30, 90);
 
     doc.text("CHI TIET DON HANG:", 20, 120);
     let y = 130;
@@ -2644,3 +2661,179 @@ document.addEventListener('keydown', function (e) {
 
 // Init carousel on DOMContentLoaded
 document.addEventListener('DOMContentLoaded', initTestiCarousel);
+
+// ── ORDER LOOKUP ────────────────────────────────────────────────
+var _lookupIdCounter = 0;
+
+function lookupOrders() {
+    var phoneInput = document.getElementById('lookupPhoneInput');
+    var emailInput = document.getElementById('lookupEmailInput');
+    var resultDiv = document.getElementById('lookupResult');
+    var guide = document.getElementById('lookupGuide');
+    var btn = document.getElementById('lookupBtn');
+    var phone = (phoneInput.value || '').trim();
+    var email = (emailInput ? emailInput.value : '').trim();
+
+    if (!phone || phone.length < 9) {
+        resultDiv.innerHTML = '<div class="lookup-empty"><span class="lookup-empty-icon">📱</span><p>Vui lòng nhập số điện thoại hợp lệ</p></div>';
+        return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="lookup-btn-text">Đang tra cứu...</span>';
+    resultDiv.innerHTML = '<div class="lookup-loading"><div class="lookup-spinner"></div><p>Đang tìm kiếm đơn hàng...</p></div>';
+    if (guide) guide.style.display = 'none';
+
+    var base = window.API_BASE || '';
+    fetch(base + '/.netlify/functions/order-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: phone, email: email })
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="lookup-btn-text">Tra cứu</span><svg class="lookup-btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+
+            if (!data.success) {
+                resultDiv.innerHTML = '<div class="lookup-empty"><span class="lookup-empty-icon">❌</span><p>' + escHtml(data.error || 'Lỗi hệ thống') + '</p></div>';
+                if (guide) guide.style.display = '';
+                return;
+            }
+
+            var orders = data.orders || [];
+            if (orders.length === 0) {
+                resultDiv.innerHTML = '<div class="lookup-empty"><span class="lookup-empty-icon">📭</span><p>Không tìm thấy đơn hàng nào với SĐT <strong>' + escHtml(phone) + '</strong></p><p class="lookup-hint">Hãy kiểm tra lại số điện thoại hoặc liên hệ hỗ trợ qua <a href="https://zalo.me/0988428496" target="_blank">Zalo</a></p></div>';
+                if (guide) guide.style.display = '';
+                return;
+            }
+
+            var html = '<div class="lookup-count">Tìm thấy ' + orders.length + ' đơn hàng</div>';
+
+            // Show hint if email not provided/verified
+            if (!data.emailVerified && orders.some(function (o) { return o.status === 'fulfilled' || o.status === 'paid'; })) {
+                html += '<div class="lookup-email-hint">💡 Nhập <strong>email đã đặt hàng</strong> ở ô phía trên để xem thông tin đăng nhập trực tiếp tại đây</div>';
+            }
+
+            orders.forEach(function (o) {
+                var statusClass = 'status-' + (o.status || 'pending');
+                var badge = '<span class="lookup-badge ' + statusClass + '">' + escHtml(o.statusLabel) + '</span>';
+
+                var itemsHtml = (o.items || []).map(function (item) {
+                    return '<div class="lookup-item"><span class="lookup-item-name">' + escHtml(item.name) + '</span><span class="lookup-item-info">x' + item.quantity + ' — ' + formatPrice(item.subtotal) + '</span></div>';
+                }).join('');
+
+                var date = o.createdAt ? new Date(o.createdAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+
+                var actionHtml = '';
+                if ((o.status === 'fulfilled' || o.status === 'paid') && !o.credentials && o.deliveryUrl) {
+                    actionHtml = '<a href="' + escAttr(o.deliveryUrl) + '" target="_blank" class="lookup-delivery-btn">🔑 Xem thông tin đăng nhập</a>';
+                } else if (o.status === 'paid' && !o.deliveryUrl && !o.credentials) {
+                    actionHtml = '<span class="lookup-paid-note">✅ Đã thanh toán — đang xử lý giao hàng</span>';
+                } else if (o.status === 'pending_payment') {
+                    actionHtml = '<span class="lookup-pending-note">⏳ Đang chờ thanh toán</span>';
+                }
+
+                // Inline credentials
+                var credHtml = '';
+                if (o.credentials && o.credentials.length > 0) {
+                    credHtml = '<div class="lookup-credentials">';
+                    credHtml += '<div class="lookup-credentials-title">🔑 Thông tin đăng nhập</div>';
+                    o.credentials.forEach(function (c) {
+                        var uid = 'lc' + (++_lookupIdCounter);
+                        if (c.isLink) {
+                            // Link/code delivery
+                            var isUrl = c.username && /^https?:\/\//i.test(c.username);
+                            credHtml += '<div class="lookup-cred-card">' +
+                                '<div class="lookup-cred-field">' +
+                                '<div class="lookup-cred-label">Link kích hoạt</div>' +
+                                '<div class="lookup-cred-value">' +
+                                '<span class="lookup-cred-text">' + (isUrl ? '<a href="' + escAttr(c.username) + '" target="_blank" style="color:#4f46e5;word-break:break-all">' + escHtml(c.username) + '</a>' : escHtml(c.username)) + '</span>' +
+                                '<button class="lookup-cred-copy" onclick="lookupCopy(\'' + escAttr(c.username).replace(/'/g, "\\'") + '\',this)">Copy</button>' +
+                                '</div></div>';
+                            if (c.extraInfo) {
+                                credHtml += '<div class="lookup-cred-field"><div class="lookup-cred-label">Hướng dẫn</div>' +
+                                    '<div class="lookup-cred-value"><span class="lookup-cred-text" style="white-space:pre-wrap">' + escHtml(c.extraInfo) + '</span></div></div>';
+                            }
+                            credHtml += '</div>';
+                        } else {
+                            // Account delivery
+                            credHtml += '<div class="lookup-cred-card">' +
+                                '<div class="lookup-cred-field">' +
+                                '<div class="lookup-cred-label">Tài khoản</div>' +
+                                '<div class="lookup-cred-value">' +
+                                '<span class="lookup-cred-text">' + escHtml(c.username) + '</span>' +
+                                '<button class="lookup-cred-copy" onclick="lookupCopy(\'' + escAttr(c.username).replace(/'/g, "\\'") + '\',this)">Copy</button>' +
+                                '</div></div>' +
+                                '<div class="lookup-cred-field">' +
+                                '<div class="lookup-cred-label">Mật khẩu</div>' +
+                                '<div class="lookup-cred-value">' +
+                                '<span class="lookup-cred-text blurred" id="' + uid + '">' + escHtml(c.password) + '</span>' +
+                                '<button class="lookup-cred-reveal" id="' + uid + '-r" onclick="lookupReveal(\'' + uid + '\')">Hiện</button>' +
+                                '<button class="lookup-cred-copy" style="display:none" id="' + uid + '-c" onclick="lookupCopy(\'' + escAttr(c.password).replace(/'/g, "\\'") + '\',this)">Copy</button>' +
+                                '</div></div>';
+                            if (c.extraInfo) {
+                                credHtml += '<div class="lookup-cred-field"><div class="lookup-cred-label">Mã 2FA / Ghi chú</div>' +
+                                    '<div class="lookup-cred-value"><span class="lookup-cred-text">' + escHtml(c.extraInfo) + '</span>' +
+                                    '<button class="lookup-cred-copy" onclick="lookupCopy(\'' + escAttr(c.extraInfo).replace(/'/g, "\\'") + '\',this)">Copy</button></div></div>';
+                            }
+                            credHtml += '</div>';
+                        }
+                    });
+                    credHtml += '</div>';
+                }
+
+                var discountHtml = '';
+                if (o.discountAmount && o.discountAmount > 0) {
+                    discountHtml = '<div class="lookup-discount">Mã giảm giá: <strong>' + escHtml(o.discountCode || '') + '</strong> (-' + formatPrice(o.discountAmount) + ')</div>';
+                }
+
+                html += '<div class="lookup-order-card">' +
+                    '<div class="lookup-order-header">' +
+                    '<div class="lookup-order-code">' + escHtml(o.orderCode) + '</div>' +
+                    badge +
+                    '</div>' +
+                    '<div class="lookup-order-meta">' +
+                    '<span>📅 ' + escHtml(date) + '</span>' +
+                    '<span class="lookup-total">💰 ' + formatPrice(o.total) + '</span>' +
+                    '</div>' +
+                    discountHtml +
+                    '<div class="lookup-items">' + itemsHtml + '</div>' +
+                    (actionHtml ? '<div class="lookup-action">' + actionHtml + '</div>' : '') +
+                    credHtml +
+                    '</div>';
+            });
+
+            resultDiv.innerHTML = html;
+        })
+        .catch(function (err) {
+            btn.disabled = false;
+            btn.innerHTML = '<span class="lookup-btn-text">Tra cứu</span><svg class="lookup-btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>';
+            resultDiv.innerHTML = '<div class="lookup-empty"><span class="lookup-empty-icon">⚠️</span><p>Lỗi kết nối. Vui lòng thử lại.</p></div>';
+            if (guide) guide.style.display = '';
+            console.error('[lookup]', err);
+        });
+}
+
+function lookupReveal(uid) {
+    var el = document.getElementById(uid);
+    var revBtn = document.getElementById(uid + '-r');
+    var cpBtn = document.getElementById(uid + '-c');
+    if (el) el.classList.remove('blurred');
+    if (revBtn) revBtn.style.display = 'none';
+    if (cpBtn) cpBtn.style.display = '';
+}
+
+function lookupCopy(text, btnEl) {
+    navigator.clipboard.writeText(text).then(function () {
+        if (btnEl) {
+            var orig = btnEl.textContent;
+            btnEl.textContent = '✓';
+            setTimeout(function () { btnEl.textContent = orig; }, 1500);
+        }
+    }).catch(function () { });
+}
+
+function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function escAttr(s) { return escHtml(s); }
+
