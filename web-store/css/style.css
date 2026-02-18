@@ -363,6 +363,36 @@ nav {
     animation: fadeInUp 0.8s ease-out 0.4s backwards;
 }
 
+.hero-actions {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.zalo-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 14px 28px;
+    border-radius: 980px;
+    background: transparent;
+    color: var(--accent);
+    text-decoration: none;
+    font-size: 16px;
+    font-weight: 600;
+    border: 2px solid var(--accent);
+    transition: all 0.25s ease;
+    animation: fadeInUp 0.8s ease-out 0.5s backwards;
+}
+
+.zalo-button:hover {
+    transform: translateY(-2px);
+    background: rgba(0, 122, 255, 0.08);
+    box-shadow: 0 10px 24px rgba(0, 113, 227, 0.18);
+}
+
 .cta-button:hover {
     background: #0077ed;
     transform: translateY(-2px);
@@ -1077,6 +1107,36 @@ section {
 
 /* --- Mobile --- */
 @media (max-width: 600px) {
+    .hero {
+        margin-top: 64px;
+        padding: 28px 20px;
+        border-radius: 22px;
+    }
+
+    .hero p {
+        font-size: 16px;
+        margin-bottom: 20px;
+    }
+
+    .slogan-main {
+        font-size: 24px;
+    }
+
+    .slogan-sub {
+        font-size: 18px;
+    }
+
+    .hero-actions {
+        width: 100%;
+        flex-direction: column;
+    }
+
+    .cta-button,
+    .zalo-button {
+        width: 100%;
+        text-align: center;
+    }
+
     .section-desc {
         font-size: 14px;
         margin-top: -12px;
@@ -4277,6 +4337,26 @@ section .section-title::after {
 }
 
 /* FLOATING CONTACT - Zalo icon FAB */
+@keyframes fabSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.5) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+@keyframes fabPulse {
+    0%, 100% {
+        box-shadow: 0 2px 12px rgba(0, 104, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 2px 20px rgba(0, 104, 255, 0.55);
+    }
+}
+
 .contact-fab {
     position: fixed;
     bottom: 20px;
@@ -4292,6 +4372,7 @@ section .section-title::after {
     box-shadow: 0 2px 12px rgba(0, 104, 255, 0.3);
     transition: transform 0.2s, box-shadow 0.2s;
     overflow: hidden;
+    animation: fabSlideIn 0.5s ease-out 1s backwards, fabPulse 3s ease-in-out 2s infinite;
 }
 
 .contact-fab:hover {

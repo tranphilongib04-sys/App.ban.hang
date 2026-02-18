@@ -16,7 +16,7 @@
 
 const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
-const CTV_CODE = 'CTV2026';
+const CTV_CODES = new Set(['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05']);
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -36,8 +36,10 @@ const RATE_LIMIT_WINDOW_MS = 5 * 60 * 1000;
 const RATE_LIMIT_MAX_REQUESTS = 10;
 
 function generateOrderCode() {
-    // Crypto-safe: TBQ + 8 random hex chars (4 billion+ combinations)
-    return 'TBQ' + crypto.randomBytes(4).toString('hex').toUpperCase();
+    // Crypto-safe: TBQ + 9 random digits (1 billion+ combinations)
+    // Digits only – avoids regex/banking issues with hex letters (A-F)
+    const num = crypto.randomInt(100000000, 999999999);
+    return 'TBQ' + num.toString();
 }
 
 // Reuse rate limit logic
@@ -102,7 +104,7 @@ exports.handler = async function (event, context) {
         const body = JSON.parse(event.body);
         let { customerName, customerEmail, customerPhone, customerNote, items, discountCode } = body;
         const codeUpper = (discountCode || '').trim().toUpperCase();
-        const isCtvCode = codeUpper === CTV_CODE;
+        const isCtvCode = CTV_CODES.has(codeUpper);
 
         // Backward compatibility
         if (!items && body.productCode) {
@@ -218,7 +220,7 @@ exports.handler = async function (event, context) {
         let appliedCouponPercent = 0;
 
         if (isCtvCode) {
-            appliedDiscountCode = CTV_CODE;
+            appliedDiscountCode = codeUpper;
             discountAmount = Math.max(0, publicTotal - ctvTotal);
             totalAmount = Math.max(0, ctvTotal);
         } else if (discountCode && discountCode.trim()) {

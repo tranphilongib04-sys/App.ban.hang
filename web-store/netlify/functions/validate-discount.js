@@ -9,7 +9,7 @@
  */
 
 const { createClient } = require('@libsql/client/web');
-const CTV_CODE = 'CTV2026';
+const CTV_CODES = new Set(['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05']);
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -52,8 +52,8 @@ exports.handler = async function (event) {
         // 1. Lookup discount code
         const codeUpper = code.trim().toUpperCase();
 
-        // ── CTV MODE ──
-        if (codeUpper === CTV_CODE) {
+        // ── CTV MODE (CTV2026, CTV01–CTV05 all use ctv_price) ──
+        if (CTV_CODES.has(codeUpper)) {
             const hasCtv = await hasCtvPriceColumn();
             let publicTotal = 0;
             let ctvTotal = 0;
@@ -88,7 +88,7 @@ exports.handler = async function (event) {
                 headers,
                 body: JSON.stringify({
                     valid: true,
-                    code: CTV_CODE,
+                    code: codeUpper,
                     codeType: 'ctv',
                     discountAmount,
                     totalBeforeDiscount: publicTotal,

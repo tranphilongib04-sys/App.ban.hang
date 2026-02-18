@@ -3,12 +3,14 @@ const crypto = require('crypto');
 // ---------------------------------------------------------------------------
 // State-machine constants
 //   pending_payment  →  paid  →  fulfilled
-//   pending_payment  →  failed | refunded   (terminal)
+//   expired          →  paid  →  fulfilled   (late payment recovery)
+//   pending_payment  →  failed | refunded    (terminal)
 // ---------------------------------------------------------------------------
 const VALID_TRANSITIONS = {
     pending_payment: ['paid', 'failed', 'refunded'],
+    expired:         ['paid'],     // allow recovery when payment arrives after TTL
     paid:            ['fulfilled', 'refunded'],
-    fulfilled:       [],          // terminal – idempotent return only
+    fulfilled:       [],           // terminal – idempotent return only
     failed:          [],
     refunded:        []
 };
@@ -114,14 +116,43 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         });
     }
 
-    // ── 3. Transition: pending_payment → paid ────────────────────────
+    // ── 3. Transition: pending_payment|expired → paid ─────────────────
+    //    Expired orders can be recovered when late payment arrives.
+    //    Stock may have been released by TTL cleanup → re-reserve below.
+    const wasExpired = fresh.status === 'expired';
     await db.execute({
-        sql: `UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ? AND status = 'pending_payment'`,
+        sql: `UPDATE orders SET status = 'paid', updated_at = ? WHERE id = ? AND status IN ('pending_payment', 'expired')`,
         args: [now, fresh.id]
     });
 
     // ── 4. Collect reserved stock_items (V3 unified) ─────────────────
     //    Giao liền (auto) mới có reserved items. Giao sau 5-10' (owner_upgrade) không có → rows rỗng.
+    //    If order was expired, stock was released → re-reserve fresh items.
+    if (wasExpired) {
+        // Get order lines to know what SKUs & quantities are needed
+        const linesResult = await db.execute({
+            sql: `SELECT ol.sku_id, ol.quantity, ol.fulfillment_type FROM order_lines ol WHERE ol.order_id = ?`,
+            args: [fresh.id]
+        });
+        for (const line of linesResult.rows) {
+            if ((line.fulfillment_type || 'auto') !== 'auto') continue; // skip owner_upgrade
+            const idsRes = await db.execute({
+                sql: `SELECT id FROM stock_items WHERE sku_id = ? AND status = 'available' LIMIT ?`,
+                args: [line.sku_id, line.quantity]
+            });
+            if (idsRes.rows.length < line.quantity) {
+                console.warn(`[finalizeOrder] Expired order ${fresh.id} recovery: insufficient stock for SKU ${line.sku_id} (need ${line.quantity}, have ${idsRes.rows.length})`);
+                // Continue anyway – partial recovery is better than none for owner_upgrade mixed orders
+            }
+            for (const row of idsRes.rows) {
+                await db.execute({
+                    sql: `UPDATE stock_items SET status = 'reserved', order_id = ? WHERE id = ? AND status = 'available'`,
+                    args: [fresh.id, row.id]
+                });
+            }
+        }
+    }
+
     const stockResult = await db.execute({
         sql: `SELECT si.id, si.account_info, si.secret_key, si.note
               FROM stock_items si

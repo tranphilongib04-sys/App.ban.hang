@@ -521,9 +521,9 @@ const products = {
         variants: [
             { name: 'CapCut 7 ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
             { name: 'CapCut 14 ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
-            { name: 'CapCut Pro 1 tháng', price: 35000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 6 tháng', price: 180000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 1 năm', price: 300000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
+            { name: 'CapCut Pro 1 tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 6 tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 1 năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
         ],
         tabs: {
             description: `
@@ -951,7 +951,7 @@ let cart = [];
 let appliedDiscount = null; // { code, discountAmount, finalTotal }
 
 // CTV MODE
-const CTV_CODE = 'CTV2026';
+const CTV_CODES = ['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05'];
 let ctvMode = localStorage.getItem('tbq_ctv_mode') === '1';
 
 function setCtvMode(enable) {
@@ -1617,7 +1617,7 @@ function renderCheckoutSummary(skipDiscountReset = false) {
             const ctvTotal = getCartTotal('ctv');
             const discountAmount = Math.max(0, publicTotal - ctvTotal);
             document.getElementById('discountLine').style.display = 'flex';
-            document.getElementById('discountCodeDisplay').textContent = CTV_CODE;
+            document.getElementById('discountCodeDisplay').textContent = appliedDiscount.code || 'CTV';
             document.getElementById('discountAmountDisplay').textContent = formatPrice(discountAmount);
             document.getElementById('checkoutTotal').textContent = formatPrice(ctvTotal);
         }
@@ -2169,12 +2169,45 @@ function startPaymentPolling(orderCode, amount) {
     if (pollingInterval) clearInterval(pollingInterval);
 
     let attempts = 0;
-    const maxAttempts = 240; // 240 * 5s = 20 minutes
+    const maxAttempts = 600; // 600 * 2s = 20 minutes
+    let isChecking = false; // guard against overlapping requests
+
+    const handlePaid = async (data) => {
+        clearInterval(pollingInterval);
+
+        const isPreorder = data.fulfillmentType === 'owner_upgrade' || data.fulfillmentType === 'preorder';
+        const hasPreorderItems = data.hasPreorderItems === true;
+
+        if (isPreorder && !data.deliveryToken) {
+            showPreorderSuccess(orderCode, data.invoiceNumber);
+        } else if (data.deliveryToken) {
+            await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
+            if (hasPreorderItems) {
+                const successState = document.getElementById('successPaymentState');
+                if (successState) {
+                    const zaloSection = `
+                        <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
+                            <h3>San pham dat truoc</h3>
+                            <p style="margin: 0.5rem 0;">Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút.</p>
+                            <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
+                        </div>
+                    `;
+                    const backHome = successState.querySelector('.conf-back-home');
+                    if (backHome) backHome.insertAdjacentHTML('beforebegin', zaloSection);
+                }
+            }
+        } else {
+            window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
+        }
+    };
 
     const check = async () => {
+        if (isChecking) return; // skip if previous request still in-flight
+        isChecking = true;
         attempts++;
         if (attempts > maxAttempts) {
             clearInterval(pollingInterval);
+            isChecking = false;
             return;
         }
 
@@ -2195,10 +2228,7 @@ function startPaymentPolling(orderCode, amount) {
                 } catch { /* ignore */ }
 
                 console.error('[poll] check-payment non-OK:', response.status, details);
-                // Don't show toast for 429 or transient errors during polling to avoid spamming user
-                if (response.status !== 429) {
-                    // showToast(details || `Lỗi máy chủ (${response.status}).`, 'error');
-                }
+                isChecking = false;
                 return;
             }
 
@@ -2206,42 +2236,18 @@ function startPaymentPolling(orderCode, amount) {
 
             // check-payment returns status: 'paid' when successful
             if (data.status === 'paid' || data.status === 'fulfilled') {
-                clearInterval(pollingInterval);
-
-                const isPreorder = data.fulfillmentType === 'owner_upgrade' || data.fulfillmentType === 'preorder';
-                const hasPreorderItems = data.hasPreorderItems === true;
-
-                if (isPreorder && !data.deliveryToken) {
-                    showPreorderSuccess(orderCode, data.invoiceNumber);
-                } else if (data.deliveryToken) {
-                    await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
-                    if (hasPreorderItems) {
-                        const successState = document.getElementById('successPaymentState');
-                        if (successState) {
-                            const zaloSection = `
-                                <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
-                                    <h3>San pham dat truoc</h3>
-                                    <p style="margin: 0.5rem 0;">Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút.</p>
-                                    <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
-                                </div>
-                            `;
-                            const backHome = successState.querySelector('.conf-back-home');
-                            if (backHome) backHome.insertAdjacentHTML('beforebegin', zaloSection);
-                        }
-                    }
-                } else {
-                    window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
-                }
+                await handlePaid(data);
             }
         } catch (error) {
             console.error('[poll] check-payment error:', error);
         }
+        isChecking = false;
     };
 
     // Run immediately
     check();
-    // Then poll every 3 seconds
-    pollingInterval = setInterval(check, 3000);
+    // Fast polling: every 2 seconds (webhook usually fulfills in ~1s, so next poll catches it)
+    pollingInterval = setInterval(check, 2000);
 }
 
 // Generate QR Code for TP Bank using VietQR API

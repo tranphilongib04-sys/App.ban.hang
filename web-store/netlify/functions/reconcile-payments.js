@@ -40,13 +40,16 @@ exports.handler = async function (event, context) {
     }
 
     try {
-        // 1. Get Pending Orders (Created in last 24h, still pending)
-        // We only care about orders that "should" have been paid recently.
-        // Let's look at orders created > 2 mins ago (give webhook time) and < 24 hours ago.
+        // Ensure schema exists before any transactions (DDL auto-commits)
+        await ensurePaymentSchema(db);
+
+        // 1. Get Pending/Expired Orders (Created in last 7 days)
+        // Include expired orders: payment may arrive after 30min TTL.
+        // fulfillment.js now supports expired → paid → fulfilled recovery.
         const pendingOrdersResult = await db.execute({
             sql: `
-                SELECT * FROM orders 
-                WHERE status = 'pending_payment' 
+                SELECT * FROM orders
+                WHERE status IN ('pending_payment', 'expired')
                 AND created_at > datetime('now', '-7 days')
                 AND created_at < datetime('now', '0 minutes')
             `,
@@ -100,8 +103,8 @@ exports.handler = async function (event, context) {
                 const code = orderCode.toUpperCase();
                 const orderCodeNumber = code.replace(/^TBQ\s*/i, '');
 
-                // Check if content has "TBQ" followed by optional space and the number
-                // OR just the number itself if sufficiently long
+                // Check if content has "TBQ" followed by optional space and the code suffix
+                // OR just the suffix itself if sufficiently long (supports hex codes)
                 const normalizedContent = content.replace(/\s+/g, ''); // Remove all spaces for easier checking
                 const normalizedCode = code.toUpperCase();
 

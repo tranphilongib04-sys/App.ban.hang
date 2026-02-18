@@ -155,8 +155,8 @@ exports.handler = async function (event, context) {
                 });
                 order = orderResult.rows[0];
 
-                // If already fulfilled, return immediately
-                if (order && order.status === 'fulfilled') {
+                // If already fulfilled or being processed (paid), return immediately
+                if (order && (order.status === 'fulfilled' || order.status === 'paid')) {
                     // Check if this order has upgrade_request fulfillment type
                     const lineResult = await db.execute({
                         sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ? LIMIT 1`,
@@ -220,11 +220,11 @@ exports.handler = async function (event, context) {
                         const code = orderCode.toUpperCase();
 
                         // STRICT RULE: Content MUST contain the order code
-                        // Match formats: "IBFT TBQ20824761", "MBVCB.xxx.TBQ 20824761", "TBQ20824761", "20824761"
+                        // Match formats: "IBFT TBQ266E445C", "MBVCB.xxx.TBQ 266E445C", "TBQ266E445C", "266E445C"
                         const orderCodeNumber = code.replace(/^TBQ\s*/i, '');
 
-                        // Check if content has "TBQ" followed by optional space and the number
-                        // OR just the number itself if sufficiently long
+                        // Check if content has "TBQ" followed by optional space and the code suffix
+                        // OR just the suffix itself if sufficiently long (supports hex codes)
                         const normalizedContent = content.replace(/\s+/g, ''); // Remove all spaces for easier checking
                         const normalizedCode = code.toUpperCase();
 
@@ -279,9 +279,10 @@ exports.handler = async function (event, context) {
             }
         }
 
-        // If payment found, process delivery
-        if (paidTransaction && db && order && order.status === 'pending_payment') {
-            const { finalizeOrder } = require('./utils/fulfillment');
+        // If payment found, process delivery (also recover expired orders)
+        if (paidTransaction && db && order && (order.status === 'pending_payment' || order.status === 'expired')) {
+            const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
+            await ensurePaymentSchema(db); // MUST run before BEGIN (DDL auto-commits)
             const linesResult = await db.execute({
                 sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ?`,
                 args: [order.id]

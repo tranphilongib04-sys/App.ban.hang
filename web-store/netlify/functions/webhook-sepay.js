@@ -32,11 +32,11 @@ function extractOrderCode(body) {
     ];
     for (const raw of candidates) {
         if (!raw) continue;
-        // Match TBQ followed by optional spaces and then digits
-        const m = String(raw).match(/TBQ\s*(\d+)/i);
+        // Match TBQ followed by optional spaces and then hex chars (A-F, 0-9)
+        const m = String(raw).match(/TBQ\s*([A-F0-9]+)/i);
         if (m) {
-            // Return normalized format: TBQ12345
-            return 'TBQ' + m[1];
+            // Return normalized format: TBQ266E445C (uppercase, no spaces)
+            return 'TBQ' + m[1].toUpperCase();
         }
     }
     return null;
