@@ -998,6 +998,42 @@
       margin-bottom: 16px;
     }
 
+    /* ── Format hints below textarea ── */
+    .import-format-hints {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .format-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 11px;
+      color: var(--text2);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      white-space: nowrap;
+    }
+
+    /* ── Date badge in preview table ── */
+    .col-date .date-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      background: rgba(245, 158, 11, 0.12);
+      color: var(--orange);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
     /* ───── Inventory table stock badges ───── */
     .stock-badge {
       display: inline-flex;
@@ -2117,10 +2153,16 @@
             <div class="import-step">
               <div class="import-step-label">
                 <span class="step-number">1</span>
-                <span>Dán tài khoản <small style="color:var(--text2)">(mỗi dòng 1 tài khoản, phân cách bằng <code>|</code> <code>:</code> hoặc khoảng trắng)</small></span>
+                <span>Dán tài khoản <small style="color:var(--text2)">(phân cách bằng <code>|</code> <code>:</code> hoặc khoảng trắng)</small></span>
               </div>
               <textarea id="superPasteRaw" class="paste-area"
-                placeholder="email@gmail.com|matkhau123|ma2fa&#10;user2@mail.com|pass456&#10;user3:pass789:2fa_code"></textarea>
+                placeholder="email@gmail.com|matkhau123 (Date 29.04)&#10;user2@mail.com|pass456|2fa_code&#10;user3:pass789 (Date 15.05)"></textarea>
+              <div class="import-format-hints">
+                <span class="format-hint">📧 tk|mk</span>
+                <span class="format-hint">🔐 tk|mk|2fa</span>
+                <span class="format-hint">📅 (Date 29.04)</span>
+                <span class="format-hint">📅 HSD: 29/04</span>
+              </div>
             </div>
 
             <!-- Step 2: Select SKU -->
@@ -3595,7 +3637,11 @@
       if (!tbody) return;
       var rows = _superParsedRows;
       if (!rows.length) { tbody.innerHTML = '<tbody><tr><td class="empty">Không có dòng nào</td></tr></tbody>'; return; }
-      var thead = '<thead><tr><th></th><th>#</th><th>Tài khoản</th><th>Mật khẩu</th><th>2FA</th><th>SKU</th><th>Trạng thái</th></tr></thead>';
+      // Check if any row has date info
+      var hasDate = rows.some(function (r) { return r.date; });
+      var thead = '<thead><tr><th></th><th>#</th><th>Tài khoản</th><th>Mật khẩu</th><th>2FA</th>' +
+        (hasDate ? '<th>📅 Hạn dùng</th>' : '') +
+        '<th>SKU</th><th>Trạng thái</th></tr></thead>';
       var bodyRows = rows.map(function (row, i) {
         var suggested = row.suggested_skus || [];
         var top = suggested[0];
@@ -3609,12 +3655,14 @@
         var statusCls = row.status === 'valid' ? 'row-status-valid' : 'row-status-error';
         var statusText = row.status === 'valid' ? 'OK' : (row.error || 'Lỗi');
         var cb = row.status === 'valid' ? '<input type="checkbox" class="super-row-cb" data-index="' + i + '" checked>' : '';
+        var dateCell = hasDate ? '<td class="col-date">' + (row.date ? '<span class="date-badge">' + escHtml(row.date) + '</span>' : '<span style="color:var(--text2)">--</span>') + '</td>' : '';
         return '<tr data-index="' + i + '">' +
           '<td>' + cb + '</td>' +
           '<td>' + (row.rowIndex || i + 1) + '</td>' +
           '<td class="col-account" title="' + escAttr(row.account) + '">' + escHtml(row.account) + '</td>' +
           '<td class="col-secret masked">********</td>' +
           '<td>' + (row.twofa || '--') + '</td>' +
+          dateCell +
           '<td><select class="super-sku-select" data-index="' + i + '">' + opts + '</select></td>' +
           '<td class="' + statusCls + '">' + statusText + '</td></tr>';
       }).join('');
@@ -3641,7 +3689,11 @@
       var validRows = _superParsedRows.filter(function (r) { return r.status === 'valid'; });
       var items = validRows.map(function (row) {
         var sku = row.selected_sku || (row.suggested_skus && row.suggested_skus[0] && row.suggested_skus[0].sku_code) || '';
-        var note = row.twofa ? ('2FA: ' + row.twofa + (row.notes ? ' | ' + row.notes : '')) : (row.notes || '');
+        var noteParts = [];
+        if (row.twofa) noteParts.push('2FA: ' + row.twofa);
+        if (row.date) noteParts.push('HSD: ' + row.date);
+        if (row.notes) noteParts.push(row.notes);
+        var note = noteParts.join(' | ');
         return { sku_code: sku, account_info: row.account, secret_key: row.password || '', note: note };
       }).filter(function (item) { return item.sku_code; });
       if (items.length === 0) {

@@ -35,22 +35,65 @@ function requireAuth(event) {
     return null;
 }
 
+/** Extract date/expiry patterns from text: (Date 29.04), [HSD: 29/04/2026], exp 2026-04-29, etc. */
+const DATE_PATTERNS = [
+    /\(Date\s+(\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?)\)/i,
+    /\[HSD[:\s]*(\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?)\]/i,
+    /\bHSD[:\s]+(\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?)/i,
+    /\bexp(?:iry)?[:\s]+(\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?)/i,
+    /\bdate[:\s]+(\d{1,2}[./-]\d{1,2}(?:[./-]\d{2,4})?)/i,
+    /\((\d{1,2}[./-]\d{1,2}[./-]\d{2,4})\)/,
+];
+
+function extractDate(text) {
+    if (!text) return { cleaned: text, date: '' };
+    for (const pat of DATE_PATTERNS) {
+        const m = text.match(pat);
+        if (m) {
+            return {
+                cleaned: text.replace(m[0], '').trim(),
+                date: m[1].trim()
+            };
+        }
+    }
+    return { cleaned: text, date: '' };
+}
+
 /** Tách 1 dòng: hỗ trợ tk|mk|2fa, tk:mk, tk\tmk, tk mk (khoảng trắng) */
 function parseLine(line) {
     const raw = (line || '').trim();
     if (!raw) return null;
+
+    // First, extract date from the whole line
+    const { cleaned: lineNoDate, date: lineDate } = extractDate(raw);
+    const workLine = lineNoDate;
+
     let parts;
-    if (raw.includes('|')) parts = raw.split('|').map(s => s.trim());
-    else if (raw.includes(':')) parts = raw.split(':').map(s => s.trim());
-    else if (raw.includes('\t')) parts = raw.split('\t').map(s => s.trim());
-    else if (/\s+/.test(raw)) parts = raw.split(/\s+/).map(s => s.trim());
-    else return { account: raw, password: '', twofa: '' };
-    return {
-        account: (parts[0] || '').trim(),
-        password: (parts[1] || '').trim(),
-        twofa: (parts[2] || '').trim(),
-        notes: (parts[3] || '').trim()
-    };
+    if (workLine.includes('|')) parts = workLine.split('|').map(s => s.trim());
+    else if (workLine.includes(':')) parts = workLine.split(':').map(s => s.trim());
+    else if (workLine.includes('\t')) parts = workLine.split('\t').map(s => s.trim());
+    else if (/\s+/.test(workLine)) parts = workLine.split(/\s+/).map(s => s.trim());
+    else return { account: workLine, password: '', twofa: '', notes: '', date: lineDate };
+
+    // Also check individual fields for embedded dates
+    let account = (parts[0] || '').trim();
+    let password = (parts[1] || '').trim();
+    let twofa = (parts[2] || '').trim();
+    let notes = (parts[3] || '').trim();
+    let date = lineDate;
+
+    if (!date) {
+        // Try extracting from password field
+        const fromPw = extractDate(password);
+        if (fromPw.date) { password = fromPw.cleaned; date = fromPw.date; }
+    }
+    if (!date) {
+        // Try extracting from notes field
+        const fromNotes = extractDate(notes);
+        if (fromNotes.date) { notes = fromNotes.cleaned; date = fromNotes.date; }
+    }
+
+    return { account, password, twofa, notes, date };
 }
 
 function fingerprint(account, password) {
@@ -127,7 +170,7 @@ exports.handler = async function (event, context) {
         for (let i = 0; i < lines.length; i++) {
             const parsed = parseLine(lines[i]);
             if (!parsed) continue;
-            const { account, password, twofa, notes } = parsed;
+            const { account, password, twofa, notes, date } = parsed;
             const hasAccount = account.length > 0;
             const status = hasAccount ? 'valid' : 'error';
             if (status === 'valid') validCount++; else errorCount++;
@@ -142,6 +185,7 @@ exports.handler = async function (event, context) {
                 password: password,
                 twofa: twofa,
                 notes: notes,
+                date: date || '',
                 fingerprint: fp,
                 status,
                 error: hasAccount ? null : 'Thiếu tài khoản',
