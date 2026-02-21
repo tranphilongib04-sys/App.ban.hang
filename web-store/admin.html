@@ -848,99 +848,91 @@
       transform: translateY(0)
     }
 
-    /* ───── Import panel (always visible) ───── */
-    .inv-import-panel {
+    /* ───── Quick Import — Minimal Design ───── */
+    .qi-panel {
       background: var(--surface);
       border: 1px solid var(--border);
-      border-left: 4px solid var(--accent);
       border-radius: var(--radius);
       margin-bottom: 24px;
       overflow: hidden;
     }
 
-    .inv-import-header {
-      padding: 16px 20px 8px;
+    .qi-top {
+      padding: 16px;
     }
 
-    .inv-import-header h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0;
-    }
-
-    .inv-import-body {
-      padding: 0 20px 20px;
-    }
-
-    .inv-import-body .paste-area {
-      min-height: 100px;
-      max-height: 200px;
+    .qi-textarea {
       width: 100%;
+      min-height: 90px;
+      max-height: 200px;
       padding: 12px 14px;
       font-family: 'SF Mono', 'Fira Code', monospace;
       font-size: 13px;
       line-height: 1.6;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
       background: var(--surface2);
       color: var(--text);
       resize: vertical;
-      transition: border-color .2s;
+      transition: border-color .2s, background .2s;
     }
 
-    .inv-import-body .paste-area:focus {
+    .qi-textarea:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+      border-style: solid;
+      background: var(--surface);
     }
 
-    .inv-import-body .paste-area::placeholder {
+    .qi-textarea::placeholder {
       color: var(--text2);
       opacity: 0.5;
+      font-family: inherit;
     }
 
-    /* ── Step-based layout ── */
-    .import-step {
-      margin-bottom: 16px;
-    }
-
-    .import-step-label {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text);
-    }
-
-    .import-step-label small {
-      font-weight: 400;
-    }
-
-    .step-number {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      background: var(--accent);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 700;
-      flex-shrink: 0;
-    }
-
-    .import-step-row {
+    .qi-type-bar {
       display: flex;
       gap: 10px;
-      align-items: stretch;
+      align-items: flex-start;
+      margin-top: 10px;
     }
 
-    .import-sku-select {
+    .qi-type-chips {
       flex: 1;
-      padding: 10px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .qi-chip {
+      padding: 6px 14px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all .15s;
+      white-space: nowrap;
+      font-family: inherit;
+    }
+
+    .qi-chip:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .qi-chip.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .qi-sku-select {
+      flex: 1;
+      padding: 10px 12px;
       border-radius: var(--radius-sm);
       border: 1px solid var(--border);
       background: var(--surface);
@@ -948,90 +940,234 @@
       font-family: inherit;
       font-size: 13px;
       cursor: pointer;
-      transition: border-color .2s;
     }
 
-    .import-sku-select:focus {
+    .qi-sku-select:focus {
       outline: none;
       border-color: var(--accent);
     }
 
-    .btn-analyze {
-      padding: 10px 20px !important;
-      font-size: 14px !important;
-      gap: 6px;
-      display: inline-flex;
-      align-items: center;
-      white-space: nowrap;
+    .qi-sku-sm {
+      flex: 0 1 auto;
+      min-width: 140px;
+      padding: 6px 10px;
+      font-size: 12px;
     }
 
-    .btn-import-final {
-      padding: 10px 20px;
-      background: #000;
+    .qi-btn {
+      padding: 10px 24px;
+      background: var(--accent);
       color: #fff;
       border: none;
-      border-radius: 10px;
+      border-radius: var(--radius-sm);
       font-weight: 700;
-      font-size: 13px;
+      font-size: 14px;
       cursor: pointer;
       white-space: nowrap;
-      transition: background .15s;
+      transition: background .15s, transform .1s;
       display: inline-flex;
       align-items: center;
       gap: 6px;
     }
 
-    .btn-import-final:hover {
-      background: #222;
-    }
+    .qi-btn:hover { background: var(--accent-dark, #1d4ed8); }
+    .qi-btn:active { transform: scale(0.97); }
 
-    .import-feedback {
-      font-size: 13px;
-      color: var(--text2);
-      min-height: 0;
-    }
-
-    .import-feedback:not(:empty) {
-      padding: 10px 14px;
-      background: var(--surface2);
+    .qi-btn-sm {
+      padding: 6px 12px;
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
       border-radius: var(--radius-sm);
-      margin-bottom: 16px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
     }
 
-    /* ── Format hints below textarea ── */
-    .import-format-hints {
+    .qi-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+
+    .qi-btn-confirm {
+      width: 100%;
+      justify-content: center;
+      padding: 12px 24px;
+      font-size: 15px;
+      background: #000;
+      border-radius: var(--radius);
+    }
+
+    .qi-btn-confirm:hover { background: #222; }
+
+    .qi-hints {
       display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
+      gap: 6px;
       margin-top: 8px;
     }
 
-    .format-hint {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 3px 10px;
+    .qi-hints span {
+      padding: 2px 8px;
       background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
+      border-radius: 4px;
       font-size: 11px;
       color: var(--text2);
-      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-family: 'SF Mono', monospace;
+    }
+
+    .qi-feedback {
+      font-size: 13px;
+      color: var(--text2);
+    }
+
+    .qi-feedback:not(:empty) {
+      padding: 10px 16px;
+      background: var(--surface2);
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Preview area ── */
+    .qi-preview {
+      border-top: 1px solid var(--border);
+    }
+
+    .qi-preview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 16px;
+      background: var(--surface2);
+    }
+
+    .qi-preview-stats {
+      font-size: 13px;
+      font-weight: 600;
+      display: flex;
+      gap: 12px;
+    }
+
+    .qi-preview-stats .qs-valid { color: var(--green); }
+    .qi-preview-stats .qs-error { color: var(--red); }
+    .qi-preview-stats .qs-date { color: var(--orange); }
+
+    .qi-preview-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    /* ── Card-based preview ── */
+    .qi-cards {
+      max-height: 340px;
+      overflow-y: auto;
+      padding: 8px 16px;
+    }
+
+    .qi-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 6px;
+      background: var(--surface);
+      font-size: 13px;
+      transition: border-color .15s;
+    }
+
+    .qi-card:hover { border-color: var(--accent); }
+
+    .qi-card.qi-error {
+      border-color: rgba(239,68,68,.3);
+      background: rgba(239,68,68,.04);
+      opacity: .6;
+    }
+
+    .qi-card-cb {
+      flex-shrink: 0;
+      accent-color: var(--accent);
+    }
+
+    .qi-card-num {
+      flex-shrink: 0;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 11px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qi-card-info {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px 10px;
+      align-items: center;
+    }
+
+    .qi-card-account {
+      font-weight: 600;
+      color: var(--text);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 220px;
+    }
+
+    .qi-card-meta {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .qi-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
       white-space: nowrap;
     }
 
-    /* ── Date badge in preview table ── */
-    .col-date .date-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 2px 8px;
-      background: rgba(245, 158, 11, 0.12);
-      color: var(--orange);
+    .qi-badge-pw { background: rgba(107,114,128,.1); color: var(--text2); }
+    .qi-badge-2fa { background: rgba(37,99,235,.1); color: var(--accent); }
+    .qi-badge-date { background: rgba(245,158,11,.1); color: var(--orange); }
+    .qi-badge-err { background: rgba(239,68,68,.1); color: var(--red); }
+
+    .qi-card-sku {
+      flex-shrink: 0;
+    }
+
+    .qi-card-sku select {
+      padding: 4px 8px;
+      border: 1px solid var(--border);
       border-radius: 6px;
       font-size: 12px;
-      font-weight: 600;
-      white-space: nowrap;
+      background: var(--surface);
+      color: var(--text);
+      max-width: 160px;
+    }
+
+    /* ── Footer ── */
+    .qi-footer {
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+    }
+
+    .qi-result {
+      font-size: 13px;
+      padding: 10px 12px;
+      border-radius: var(--radius-sm);
+      margin-bottom: 10px;
+      background: var(--surface2);
     }
 
     /* ───── Inventory table stock badges ───── */
@@ -2143,61 +2279,46 @@
           </div>
         </div>
 
-        <!-- Quick Import Section (always visible) -->
-        <div class="inv-import-panel">
-          <div class="inv-import-header">
-            <h3>📥 Nhập kho nhanh</h3>
+        <!-- Quick Import Section -->
+        <div class="qi-panel">
+          <div class="qi-top">
+            <textarea id="superPasteRaw" class="qi-textarea"
+              placeholder="Dán tài khoản vào đây — mỗi dòng 1 tài khoản&#10;&#10;email@gmail.com|matkhau123 (Date 29.04)&#10;user2@mail.com|pass456|2fa_code"></textarea>
+            <div class="qi-type-bar">
+              <div class="qi-type-chips" id="qiTypeChips">
+                <button type="button" class="qi-chip active" data-sku="" onclick="selectSkuChip(this)">🔍 Tự đoán</button>
+              </div>
+              <button type="button" class="qi-btn" onclick="doQuickImport()">
+                📥 Nhập kho
+              </button>
+            </div>
+            <div class="qi-hints">
+              <span>tk|mk</span>
+              <span>tk|mk|2fa</span>
+              <span>(Date 29.04)</span>
+            </div>
+            <!-- Hidden select for backward compat -->
+            <select id="superProfileSku" style="display:none"></select>
           </div>
-          <div class="inv-import-body">
-            <!-- Step 1: Paste data -->
-            <div class="import-step">
-              <div class="import-step-label">
-                <span class="step-number">1</span>
-                <span>Dán tài khoản <small style="color:var(--text2)">(phân cách bằng <code>|</code> <code>:</code> hoặc khoảng trắng)</small></span>
-              </div>
-              <textarea id="superPasteRaw" class="paste-area"
-                placeholder="email@gmail.com|matkhau123 (Date 29.04)&#10;user2@mail.com|pass456|2fa_code&#10;user3:pass789 (Date 15.05)"></textarea>
-              <div class="import-format-hints">
-                <span class="format-hint">📧 tk|mk</span>
-                <span class="format-hint">🔐 tk|mk|2fa</span>
-                <span class="format-hint">📅 (Date 29.04)</span>
-                <span class="format-hint">📅 HSD: 29/04</span>
+
+          <!-- Preview (hidden until analyzed) -->
+          <div id="superPreviewWrap" class="qi-preview" style="display:none;">
+            <div class="qi-preview-header">
+              <div class="qi-preview-stats" id="qiPreviewStats"></div>
+              <div class="qi-preview-actions">
+                <select id="superApplySkuSelect" class="qi-sku-select qi-sku-sm"></select>
+                <button type="button" class="qi-btn-sm" onclick="applySkuToAllValid()">Đổi SKU tất cả</button>
               </div>
             </div>
-
-            <!-- Step 2: Select SKU -->
-            <div class="import-step">
-              <div class="import-step-label">
-                <span class="step-number">2</span>
-                <span>Chọn loại sản phẩm <small style="color:var(--text2)">(tùy chọn — hệ thống tự đoán nếu bỏ trống)</small></span>
-              </div>
-              <div class="import-step-row">
-                <select id="superProfileSku" class="import-sku-select">
-                  <option value="">🔍 Tự đoán SKU</option>
-                </select>
-                <button type="button" class="btn-primary-sm btn-analyze" onclick="doParseStock()">
-                  ⚡ Phân tích
-                </button>
-              </div>
-            </div>
-
-            <!-- Feedback -->
-            <div id="superParseFeedback" class="import-feedback"></div>
-
-            <!-- Preview (hidden until analyzed) -->
-            <div id="superPreviewWrap" style="display:none;">
-              <div class="preview-wrap">
-                <table class="preview-table table-wrap" id="superPreviewTable"></table>
-              </div>
-              <div class="sku-panel">
-                <span style="color:var(--text2);font-size:13px;">Áp dụng SKU cho tất cả:</span>
-                <select id="superApplySkuSelect"></select>
-                <button type="button" class="btn-primary-sm" onclick="applySkuToAllValid()">Áp dụng</button>
-                <button type="button" class="btn-import-final" onclick="doSuperImport()">🚀 Nhập lên kho</button>
-              </div>
-              <div id="superImportResult" class="import-result" style="display:none;"></div>
+            <div class="qi-cards" id="superPreviewCards"></div>
+            <div class="qi-footer">
+              <div id="superImportResult" class="qi-result" style="display:none;"></div>
+              <button type="button" class="qi-btn qi-btn-confirm" onclick="doSuperImport()">
+                ✅ Xác nhận nhập <span id="qiConfirmCount"></span> tài khoản
+              </button>
             </div>
           </div>
+          <div id="superParseFeedback" class="qi-feedback"></div>
         </div>
 
         <!-- Inventory List Table -->
@@ -3361,14 +3482,43 @@
     }
 
     function populateSkuDropdown(rows) {
+      // Hidden select (backward compat)
       var sel = document.getElementById('superProfileSku');
-      if (!sel) return;
       var autoSkus = rows.filter(function (r) { var sku = (r.sku || r.product_code || '').trim(); return (r.delivery_type || 'auto') === 'auto' && !SKU_HIDDEN[sku]; });
-      sel.innerHTML = '<option value="">-- Chọn SKU --</option>' +
-        autoSkus.map(function (r) {
-          var sku = r.sku || r.product_code || '';
-          return '<option value="' + escAttr(sku) + '">' + escHtml(getSkuName(sku)) + '</option>';
-        }).join('');
+      if (sel) {
+        sel.innerHTML = '<option value="">-- Chọn SKU --</option>' +
+          autoSkus.map(function (r) {
+            var sku = r.sku || r.product_code || '';
+            return '<option value="' + escAttr(sku) + '">' + escHtml(getSkuName(sku)) + '</option>';
+          }).join('');
+      }
+      // Render chips
+      var chipContainer = document.getElementById('qiTypeChips');
+      if (!chipContainer) return;
+      var chipsHtml = '<button type="button" class="qi-chip active" data-sku="" onclick="selectSkuChip(this)">🔍 Tự đoán</button>';
+      autoSkus.forEach(function (r) {
+        var sku = r.sku || r.product_code || '';
+        var meta = SKU_META[sku];
+        var icon = meta ? meta.icon : '📦';
+        var shortName = meta ? meta.name.replace(/ 1 (tháng|năm)/, '').replace(/ 7 ngày/, ' 7d').replace(/ 14 ngày/, ' 14d') : sku;
+        var avail = r.available || 0;
+        chipsHtml += '<button type="button" class="qi-chip" data-sku="' + escAttr(sku) + '" onclick="selectSkuChip(this)">' +
+          icon + ' ' + escHtml(shortName) +
+          (avail > 0 ? '' : ' <span style="color:var(--red);font-size:11px">⚠0</span>') +
+          '</button>';
+      });
+      chipContainer.innerHTML = chipsHtml;
+    }
+
+    function selectSkuChip(el) {
+      // Toggle active state
+      var container = el.parentElement;
+      container.querySelectorAll('.qi-chip').forEach(function (c) { c.classList.remove('active'); });
+      el.classList.add('active');
+      // Sync to hidden select
+      var sku = el.dataset.sku || '';
+      var sel = document.getElementById('superProfileSku');
+      if (sel) sel.value = sku;
     }
 
     // ── PASTE IMPORT / VIEW STOCK MODAL ─────────────────────────
@@ -3594,11 +3744,12 @@
     var LAST_USED_SKU_KEY = 'tbq_last_used_sku';
     var _superParsedRows = [];
 
-    async function doParseStock() {
+    /* ── Quick Import: 1-click parse + preview ── */
+    async function doQuickImport() {
       var raw = (document.getElementById('superPasteRaw') && document.getElementById('superPasteRaw').value) ? document.getElementById('superPasteRaw').value.trim() : '';
       var fb = document.getElementById('superParseFeedback');
-      if (!raw) { if (fb) fb.textContent = 'Dán dữ liệu (tk|mk|2fa) vào ô trên rồi bấm Phân tích.'; return; }
-      if (fb) fb.textContent = 'Đang phân tích...';
+      if (!raw) { if (fb) fb.textContent = 'Dán dữ liệu vào ô trên rồi bấm Nhập kho.'; return; }
+      if (fb) fb.textContent = '⏳ Đang phân tích...';
       var profileSku = (document.getElementById('superProfileSku') && document.getElementById('superProfileSku').value) || '';
       var lastUsedSku = localStorage.getItem(LAST_USED_SKU_KEY) || '';
       try {
@@ -3608,17 +3759,20 @@
           body: JSON.stringify({ raw: raw, last_used_sku: lastUsedSku || undefined, profile_sku: profileSku || undefined })
         });
         var data = await r.json().catch(function () { return {}; });
-        if (r.status === 401) { if (fb) fb.textContent = 'Token hết hạn - đăng nhập lại.'; return; }
+        if (r.status === 401) { if (fb) fb.textContent = 'Token hết hạn — đăng nhập lại.'; return; }
         if (!r.ok) { if (fb) fb.textContent = 'Lỗi: ' + (data.error || r.status); return; }
         _superParsedRows = data.rows || [];
-        if (fb) fb.textContent = 'Đã phân tích: ' + (data.summary && data.summary.valid) + ' hợp lệ, ' + (data.summary && data.summary.error) + ' lỗi.';
-        renderSuperPreviewTable();
-        document.getElementById('superPreviewWrap').style.display = 'block';
+        if (fb) fb.textContent = '';
+        renderPreviewCards();
+        document.getElementById('superPreviewWrap').style.display = '';
         fillSuperApplySkuSelect();
       } catch (e) {
         if (fb) fb.textContent = 'Lỗi: ' + e.message;
       }
     }
+
+    // Also keep doParseStock as alias
+    var doParseStock = doQuickImport;
 
     function fillSuperApplySkuSelect() {
       var sel = document.getElementById('superApplySkuSelect');
@@ -3626,54 +3780,80 @@
       var rows = (window._lastInventoryRows || []).filter(function (r) {
         return (r.delivery_type || 'auto') === 'auto';
       });
-      sel.innerHTML = '<option value="">-- Chọn SKU --</option>' + rows.map(function (r) {
+      sel.innerHTML = '<option value="">-- SKU --</option>' + rows.map(function (r) {
         var sku = r.sku_code || '';
         return '<option value="' + escAttr(sku) + '">' + escHtml(getSkuName(sku)) + '</option>';
       }).join('');
     }
 
-    function renderSuperPreviewTable() {
-      var tbody = document.getElementById('superPreviewTable');
-      if (!tbody) return;
+    function renderPreviewCards() {
+      var container = document.getElementById('superPreviewCards');
+      var statsEl = document.getElementById('qiPreviewStats');
+      var countEl = document.getElementById('qiConfirmCount');
+      if (!container) return;
       var rows = _superParsedRows;
-      if (!rows.length) { tbody.innerHTML = '<tbody><tr><td class="empty">Không có dòng nào</td></tr></tbody>'; return; }
-      // Check if any row has date info
-      var hasDate = rows.some(function (r) { return r.date; });
-      var thead = '<thead><tr><th></th><th>#</th><th>Tài khoản</th><th>Mật khẩu</th><th>2FA</th>' +
-        (hasDate ? '<th>📅 Hạn dùng</th>' : '') +
-        '<th>SKU</th><th>Trạng thái</th></tr></thead>';
-      var bodyRows = rows.map(function (row, i) {
+      if (!rows.length) { container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Không có dòng nào</div>'; return; }
+
+      var validCount = rows.filter(function (r) { return r.status === 'valid'; }).length;
+      var errorCount = rows.length - validCount;
+      var dateCount = rows.filter(function (r) { return r.date; }).length;
+
+      // Stats header
+      var statsHtml = '<span class="qs-valid">✓ ' + validCount + ' hợp lệ</span>';
+      if (errorCount > 0) statsHtml += '<span class="qs-error">✗ ' + errorCount + ' lỗi</span>';
+      if (dateCount > 0) statsHtml += '<span class="qs-date">📅 ' + dateCount + ' có hạn</span>';
+      if (statsEl) statsEl.innerHTML = statsHtml;
+      if (countEl) countEl.textContent = validCount;
+
+      // Cards
+      var html = rows.map(function (row, i) {
         var suggested = row.suggested_skus || [];
         var top = suggested[0];
         var selected = row.selected_sku || (top && top.sku_code) || '';
+        var isValid = row.status === 'valid';
+
+        // SKU dropdown
         var opts = suggested.map(function (s) {
-          return '<option value="' + escAttr(s.sku_code) + '"' + (s.sku_code === selected ? ' selected' : '') + '>' + getSkuName(s.sku_code) + ' (' + (s.confidence || 0) + '%)</option>';
+          return '<option value="' + escAttr(s.sku_code) + '"' + (s.sku_code === selected ? ' selected' : '') + '>' + getSkuName(s.sku_code) + '</option>';
         }).join('');
         if (selected && suggested.every(function (s) { return s.sku_code !== selected; })) {
           opts = '<option value="' + escAttr(selected) + '" selected>' + getSkuName(selected) + '</option>' + opts;
         }
-        var statusCls = row.status === 'valid' ? 'row-status-valid' : 'row-status-error';
-        var statusText = row.status === 'valid' ? 'OK' : (row.error || 'Lỗi');
-        var cb = row.status === 'valid' ? '<input type="checkbox" class="super-row-cb" data-index="' + i + '" checked>' : '';
-        var dateCell = hasDate ? '<td class="col-date">' + (row.date ? '<span class="date-badge">' + escHtml(row.date) + '</span>' : '<span style="color:var(--text2)">--</span>') + '</td>' : '';
-        return '<tr data-index="' + i + '">' +
-          '<td>' + cb + '</td>' +
-          '<td>' + (row.rowIndex || i + 1) + '</td>' +
-          '<td class="col-account" title="' + escAttr(row.account) + '">' + escHtml(row.account) + '</td>' +
-          '<td class="col-secret masked">********</td>' +
-          '<td>' + (row.twofa || '--') + '</td>' +
-          dateCell +
-          '<td><select class="super-sku-select" data-index="' + i + '">' + opts + '</select></td>' +
-          '<td class="' + statusCls + '">' + statusText + '</td></tr>';
+
+        // Meta badges
+        var meta = '';
+        if (row.password) meta += '<span class="qi-badge qi-badge-pw">🔑 MK</span>';
+        if (row.twofa) meta += '<span class="qi-badge qi-badge-2fa">🔐 2FA</span>';
+        if (row.date) meta += '<span class="qi-badge qi-badge-date">📅 ' + escHtml(row.date) + '</span>';
+        if (!isValid) meta += '<span class="qi-badge qi-badge-err">' + escHtml(row.error || 'Lỗi') + '</span>';
+
+        var cb = isValid ? '<input type="checkbox" class="qi-card-cb super-row-cb" data-index="' + i + '" checked>' : '';
+        var skuHtml = isValid ? '<div class="qi-card-sku"><select class="super-sku-select" data-index="' + i + '">' + opts + '</select></div>' : '';
+
+        return '<div class="qi-card' + (isValid ? '' : ' qi-error') + '" data-index="' + i + '">' +
+          cb +
+          '<span class="qi-card-num">' + (row.rowIndex || i + 1) + '</span>' +
+          '<div class="qi-card-info">' +
+            '<span class="qi-card-account" title="' + escAttr(row.account) + '">' + escHtml(row.account) + '</span>' +
+            '<span class="qi-card-meta">' + meta + '</span>' +
+          '</div>' +
+          skuHtml +
+        '</div>';
       }).join('');
-      tbody.innerHTML = thead + '<tbody>' + bodyRows + '</tbody>';
-      tbody.querySelectorAll('.super-sku-select').forEach(function (sel) {
+
+      container.innerHTML = html;
+
+      // Bind SKU change
+      container.querySelectorAll('.super-sku-select').forEach(function (sel) {
         sel.addEventListener('change', function () {
           var idx = parseInt(sel.dataset.index, 10);
           if (_superParsedRows[idx]) _superParsedRows[idx].selected_sku = sel.value;
         });
       });
     }
+
+    // Backward compat
+    var renderSuperPreviewTable = renderPreviewCards;
 
     function applySkuToAllValid() {
       var sel = document.getElementById('superApplySkuSelect');
@@ -3682,7 +3862,7 @@
       _superParsedRows.forEach(function (row) {
         if (row.status === 'valid') row.selected_sku = sku;
       });
-      renderSuperPreviewTable();
+      renderPreviewCards();
     }
 
     async function doSuperImport() {
