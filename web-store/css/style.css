@@ -435,12 +435,12 @@ section {
 
 .product-image {
     width: 100%;
-    height: 280px;
+    height: 220px;
     display: flex;
     align-items: center;
     justify-content: center;
     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    padding: 40px;
+    padding: 32px;
     position: relative;
     overflow: hidden;
 }
@@ -1224,22 +1224,22 @@ section {
 
 footer {
     background: var(--bg-gray);
-    padding: 48px 24px 24px;
+    padding: 24px 24px 16px;
     text-align: center;
 }
 
 .footer-links {
     display: flex;
     justify-content: center;
-    gap: 32px;
-    margin-bottom: 24px;
+    gap: 20px;
+    margin-bottom: 12px;
     flex-wrap: wrap;
 }
 
 .footer-links a {
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 14px;
+    font-size: 13px;
     transition: color 0.3s;
 }
 
@@ -1248,20 +1248,20 @@ footer {
 }
 
 .footer-contact {
-    margin-bottom: 24px;
+    margin-bottom: 12px;
     color: var(--text-secondary);
-    font-size: 14px;
+    font-size: 13px;
 }
 
 .footer-contact a {
     color: var(--accent);
     text-decoration: none;
-    margin: 0 8px;
+    margin: 0 6px;
 }
 
 .footer-copyright {
-    color: var(--text-secondary);
-    font-size: 12px;
+    color: var(--text-muted);
+    font-size: 11px;
 }
 
 .cart-sidebar {
@@ -3995,18 +3995,20 @@ section .section-title::after {
     }
 
     .footer-links {
-        flex-direction: column;
-        gap: var(--spacing-4);
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--spacing-3);
     }
 
     .footer-contact {
-        font-size: var(--caption);
-        line-height: 2;
+        font-size: 12px;
+        line-height: 1.8;
     }
 
     .footer-contact a {
-        display: block;
-        margin: var(--spacing-2) 0;
+        display: inline;
+        margin: 0 4px;
     }
 
     /* Section spacing – Base × 2 */
@@ -4107,15 +4109,15 @@ section .section-title::after {
     }
 
     footer {
-        padding: var(--spacing-6) var(--spacing-4) var(--spacing-4);
+        padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
     }
 
     .footer-links {
-        margin-bottom: var(--spacing-4);
+        margin-bottom: var(--spacing-3);
     }
 
     .footer-contact {
-        margin-bottom: var(--spacing-4);
+        margin-bottom: var(--spacing-3);
     }
 
     .cart-header {
@@ -4362,14 +4364,14 @@ section .section-title::after {
     bottom: 20px;
     right: 20px;
     z-index: 999;
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    background: transparent;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: #0068FF;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 12px rgba(0, 104, 255, 0.3);
+    box-shadow: 0 4px 16px rgba(0, 104, 255, 0.4);
     transition: transform 0.2s, box-shadow 0.2s;
     overflow: hidden;
     animation: fabSlideIn 0.5s ease-out 1s backwards, fabPulse 3s ease-in-out 2s infinite;
@@ -4377,26 +4379,26 @@ section .section-title::after {
 
 .contact-fab:hover {
     transform: scale(1.08);
-    box-shadow: 0 4px 20px rgba(0, 104, 255, 0.45);
+    box-shadow: 0 6px 24px rgba(0, 104, 255, 0.5);
 }
 
 .contact-fab svg {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
 }
 
 @media (max-width: 768px) {
     .contact-fab {
-        width: 44px;
-        height: 44px;
-        bottom: 16px;
+        width: 52px;
+        height: 52px;
+        bottom: 76px;
         right: 16px;
-        border-radius: 12px;
+        border-radius: 14px;
     }
 
     .contact-fab svg {
-        width: 32px;
-        height: 32px;
+        width: 38px;
+        height: 38px;
     }
 }
 
@@ -5344,6 +5346,14 @@ section .section-title::after {
 
 .mobile-nav-item span {
     font-family: 'Be Vietnam Pro', sans-serif;
+}
+
+.mobile-nav-zalo {
+    color: #0068FF !important;
+}
+
+.mobile-nav-zalo svg {
+    stroke: none !important;
 }
 
 @media (max-width: 768px) {

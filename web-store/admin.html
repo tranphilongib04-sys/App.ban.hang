@@ -859,28 +859,143 @@
     }
 
     .inv-import-header {
-      padding: 16px 20px 0;
+      padding: 16px 20px 8px;
     }
 
     .inv-import-header h3 {
-      font-size: 15px;
+      font-size: 16px;
       font-weight: 700;
-      margin: 0 0 4px;
-    }
-
-    .inv-import-header p {
-      font-size: 13px;
-      color: var(--text2);
       margin: 0;
     }
 
     .inv-import-body {
-      padding: 12px 20px 16px;
+      padding: 0 20px 20px;
     }
 
     .inv-import-body .paste-area {
-      min-height: 80px;
-      max-height: 160px;
+      min-height: 100px;
+      max-height: 200px;
+      width: 100%;
+      padding: 12px 14px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      resize: vertical;
+      transition: border-color .2s;
+    }
+
+    .inv-import-body .paste-area:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    .inv-import-body .paste-area::placeholder {
+      color: var(--text2);
+      opacity: 0.5;
+    }
+
+    /* ── Step-based layout ── */
+    .import-step {
+      margin-bottom: 16px;
+    }
+
+    .import-step-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .import-step-label small {
+      font-weight: 400;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .import-step-row {
+      display: flex;
+      gap: 10px;
+      align-items: stretch;
+    }
+
+    .import-sku-select {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      transition: border-color .2s;
+    }
+
+    .import-sku-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .btn-analyze {
+      padding: 10px 20px !important;
+      font-size: 14px !important;
+      gap: 6px;
+      display: inline-flex;
+      align-items: center;
+      white-space: nowrap;
+    }
+
+    .btn-import-final {
+      padding: 10px 20px;
+      background: #000;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background .15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-import-final:hover {
+      background: #222;
+    }
+
+    .import-feedback {
+      font-size: 13px;
+      color: var(--text2);
+      min-height: 0;
+    }
+
+    .import-feedback:not(:empty) {
+      padding: 10px 14px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+      margin-bottom: 16px;
     }
 
     /* ───── Inventory table stock badges ───── */
@@ -1996,19 +2111,38 @@
         <div class="inv-import-panel">
           <div class="inv-import-header">
             <h3>📥 Nhập kho nhanh</h3>
-            <p>Dán <strong>tk|mk|2fa</strong> (hoặc <code>tk:mk</code>, <code>tk mk</code>). Tự tách, chuẩn hoá và đề
-              xuất SKU.</p>
           </div>
           <div class="inv-import-body">
-            <textarea id="superPasteRaw" class="paste-area"
-              placeholder="user1@mail.com|pass1|2fa1&#10;user2@gmail.com|pass2&#10;user3:pass3:"></textarea>
-            <div class="tool-row">
-              <label>SKU:</label>
-              <select id="superProfileSku">
-                <option value="">-- Chọn SKU --</option>
-              </select>
-              <button type="button" class="btn-primary-sm" onclick="doParseStock()">Phân tích</button>
+            <!-- Step 1: Paste data -->
+            <div class="import-step">
+              <div class="import-step-label">
+                <span class="step-number">1</span>
+                <span>Dán tài khoản <small style="color:var(--text2)">(mỗi dòng 1 tài khoản, phân cách bằng <code>|</code> <code>:</code> hoặc khoảng trắng)</small></span>
+              </div>
+              <textarea id="superPasteRaw" class="paste-area"
+                placeholder="email@gmail.com|matkhau123|ma2fa&#10;user2@mail.com|pass456&#10;user3:pass789:2fa_code"></textarea>
             </div>
+
+            <!-- Step 2: Select SKU -->
+            <div class="import-step">
+              <div class="import-step-label">
+                <span class="step-number">2</span>
+                <span>Chọn loại sản phẩm <small style="color:var(--text2)">(tùy chọn — hệ thống tự đoán nếu bỏ trống)</small></span>
+              </div>
+              <div class="import-step-row">
+                <select id="superProfileSku" class="import-sku-select">
+                  <option value="">🔍 Tự đoán SKU</option>
+                </select>
+                <button type="button" class="btn-primary-sm btn-analyze" onclick="doParseStock()">
+                  ⚡ Phân tích
+                </button>
+              </div>
+            </div>
+
+            <!-- Feedback -->
+            <div id="superParseFeedback" class="import-feedback"></div>
+
+            <!-- Preview (hidden until analyzed) -->
             <div id="superPreviewWrap" style="display:none;">
               <div class="preview-wrap">
                 <table class="preview-table table-wrap" id="superPreviewTable"></table>
@@ -2017,12 +2151,10 @@
                 <span style="color:var(--text2);font-size:13px;">Áp dụng SKU cho tất cả:</span>
                 <select id="superApplySkuSelect"></select>
                 <button type="button" class="btn-primary-sm" onclick="applySkuToAllValid()">Áp dụng</button>
-                <button type="button" class="btn-primary-sm" onclick="doSuperImport()" style="background:#000;">Nhập lên
-                  kho</button>
+                <button type="button" class="btn-import-final" onclick="doSuperImport()">🚀 Nhập lên kho</button>
               </div>
               <div id="superImportResult" class="import-result" style="display:none;"></div>
             </div>
-            <div id="superParseFeedback" style="font-size:13px;color:var(--text2);"></div>
           </div>
         </div>
 
@@ -2659,7 +2791,7 @@
     let pollTimer = null;
 
     // SKUs to hide from the grid (discontinued)
-    var SKU_HIDDEN = { chatgpt_plus_3m: true };
+    var SKU_HIDDEN = { chatgpt_plus_3m: true, chatgpt_code_1m_vn: true };
 
     // SKU metadata
     var SKU_META = {
