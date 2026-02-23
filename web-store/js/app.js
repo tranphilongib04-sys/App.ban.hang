@@ -10,12 +10,12 @@ const products = {
         featured: true,
         rating: 4.8,
         reviewCount: 34,
+        soldCount: 156,
         variants: [
             { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '', productCode: 'chatgpt_plus_cap_tk' },
             { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
             { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_pro_1m', deliveryType: 'preorder' },
-            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' },
-            { name: 'Code ChatGPT 1 tháng (IP Việt Nam)', price: 30000, duration: '1 tháng', note: '1 code/link, giao liền', productCode: 'chatgpt_code_1m_vn' }
+            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' }
         ],
         tabs: {
             description: `
@@ -37,7 +37,6 @@ const products = {
                     <li><strong>ChatGPT Plus gia hạn:</strong> Bảo hành đến hết tháng</li>
                     <li><strong>ChatGPT Pro:</strong> Hỗ trợ bảo hành khi hết credit</li>
                     <li><strong>ChatGPT Go:</strong> Bảo hành 1 tháng</li>
-                    <li><strong>Code ChatGPT 1 tháng (IP VN):</strong> Giao link kích hoạt, dùng theo hướng dẫn</li>
                 </ul>
                 <p>Nếu có bất kỳ vấn đề gì, vui lòng liên hệ Zalo: 0988428496 để được hỗ trợ ngay lập tức.</p>
             `,
@@ -55,20 +54,11 @@ const products = {
                     <li>Chờ admin gia hạn (15-30 phút)</li>
                     <li>Nhận thông báo khi hoàn tất</li>
                 </ul>
-                <p><strong>Đối với Code ChatGPT 1 tháng (IP Việt Nam):</strong></p>
-                <ul>
-                    <li>Sau khi thanh toán, bạn nhận ngay <strong>đường link kích hoạt</strong> trên màn hình (giao liền)</li>
-                    <li>Dùng <strong>tài khoản OpenAI mới</strong>, chưa từng nâng cấp ChatGPT Plus</li>
-                    <li>Thêm <strong>thẻ thanh toán Việt Nam</strong> (VNPay, thẻ nội địa) khi kích hoạt</li>
-                    <li><strong>Nhớ hủy gói (cancel subscription)</strong> trước khi hết 1 tháng để không bị trừ tiền kỳ tiếp theo</li>
-                </ul>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
                 <p><strong>Q: Tài khoản có bị khóa không?</strong></p>
                 <p>A: Tài khoản được đảm bảo an toàn, có chính sách bảo hành rõ ràng.</p>
-                <p><strong>Q: Code ChatGPT (IP VN) dùng thế nào?</strong></p>
-                <p>A: Mở link nhận được → đăng nhập bằng tài khoản OpenAI mới (chưa từng Plus) → thêm thẻ VN → kích hoạt. Nhớ hủy gói trước khi hết tháng.</p>
                 <p><strong>Q: Có thể đổi mật khẩu không?</strong></p>
                 <p>A: Với gói cấp TK mới, bạn có thể đổi mật khẩu tự do.</p>
                 <p><strong>Q: Thanh toán như thế nào?</strong></p>
@@ -86,6 +76,7 @@ const products = {
         featured: true,
         rating: 4.7,
         reviewCount: 29,
+        soldCount: 132,
         variants: [
             { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m' }
         ],
@@ -141,6 +132,7 @@ const products = {
         featured: true,
         rating: 4.6,
         reviewCount: 18,
+        soldCount: 98,
         variants: [
             { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m' },
             { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m' },
@@ -196,6 +188,7 @@ const products = {
         featured: true,
         rating: 4.9,
         reviewCount: 39,
+        soldCount: 187,
         variants: [
             { name: 'Adobe 4 tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành', productCode: 'adobe_4m_kbh' },
             { name: 'Adobe 1 năm Log Ultraview', price: 400000, duration: '1 năm', note: '', productCode: 'adobe_1y_ultraview' },
@@ -259,6 +252,7 @@ const products = {
         featured: true,
         rating: 4.5,
         reviewCount: 22,
+        soldCount: 89,
         variants: [
             { name: 'YouTube Premium FBH', price: 40000, duration: '1 tháng', note: 'Khách cấp TK Gmail, Full bảo hành', productCode: 'youtube_premium_1m' }
         ],
@@ -311,6 +305,7 @@ const products = {
         featured: false,
         rating: 4.7,
         reviewCount: 15,
+        soldCount: 45,
         variants: [
             { name: 'Duolingo Plus 1 năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành', productCode: 'duolingo_plus_1y' }
         ],
@@ -363,6 +358,7 @@ const products = {
         featured: false,
         rating: 4.8,
         reviewCount: 21,
+        soldCount: 76,
         variants: [
             { name: 'MS 365 1 năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành', productCode: 'ms365_1y' }
         ],
@@ -415,6 +411,7 @@ const products = {
         featured: false,
         rating: 4.5,
         reviewCount: 12,
+        soldCount: 34,
         variants: [
             { name: 'Quizlet Plus 1 năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_plus_1y' },
             { name: 'Quizlet Unlimited 1 năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_unlimited_1y' }
@@ -466,6 +463,9 @@ const products = {
         description: 'Công cụ thiết kế đồ họa online dễ sử dụng với hàng triệu template',
         image: 'images/canva-logo.png',
         featured: false,
+        rating: 4.6,
+        reviewCount: 16,
+        soldCount: 52,
         variants: [
             { name: 'Canva Edu 1 năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_edu_1y' },
             { name: 'Canva Pro 1 năm FBH', price: 130000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_pro_1y' }
@@ -518,6 +518,9 @@ const products = {
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
         image: 'images/capcut-logo.png',
         featured: true,
+        rating: 4.7,
+        reviewCount: 25,
+        soldCount: 112,
         variants: [
             { name: 'CapCut 7 ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
             { name: 'CapCut 14 ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
@@ -579,6 +582,7 @@ const products = {
         featured: true,
         rating: 4.6,
         reviewCount: 12,
+        soldCount: 38,
         variants: [
             { name: 'Grok 7 ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' }
         ],
@@ -633,6 +637,7 @@ const products = {
         featured: false,
         rating: 4.7,
         reviewCount: 8,
+        soldCount: 23,
         variants: [
             { name: 'AutoCAD nâng cấp mail chính chủ 1 năm', price: 170000, ctvPrice: 150000, duration: '1 năm', note: 'Chỉ cần cung cấp địa chỉ mail', productCode: 'autocad_1y' }
         ],
@@ -682,6 +687,7 @@ const products = {
         featured: false,
         rating: 4.6,
         reviewCount: 10,
+        soldCount: 29,
         variants: [
             { name: 'LinkedIn Business 3 tháng', price: 530000, ctvPrice: 480000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_3m' },
             { name: 'LinkedIn Business 1 năm', price: 1750000, ctvPrice: 1700000, duration: '1 năm', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_1y' },
@@ -733,6 +739,7 @@ const products = {
         featured: false,
         rating: 4.5,
         reviewCount: 6,
+        soldCount: 18,
         variants: [
             { name: 'Gamma Plus chính chủ 1 tháng', price: 150000, duration: '1 tháng', note: 'Gói 10$, cần tên đăng nhập + mật khẩu', productCode: 'gamma_plus_1m' },
             { name: 'Gamma Pro hình chủ 1 tháng', price: 220000, duration: '1 tháng', note: 'Cần tên đăng nhập + mật khẩu', productCode: 'gamma_pro_1m' }
@@ -783,6 +790,7 @@ const products = {
         featured: false,
         rating: 4.6,
         reviewCount: 5,
+        soldCount: 14,
         variants: [
             { name: 'SketchUp EDU cấp sẵn 1 năm', price: 350000, duration: '1 năm', note: 'Cấp TK riêng, đăng nhập bằng Gmail', productCode: 'sketchup_edu_1y' }
         ],
@@ -829,6 +837,7 @@ const products = {
         featured: false,
         rating: 4.8,
         reviewCount: 14,
+        soldCount: 41,
         variants: [
             { name: 'Figma Pro chính chủ 1 tháng', price: 200000, duration: '1 tháng', note: 'Nâng cấp chính chủ, cần tên đăng nhập + mật khẩu', productCode: 'figma_pro_1m' },
             { name: 'Figma Edu 1 năm (cấp TK)', price: 280000, duration: '1 năm', note: 'Cấp sẵn TK/MK, lấy về nhập và dùng', productCode: 'figma_edu_1y' }
@@ -882,6 +891,7 @@ const products = {
         featured: false,
         rating: 4.7,
         reviewCount: 7,
+        soldCount: 19,
         variants: [
             { name: 'Autodesk lẻ 1 app 1 năm', price: 170000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_1app_1y' },
             { name: 'Autodesk lẻ 2 app 1 năm', price: 250000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_2app_1y' },
@@ -1101,11 +1111,67 @@ document.addEventListener('click', function (e) {
 });
 
 // INITIALIZE
+// ── HERO SLIDER ──
+let currentSlide = 0;
+let slideInterval = null;
+
+function goToSlide(index) {
+    const slides = document.querySelectorAll('.hero-slide');
+    const dots = document.querySelectorAll('.hero-dot');
+    if (!slides.length) return;
+    currentSlide = ((index % slides.length) + slides.length) % slides.length;
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    dots.forEach((d, i) => d.classList.toggle('active', i === currentSlide));
+}
+
+function nextSlide() { goToSlide(currentSlide + 1); resetSlideTimer(); }
+function prevSlide() { goToSlide(currentSlide - 1); resetSlideTimer(); }
+
+function resetSlideTimer() {
+    clearInterval(slideInterval);
+    slideInterval = setInterval(() => goToSlide(currentSlide + 1), 5000);
+}
+
+function initHeroSlider() {
+    slideInterval = setInterval(() => goToSlide(currentSlide + 1), 5000);
+}
+
+// ── CATEGORY BANNERS ──
+const categoryConfig = {
+    'AI': { emoji: '🤖', gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' },
+    'Giải trí': { emoji: '🎬', gradient: 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)' },
+    'Thiết kế': { emoji: '🎨', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)' },
+    'Công cụ': { emoji: '🛠️', gradient: 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)' },
+    'Học tập': { emoji: '📚', gradient: 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)' }
+};
+
+function renderCategoryBanners() {
+    const container = document.getElementById('categoryBanners');
+    if (!container) return;
+    const categories = [...new Set(Object.values(products).filter(p => p.category !== 'Testing').map(p => p.category))];
+
+    container.innerHTML = categories.map(cat => {
+        const config = categoryConfig[cat] || { emoji: '📦', gradient: 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)' };
+        const count = Object.values(products).filter(p => p.category === cat).length;
+        return `
+            <a href="#products" class="category-banner-card" onclick="setTimeout(()=>filterProducts(document.querySelector('.filter-list li[data-cat=\\'${cat}\\']')||document.querySelectorAll('.filter-list li')[0],'${cat}'),100)" style="background: ${config.gradient}">
+                <span class="cat-banner-emoji">${config.emoji}</span>
+                <span class="cat-banner-name">${cat}</span>
+                <span class="cat-banner-count">${count} sản phẩm</span>
+            </a>
+        `;
+    }).join('');
+}
+
 window.onload = function () {
     renderFeaturedProducts();
     renderAllProducts();
     renderFilterList();
+    renderCategoryBanners();
     updateCartUI();
+
+    // Init hero slider
+    initHeroSlider();
 
     // Inject background orbs into hero + CTA
     injectOrbs();
@@ -1243,6 +1309,52 @@ function doRoute(page, parts, showPage) {
     }
 }
 
+// RENDER PRODUCT CARD (shared template)
+function renderProductCardHTML(product) {
+    const minPublic = Math.min(...product.variants.map(v => getVariantPrice(v, 'public')));
+    const maxPublic = Math.max(...product.variants.map(v => getVariantPrice(v, 'public')));
+    const minCtv = Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')));
+    const hasMultiplePrices = minPublic !== maxPublic;
+    const priceDisplay = hasMultiplePrices
+        ? `${formatPrice(minPublic)} - ${formatPrice(maxPublic)}`
+        : formatPrice(minPublic);
+    const rating = product.rating || 4.5;
+    const soldCount = product.soldCount || 0;
+
+    return `
+        <div class="product-card" onclick="window.location.hash='product/${product.id}'">
+            <div class="product-image">
+                <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
+                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ Giao liền' : '🕐 Giao sau'}
+                </span>
+                <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
+            </div>
+            <div class="product-info product-info-simple">
+                <h3 class="product-name">${product.name}</h3>
+                <div class="product-meta-row">
+                    <span class="product-rating-stars">${renderStars(rating)} ${rating}</span>
+                    <span class="product-sold">| ${soldCount > 99 ? soldCount + '+' : soldCount} sold</span>
+                </div>
+                <div class="product-price-row">
+                    <span class="product-price">${priceDisplay}</span>
+                    ${ctvMode && minCtv !== minPublic ? `<span class="price-ctv">CTV: ${formatPrice(minCtv)}</span>` : ''}
+                </div>
+                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    Xem chi tiết
+                </a>
+            </div>
+        </div>
+    `;
+}
+
+function renderStars(rating) {
+    const full = Math.floor(rating);
+    const half = rating - full >= 0.5 ? 1 : 0;
+    const empty = 5 - full - half;
+    return '<span class="stars">' + '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty) + '</span>';
+}
+
 // RENDER FEATURED PRODUCTS
 function renderFeaturedProducts() {
     const container = document.getElementById('featuredProducts');
@@ -1250,24 +1362,7 @@ function renderFeaturedProducts() {
         .filter(p => p.featured)
         .sort((a, b) => ((a.deliveryType || 'instant') === 'instant' ? 0 : 1) - ((b.deliveryType || 'instant') === 'instant' ? 0 : 1));
 
-    container.innerHTML = featured.map(product => `
-        <div class="product-card" onclick="window.location.hash='product/${product.id}'">
-            <div class="product-image">
-                <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
-            </div>
-            <div class="product-info product-info-simple">
-                <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
-                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ GIAO LIỀN' : '🕐 GIAO SAU'}
-                </span>
-                <h3 class="product-name">${product.name}</h3>
-                ${renderPriceStack(
-        Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
-        Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
-    )}
-                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
-            </div>
-        </div>
-    `).join('');
+    container.innerHTML = featured.map(product => renderProductCardHTML(product)).join('');
 }
 
 // RENDER ALL PRODUCTS
@@ -1280,24 +1375,7 @@ function renderAllProducts(filter = 'all') {
     }
     productsToShow.sort((a, b) => ((a.deliveryType || 'instant') === 'instant' ? 0 : 1) - ((b.deliveryType || 'instant') === 'instant' ? 0 : 1));
 
-    container.innerHTML = productsToShow.map(product => `
-        <div class="product-card" onclick="window.location.hash='product/${product.id}'">
-            <div class="product-image">
-                <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
-            </div>
-            <div class="product-info product-info-simple">
-                <span class="delivery-badge ${(product.deliveryType || 'instant') === 'instant' ? 'badge-instant' : 'badge-preorder'}">
-                    ${(product.deliveryType || 'instant') === 'instant' ? '⚡ GIAO LIỀN' : '🕐 GIAO SAU'}
-                </span>
-                <h3 class="product-name">${product.name}</h3>
-                ${renderPriceStack(
-        Math.min(...product.variants.map(v => getVariantPrice(v, 'public'))),
-        Math.min(...product.variants.map(v => getVariantPrice(v, 'ctv')))
-    )}
-                <a href="#product/${product.id}" class="buy-now-btn" onclick="event.stopPropagation()">Xem chi tiết</a>
-            </div>
-        </div>
-    `).join('');
+    container.innerHTML = productsToShow.map(product => renderProductCardHTML(product)).join('');
 }
 
 // RENDER FILTER LIST
@@ -1305,10 +1383,9 @@ function renderFilterList() {
     const container = document.getElementById('filterList');
     const categories = [...new Set(Object.values(products).filter(p => p.category !== 'Testing').map(p => p.category))];
 
-    // Clean UI - No icons as requested
-    const allItem = '<li class="active" onclick="filterProducts(this, \'all\')">Tất cả</li>';
+    const allItem = '<li class="active" data-cat="all" onclick="filterProducts(this, \'all\')">Tất cả</li>';
     const categoryItems = categories.map(cat =>
-        `<li onclick="filterProducts(this, '${cat}')">${cat}</li>`
+        `<li data-cat="${cat}" onclick="filterProducts(this, '${cat}')">${cat}</li>`
     ).join('');
 
     container.innerHTML = allItem + categoryItems;

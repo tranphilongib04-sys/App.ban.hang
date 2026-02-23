@@ -14,7 +14,7 @@
     <!-- CSS -->
     <link rel="stylesheet" href="css/style.css">
     <!-- Favicon -->
-    <link rel="icon" href="https://img.icons8.com/color/48/shop.png" type="image/png">
+    <link rel="icon" href="images/logo_v2.png" type="image/png">
     <!-- Invoice Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
@@ -70,17 +70,54 @@
 
     <!-- HOME PAGE -->
     <div id="homePage" class="page active">
-        <!-- HERO -->
-        <section class="hero">
-            <h1>
-                <span class="slogan-main">Tiệm Bản Quyền</span>
-                <span class="slogan-sub">Mua là ghiền, dùng sướng liền</span>
-            </h1>
-            <p>Dịch vụ premium chất lượng cao với giá cả hợp lý</p>
-            <div class="hero-actions">
-                <a href="#products" class="cta-button">Khám phá ngay</a>
-                <a href="https://zalo.me/0988428496" target="_blank" class="zalo-button">Chat Zalo</a>
+        <!-- HERO BANNER SLIDER -->
+        <section class="hero-banner">
+            <div class="hero-slider">
+                <div class="hero-slide active">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge">HOT</span>
+                        <h2 class="hero-slide-title">Alo là có liền,<br>chỉ có thể là <span class="text-gold">Tiệm Bản Quyền</span></h2>
+                        <p class="hero-slide-desc">Dịch vụ số premium chính hãng · Giao hàng tức thì · Hỗ trợ 24/7</p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Khám phá ngay</a>
+                            <a href="https://zalo.me/0988428496" target="_blank" class="hero-slide-btn-outline">Chat Zalo</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <img src="images/logo_v2.png" alt="TBQ Homie">
+                    </div>
+                </div>
+                <div class="hero-slide">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge">DEAL</span>
+                        <h2 class="hero-slide-title">Giá tốt nhất<br><span class="text-gold">cho mọi dịch vụ</span></h2>
+                        <p class="hero-slide-desc">ChatGPT · Netflix · Spotify · Adobe · YouTube Premium và nhiều hơn nữa</p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Xem sản phẩm</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <div class="hero-visual-grid">
+                            <span>🤖</span><span>🎬</span><span>🎵</span><span>🎨</span>
+                        </div>
+                    </div>
+                </div>
             </div>
+            <div class="hero-slider-dots">
+                <button class="hero-dot active" onclick="goToSlide(0)"></button>
+                <button class="hero-dot" onclick="goToSlide(1)"></button>
+            </div>
+            <button class="hero-slider-arrow hero-arrow-prev" onclick="prevSlide()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            </button>
+            <button class="hero-slider-arrow hero-arrow-next" onclick="nextSlide()">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+            </button>
+        </section>
+
+        <!-- CATEGORY BANNERS -->
+        <section class="category-banners">
+            <div class="category-banner-grid" id="categoryBanners"></div>
         </section>
 
         <!-- FEATURED PRODUCTS -->
@@ -319,17 +356,16 @@
 
     <!-- PRODUCTS PAGE -->
     <div id="productsPage" class="page">
-        <div class="products-container">
-            <aside class="filter-sidebar">
-                <h3 class="filter-title">Danh mục</h3>
-                <ul class="filter-list" id="filterList">
-                    <li class="active" onclick="filterProducts(this, 'all')">Tất cả sản phẩm</li>
-                </ul>
-            </aside>
-            <div class="products-content">
+        <div class="products-container products-container-v2">
+            <div class="products-header-v2">
                 <h2 class="section-title">Tất cả sản phẩm</h2>
-                <div class="product-grid" id="allProducts"></div>
+                <div class="filter-chips-wrap">
+                    <ul class="filter-list filter-chips" id="filterList">
+                        <li class="active" onclick="filterProducts(this, 'all')">Tất cả</li>
+                    </ul>
+                </div>
             </div>
+            <div class="product-grid" id="allProducts"></div>
         </div>
     </div>
 
@@ -669,14 +705,6 @@
                     <line x1="21" y1="21" x2="16.65" y2="16.65" />
                 </svg>
                 <span>Tra cứu</span>
-            </a>
-            <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="mobile-nav-item mobile-nav-zalo">
-                <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style="width:22px;height:22px">
-                    <rect width="48" height="48" rx="10" fill="#0068FF" />
-                    <path d="M35.8 30.4c.6-1.5.9-3.2.9-5 0-7.5-6.5-13.6-14.5-13.6S7.7 17.9 7.7 25.4c0 7.5 6.5 13.6 14.5 13.6 1.7 0 3.4-.3 4.9-.7l5.1 1.4-1.4-4.3c1.9-1.4 3.5-3.2 4.4-5.2l.6.2Z" fill="#fff" opacity=".95" />
-                    <text x="17" y="30" font-family="Arial,sans-serif" font-weight="800" font-size="16" fill="#0068FF">Z</text>
-                </svg>
-                <span>Zalo</span>
             </a>
         </div>
     </nav>
