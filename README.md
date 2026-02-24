@@ -34,13 +34,6 @@ netlify dev
 
 ---
 
-### 📊 Admin Panel *(Coming Soon)*
-**Path:** `admin-panel/`
-
-Web-based admin panel for remote management.
-
----
-
 ## Quick Start
 
 ### Desktop App (Local Admin)
@@ -94,7 +87,6 @@ cd web-store && netlify dev
 
 - `desktop-app/docs/` - Desktop app docs
 - `web-store/docs/` - Web store & deployment docs
-- `shared/docs/` - Shared documentation
 
 ## Testing
 

@@ -52,9 +52,9 @@ function generateDeliveryToken(orderId, email) {
     return crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
 }
 
-// Rate Limiting Config for Check Payment (higher limit)
+// Rate Limiting Config for Check Payment
 const RATE_LIMIT_CHECK_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_CHECK_MAX_REQUESTS = 300; // 300 checks per minute per IP
+const RATE_LIMIT_CHECK_MAX_REQUESTS = 30; // SECURITY: Reduced from 300 to 30 per minute per IP
 
 async function checkRateLimit(db, ip) {
     // Ensure table exists (quick check)
@@ -344,8 +344,7 @@ exports.handler = async function (event, context) {
             statusCode: 500,
             headers,
             body: JSON.stringify({
-                error: 'Internal server error',
-                message: error.message
+                error: 'Lỗi hệ thống'
             })
         };
     }

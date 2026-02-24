@@ -4,6 +4,10 @@ desktop-app/.next/
 desktop-app/build/
 desktop-app/dist/
 desktop-app/data/*.db
+desktop-app/data/*.db-shm
+desktop-app/data/*.db-wal
+desktop-app/data/*.db-info
+desktop-app/data/*.corrupt.*
 desktop-app/data/backups/
 desktop-app/.env
 desktop-app/.env.local
@@ -14,12 +18,8 @@ web-store/.netlify/
 web-store/.env
 web-store/.env.local
 
-# Admin Panel
-admin-panel/node_modules/
-admin-panel/.next/
-admin-panel/.netlify/
-admin-panel/.env
-admin-panel/.env.local
+# Netlify
+.netlify/
 
 # IDE & OS
 .vscode/
@@ -34,4 +34,9 @@ npm-debug.log*
 
 # Build artifacts
 *.tsbuildinfo
-node_modules
+node_modules/
+.next/
+
+# Environment
+.env
+.env.local

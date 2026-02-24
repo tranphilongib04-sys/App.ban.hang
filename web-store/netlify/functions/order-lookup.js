@@ -192,11 +192,8 @@ exports.handler = async function (event) {
                 items: linesByOrder[o.id] || []
             };
 
-            // For paid/fulfilled orders, provide delivery URL
-            if (o.status === 'fulfilled' || o.status === 'paid') {
-                const token = generateDeliveryToken(o.id, o.customer_email);
-                result.deliveryUrl = `/.netlify/functions/delivery?token=${token}&order=${o.order_code}`;
-            }
+            // SECURITY: Delivery URLs removed from order-lookup to prevent credential leakage via phone only.
+            // Users should use their original delivery link or email-verified credentials instead.
 
             // Include credentials inline when email verified
             if (emailVerified && credentialsByOrder[o.id]) {

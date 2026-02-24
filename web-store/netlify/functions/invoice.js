@@ -20,11 +20,12 @@ function getDbClient() {
 function verifyDeliveryToken(token, orderId, email) {
     const secret = process.env.DELIVERY_SECRET;
     if (!secret) throw new Error('DELIVERY_SECRET not configured');
+    const safeEmail = email || '';
     const validTokens = [];
     for (let i = 0; i < 7; i++) {
         const date = new Date();
         date.setDate(date.getDate() - i);
-        const data = `${orderId}|${email}|${Math.floor(date.getTime() / (1000 * 60 * 60 * 24))}`;
+        const data = `${orderId}|${safeEmail}|${Math.floor(date.getTime() / (1000 * 60 * 60 * 24))}`;
         const hash = crypto.createHash('sha256').update(secret + data).digest('hex').substring(0, 32);
         validTokens.push(hash);
     }
@@ -53,6 +54,7 @@ exports.handler = async function (event, context) {
                     i.invoice_number,
                     GROUP_CONCAT(ol.id) as line_ids,
                     GROUP_CONCAT(ol.product_id) as product_ids,
+                    GROUP_CONCAT(ol.product_name, '|||') as product_names,
                     GROUP_CONCAT(ol.quantity) as quantities,
                     GROUP_CONCAT(ol.unit_price) as unit_prices,
                     GROUP_CONCAT(ol.subtotal) as subtotals
@@ -84,29 +86,16 @@ exports.handler = async function (event, context) {
             };
         }
 
-        // Get product names
-        const productIds = (orderData.product_ids || '').split(',').filter(Boolean);
-        const products = {};
-        if (productIds.length > 0) {
-            const productResult = await db.execute({
-                sql: `SELECT id, name, variant FROM products WHERE id IN (${productIds.map(() => '?').join(',')})`,
-                args: productIds
-            });
-            for (const p of productResult.rows) {
-                products[p.id] = p.name + (p.variant ? ` - ${p.variant}` : '');
-            }
-        }
-
-        // Parse order lines
+        // Parse order lines (product_name from order_lines, not products table)
+        const productNames = (orderData.product_names || '').split('|||').filter(Boolean);
         const quantities = (orderData.quantities || '').split(',').filter(Boolean);
         const unitPrices = (orderData.unit_prices || '').split(',').filter(Boolean);
         const subtotals = (orderData.subtotals || '').split(',').filter(Boolean);
-        const pIds = productIds;
 
         const lines = [];
         for (let i = 0; i < quantities.length; i++) {
             lines.push({
-                productName: products[pIds[i]] || 'Sản phẩm',
+                productName: productNames[i] || 'Sản phẩm',
                 quantity: parseInt(quantities[i]) || 1,
                 unitPrice: parseInt(unitPrices[i]) || 0,
                 subtotal: parseInt(subtotals[i]) || 0
@@ -389,7 +378,7 @@ exports.handler = async function (event, context) {
         return {
             statusCode: 500,
             headers: { 'Content-Type': 'text/html' },
-            body: '<h1>Error generating invoice</h1>'
+            body: `<h1>Error generating invoice</h1><p style="color:#666;font-size:14px">${error.message || 'Unknown error'}</p>`
         };
     }
 };

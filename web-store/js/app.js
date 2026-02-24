@@ -12,8 +12,8 @@ const products = {
         reviewCount: 34,
         soldCount: 156,
         variants: [
-            { name: 'ChatGPT Plus - Cấp TK mới', price: 70000, duration: '1 tháng', note: '', productCode: 'chatgpt_plus_cap_tk' },
-            { name: 'ChatGPT Plus - Gia hạn TK cũ', price: 90000, duration: '1 tháng', note: 'Khách cần gửi TK/MK qua Zalo', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
+            { name: 'ChatGPT Plus chính chủ - KBH', price: 90000, duration: '1 tháng', note: 'Có thể gia hạn TK cũ hoặc cấp TK mới. Gia hạn TK cũ: giao sau, gửi admin. Cấp TK mới: giao liền, lấy trong kho.', productCode: 'chatgpt_plus_cap_tk' },
+            { name: 'ChatGPT Plus chính chủ - FBH', price: 190000, duration: '1 tháng', note: 'Hàng die đền khách. Chỉ gia hạn TK cũ: giao sau, gửi admin.', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
             { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_pro_1m', deliveryType: 'preorder' },
             { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' }
         ],
@@ -33,8 +33,8 @@ const products = {
             warranty: `
                 <h3>Chính sách bảo hành</h3>
                 <ul>
-                    <li><strong>ChatGPT Plus cấp TK mới:</strong> Bảo hành đến hết tháng</li>
-                    <li><strong>ChatGPT Plus gia hạn:</strong> Bảo hành đến hết tháng</li>
+                    <li><strong>ChatGPT Plus chính chủ KBH:</strong> Bảo hành đến hết tháng (có thể gia hạn TK cũ hoặc cấp TK mới)</li>
+                    <li><strong>ChatGPT Plus chính chủ FBH:</strong> Hàng die đền khách, chỉ gia hạn TK cũ</li>
                     <li><strong>ChatGPT Pro:</strong> Hỗ trợ bảo hành khi hết credit</li>
                     <li><strong>ChatGPT Go:</strong> Bảo hành 1 tháng</li>
                 </ul>
@@ -42,13 +42,13 @@ const products = {
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
-                <p><strong>Đối với gói cấp TK mới:</strong></p>
+                <p><strong>Đối với gói KBH (cấp TK mới – giao liền):</strong></p>
                 <ul>
                     <li>Sau khi thanh toán, bạn sẽ nhận được tài khoản/mật khẩu qua Zalo</li>
                     <li>Đăng nhập tại chat.openai.com</li>
                     <li>Bắt đầu sử dụng ngay</li>
                 </ul>
-                <p><strong>Đối với gói gia hạn TK cũ:</strong></p>
+                <p><strong>Đối với gói KBH/FBH gia hạn TK cũ (giao sau):</strong></p>
                 <ul>
                     <li>Gửi tài khoản/mật khẩu của bạn qua Zalo: 0988428496</li>
                     <li>Chờ admin gia hạn (15-30 phút)</li>
@@ -576,7 +576,7 @@ const products = {
         id: 'grok',
         name: 'Grok',
         category: 'AI',
-        deliveryType: 'instant',
+        deliveryType: 'preorder',
         description: 'AI của xAI (Elon Musk), truy cập real-time, trả lời sắc bén và cập nhật tin tức',
         image: 'images/grok-logo.png',
         featured: true,
@@ -584,7 +584,9 @@ const products = {
         reviewCount: 12,
         soldCount: 38,
         variants: [
-            { name: 'Grok 7 ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' }
+            { name: 'Grok 7 ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' },
+            { name: 'Super Grok - Cấp sẵn', price: 270000, duration: '1 tháng', note: 'Cấp TK/MK sẵn', productCode: 'super_grok_cap_san', deliveryType: 'preorder' },
+            { name: 'Super Grok - Nâng chính chủ', price: 350000, duration: '1 tháng', note: 'Khách gửi TK qua Zalo', productCode: 'super_grok_chinh_chu', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -931,6 +933,122 @@ const products = {
                 <p>A: Bạn chọn 1 app bất kỳ (AutoCAD, Revit, 3ds Max...).</p>
                 <p><strong>Q: Full app gồm những gì?</strong></p>
                 <p>A: Toàn bộ ứng dụng Autodesk (AutoCAD, Revit, 3ds Max, Maya, Inventor...).</p>
+            `
+        }
+    },
+    meitu: {
+        id: 'meitu',
+        name: 'Meitu',
+        category: 'Thiết kế',
+        deliveryType: 'preorder',
+        description: 'Ứng dụng chỉnh ảnh, làm đẹp và thiết kế ảnh chuyên nghiệp hàng đầu',
+        image: 'images/meitu-logo.png',
+        featured: false,
+        rating: 4.6,
+        reviewCount: 5,
+        soldCount: 12,
+        variants: [
+            { name: 'Meitu VIP 1 tháng', price: 75000, duration: '1 tháng', note: 'Đăng nhập cố định 1 thiết bị', productCode: 'meitu_vip_1m' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Meitu</h3>
+                <p>Meitu là ứng dụng chỉnh sửa ảnh và làm đẹp hàng đầu, với hàng ngàn bộ lọc, hiệu ứng và công cụ AI tiên tiến:</p>
+                <ul>
+                    <li>Chỉnh sửa ảnh chuyên nghiệp với AI</li>
+                    <li>Hàng ngàn bộ lọc và hiệu ứng đẹp mắt</li>
+                    <li>Công cụ làm đẹp, retouch da mặt</li>
+                    <li>Thiết kế poster, collage sáng tạo</li>
+                    <li>Xóa phông, thay nền thông minh</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li><strong>Bảo hành Full-Time</strong> trong suốt thời hạn sử dụng</li>
+                    <li>Hỗ trợ xử lý mọi vấn đề phát sinh</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+                <p><strong>⚠️ Lưu ý quan trọng:</strong></p>
+                <ul>
+                    <li>Quý khách đăng nhập cố định <strong>1 thiết bị</strong></li>
+                    <li>Không chỉnh sửa, thay đổi bất kỳ thông tin nào trên tài khoản</li>
+                    <li>Vi phạm các điều khoản trên sẽ <strong>không được bảo hành</strong></li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, nhận tài khoản/mật khẩu</li>
+                    <li>Đăng nhập trên 1 thiết bị duy nhất</li>
+                    <li>Sử dụng đầy đủ tính năng VIP</li>
+                    <li><strong>Không đổi mật khẩu, email hoặc bất kỳ thông tin nào</strong></li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Có thể dùng trên nhiều thiết bị không?</strong></p>
+                <p>A: Không, chỉ đăng nhập cố định trên 1 thiết bị duy nhất.</p>
+                <p><strong>Q: Có được đổi mật khẩu không?</strong></p>
+                <p>A: Không, việc thay đổi thông tin tài khoản sẽ mất bảo hành.</p>
+                <p><strong>Q: Bảo hành như thế nào?</strong></p>
+                <p>A: Bảo hành Full-Time trong suốt thời hạn sử dụng, liên hệ Zalo khi gặp vấn đề.</p>
+            `
+        }
+    },
+    gemini: {
+        id: 'gemini',
+        name: 'Gemini Pro + 2TB Drive',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'Google Gemini Pro kèm 2TB Google Drive, trợ lý AI mạnh mẽ từ Google',
+        image: 'images/gemini-logo.png',
+        featured: false,
+        rating: 4.7,
+        reviewCount: 4,
+        soldCount: 10,
+        variants: [
+            { name: 'Gemini Pro + 2TB - 1 tháng', price: 25000, duration: '1 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 3 tháng', price: 70000, duration: '3 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_3m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 6 tháng', price: 120000, duration: '6 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_6m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 1 năm', price: 220000, duration: '1 năm', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1y', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Gemini Pro + 2TB Drive</h3>
+                <p>Google Gemini Pro là trợ lý AI thế hệ mới từ Google, đi kèm 2TB dung lượng Google Drive:</p>
+                <ul>
+                    <li>Trợ lý AI Gemini Pro với khả năng xử lý đa phương tiện</li>
+                    <li>2TB Google Drive lưu trữ đám mây</li>
+                    <li>Tích hợp Gmail, Google Docs, Sheets</li>
+                    <li>Chỉnh sửa ảnh với Magic Editor</li>
+                    <li>Tạo hình ảnh AI với Imagen</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời hạn sử dụng</li>
+                    <li>Hỗ trợ xử lý mọi vấn đề phát sinh</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, IB Zalo: 0988428496 để nhận hàng</li>
+                    <li>Admin sẽ kích hoạt trong 5-15 phút</li>
+                    <li>Đăng nhập Google và sử dụng Gemini Pro</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Dùng được trên tài khoản Google cá nhân không?</strong></p>
+                <p>A: Có, sẽ được add vào Google Workspace.</p>
+                <p><strong>Q: 2TB Drive dùng chung hay riêng?</strong></p>
+                <p>A: 2TB Drive riêng cho tài khoản của bạn.</p>
+                <p><strong>Q: Nhận hàng như thế nào?</strong></p>
+                <p>A: Sau khi thanh toán, IB Zalo để admin kích hoạt.</p>
             `
         }
     },
@@ -1414,6 +1532,10 @@ function showProductDetail(productId) {
     const product = products[productId];
     if (!product) return;
 
+    // Reset detail order info state
+    detailQuantity = 1;
+    detailDiscount = null;
+
     const container = document.getElementById('productDetailContent');
 
     container.innerHTML = `
@@ -1421,6 +1543,61 @@ function showProductDetail(productId) {
             <div class="product-gallery">
                 <div class="main-image">
                     <img src="${product.image}" alt="${product.name}" onerror="handleImgError(this,'${product.id}')">
+                </div>
+
+                <!-- ORDER INFO SECTION (sticky with image) -->
+                <div class="order-info-section" id="orderInfoSection">
+                    <!-- Quantity -->
+                    <div class="order-info-row">
+                        <span class="order-info-label">Số lượng</span>
+                        <div class="qty-controls">
+                            <button class="qty-btn" onclick="updateDetailQuantity(-1)">−</button>
+                            <span class="qty-value" id="detailQty">1</span>
+                            <button class="qty-btn" onclick="updateDetailQuantity(1)">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Discount Code Collapsible -->
+                    <div class="detail-discount-wrap">
+                        <button class="detail-discount-toggle" onclick="toggleDetailDiscount()" id="detailDiscountToggle">
+                            <span>💳 Bạn có mã giảm giá?</span>
+                            <svg class="detail-discount-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
+                        </button>
+                        <div class="detail-discount-content" id="detailDiscountContent" style="display:none;">
+                            <div class="discount-input-group">
+                                <input type="text" id="detailDiscountInput" placeholder="Nhập mã CTV / mã giảm giá" maxlength="30" autocomplete="off">
+                                <button type="button" class="discount-apply-btn" id="detailDiscountApplyBtn" onclick="applyDetailDiscount('${productId}')">Áp dụng</button>
+                            </div>
+                            <div id="detailDiscountFeedback" class="discount-feedback"></div>
+                        </div>
+                    </div>
+
+                    <!-- Price Summary -->
+                    <div class="detail-price-summary" id="detailPriceSummary">
+                        <div class="price-summary-row">
+                            <span>Tạm tính</span>
+                            <span id="detailSubtotal">0₫</span>
+                        </div>
+                        <div class="price-summary-row discount-row" id="detailDiscountRow" style="display:none;">
+                            <span>🏷️ <span class="discount-label-text" id="detailDiscountLabel">Chiết khấu</span></span>
+                            <span class="discount-value" id="detailDiscountValue">-0₫</span>
+                        </div>
+                        <div class="price-summary-divider"></div>
+                        <div class="price-summary-row total-row">
+                            <span>Tổng cộng</span>
+                            <span class="total-value" id="detailTotal">0₫</span>
+                        </div>
+                    </div>
+
+                    <!-- Action Buttons -->
+                    <div class="buy-now-row">
+                        <button class="buy-now-btn" onclick="buyNow('${productId}')">
+                            🛒 Đặt hàng ngay
+                        </button>
+                        <button class="add-to-cart-text-btn" onclick="addToCart('${productId}')">
+                            🛍 Thêm giỏ hàng
+                        </button>
+                    </div>
                 </div>
             </div>
             
@@ -1456,10 +1633,6 @@ function showProductDetail(productId) {
                         `).join('')}
                     </div>
                 </div>
-                
-                <button class="add-to-cart-btn" onclick="addToCart('${productId}')">
-                    Thêm vào giỏ hàng
-                </button>
             </div>
         </div>
         
@@ -1477,7 +1650,14 @@ function showProductDetail(productId) {
             <div class="tab-content">${product.tabs.faq}</div>
         </div>
     `;
+
+    // Initialize price summary after DOM is ready
+    setTimeout(() => updateDetailPriceSummary(productId), 0);
 }
+
+// detail-level state
+let detailQuantity = 1;
+let detailDiscount = null; // { code, discountAmount, finalTotal, codeType, percent }
 
 // SELECT VARIANT
 function selectVariant(index) {
@@ -1489,6 +1669,334 @@ function selectVariant(index) {
             opt.classList.add('just-selected');
         }
     });
+    // Recalculate price when variant changes
+    const currentProductId = window.location.hash.replace('#product/', '');
+    if (currentProductId) {
+        detailDiscount = null;
+        clearDetailDiscount();
+        updateDetailPriceSummary(currentProductId);
+    }
+}
+
+// ── DETAIL ORDER INFO FUNCTIONS ──
+
+function updateDetailQuantity(delta) {
+    const qtyEl = document.getElementById('detailQty');
+    if (!qtyEl) return;
+    detailQuantity = Math.max(1, detailQuantity + delta);
+    qtyEl.textContent = detailQuantity;
+    const currentProductId = window.location.hash.replace('#product/', '');
+    updateDetailPriceSummary(currentProductId);
+}
+
+function updateDetailPriceSummary(productId) {
+    const product = products[productId];
+    if (!product) return;
+
+    const selected = document.querySelector('input[name="variant"]:checked');
+    if (!selected) return;
+    const variant = product.variants[selected.value];
+    const unitPrice = getVariantPrice(variant, ctvMode ? 'ctv' : 'public');
+    const subtotal = unitPrice * detailQuantity;
+
+    const subtotalEl = document.getElementById('detailSubtotal');
+    const totalEl = document.getElementById('detailTotal');
+    const discountRow = document.getElementById('detailDiscountRow');
+    const discountValueEl = document.getElementById('detailDiscountValue');
+    const discountLabelEl = document.getElementById('detailDiscountLabel');
+
+    if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+
+    let finalTotal = subtotal;
+    if (detailDiscount && detailDiscount.discountAmount > 0) {
+        const discountAmt = detailDiscount.percent
+            ? Math.round(subtotal * detailDiscount.percent / 100)
+            : detailDiscount.discountAmount;
+        finalTotal = Math.max(0, subtotal - discountAmt);
+        if (discountRow) discountRow.style.display = 'flex';
+        if (discountValueEl) discountValueEl.textContent = '-' + formatPrice(discountAmt);
+        if (discountLabelEl) discountLabelEl.textContent = `Chiết khấu (${detailDiscount.percent ? detailDiscount.percent + '%' : detailDiscount.code})`;
+    } else {
+        if (discountRow) discountRow.style.display = 'none';
+    }
+
+    if (totalEl) totalEl.textContent = formatPrice(finalTotal);
+}
+
+function toggleDetailDiscount() {
+    const content = document.getElementById('detailDiscountContent');
+    const toggle = document.getElementById('detailDiscountToggle');
+    if (!content) return;
+    const isOpen = content.style.display !== 'none';
+    content.style.display = isOpen ? 'none' : 'block';
+    if (toggle) toggle.classList.toggle('open', !isOpen);
+}
+
+async function applyDetailDiscount(productId) {
+    const input = document.getElementById('detailDiscountInput');
+    const feedback = document.getElementById('detailDiscountFeedback');
+    const btn = document.getElementById('detailDiscountApplyBtn');
+    const code = input.value.trim();
+
+    if (!code) {
+        feedback.textContent = '';
+        feedback.className = 'discount-feedback';
+        return;
+    }
+
+    const product = products[productId];
+    const selected = document.querySelector('input[name="variant"]:checked');
+    if (!product || !selected) return;
+    const variant = product.variants[selected.value];
+    const productCode = getProductCode(productId, variant.name);
+
+    const items = [{ productCode, quantity: detailQuantity }];
+
+    btn.disabled = true;
+    btn.textContent = '...';
+
+    try {
+        const response = await fetch('/.netlify/functions/validate-discount', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ code, items })
+        });
+
+        const data = await response.json();
+
+        if (data.valid) {
+            detailDiscount = {
+                code: data.code,
+                discountAmount: data.discountAmount,
+                finalTotal: data.finalTotal,
+                codeType: data.codeType || 'discount',
+                percent: data.discountPercent || 0
+            };
+
+            feedback.textContent = data.message;
+            feedback.className = 'discount-feedback success';
+            input.readOnly = true;
+            btn.textContent = 'Xoá';
+            btn.disabled = false;
+            btn.onclick = function () { clearDetailDiscount(); };
+
+            if (data.codeType === 'ctv') setCtvMode(true);
+        } else {
+            feedback.textContent = data.error || 'Mã giảm giá không hợp lệ';
+            feedback.className = 'discount-feedback error';
+            detailDiscount = null;
+            btn.disabled = false;
+            btn.textContent = 'Áp dụng';
+        }
+    } catch (err) {
+        feedback.textContent = 'Không thể kiểm tra mã. Thử lại sau.';
+        feedback.className = 'discount-feedback error';
+        btn.disabled = false;
+        btn.textContent = 'Áp dụng';
+    }
+
+    updateDetailPriceSummary(productId);
+}
+
+function clearDetailDiscount() {
+    detailDiscount = null;
+    const input = document.getElementById('detailDiscountInput');
+    const feedback = document.getElementById('detailDiscountFeedback');
+    const btn = document.getElementById('detailDiscountApplyBtn');
+    const currentProductId = window.location.hash.replace('#product/', '');
+
+    if (input) { input.readOnly = false; input.value = ''; }
+    if (feedback) { feedback.textContent = ''; feedback.className = 'discount-feedback'; }
+    if (btn) {
+        btn.textContent = 'Áp dụng';
+        btn.disabled = false;
+        btn.onclick = function () { applyDetailDiscount(currentProductId); };
+    }
+
+    if (ctvMode) setCtvMode(false);
+    updateDetailPriceSummary(currentProductId);
+}
+
+// BUY NOW - Direct order from product page
+function buyNow(productId) {
+    const product = products[productId];
+    const selected = document.querySelector('input[name="variant"]:checked');
+    if (!product || !selected) return;
+
+    const variant = product.variants[selected.value];
+    const email = document.getElementById('detailEmail')?.value.trim() || '';
+
+    // Build the modal
+    let existing = document.getElementById('buyNowModal');
+    if (existing) existing.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'buyNowModal';
+    modal.className = 'buy-now-modal-overlay';
+    modal.innerHTML = `
+        <div class="buy-now-modal">
+            <button class="buy-now-modal-close" onclick="document.getElementById('buyNowModal').remove()">&times;</button>
+            <h3>Thông tin liên hệ</h3>
+            <p class="buy-now-modal-desc">Nhập tên và SĐT để đặt hàng nhanh</p>
+            <div class="buy-now-modal-field">
+                <label>Họ và tên *</label>
+                <input type="text" id="buyNowName" required>
+            </div>
+            <div class="buy-now-modal-field">
+                <label>Số điện thoại *</label>
+                <input type="tel" id="buyNowPhone" required>
+                <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📱 Dùng SĐT này để tra cứu đơn hàng</div>
+            </div>
+            <div class="buy-now-modal-summary">
+                <span>${variant.name} × ${detailQuantity}</span>
+                <span class="buy-now-modal-total">${document.getElementById('detailTotal')?.textContent || '0₫'}</span>
+            </div>
+            <button class="buy-now-modal-submit" id="buyNowSubmitBtn" onclick="submitBuyNow('${productId}')">
+                Xác nhận đặt hàng
+            </button>
+        </div>
+    `;
+    document.body.appendChild(modal);
+
+    // Close on overlay click
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.remove();
+    });
+
+    // Focus name input
+    setTimeout(() => document.getElementById('buyNowName')?.focus(), 100);
+}
+
+async function submitBuyNow(productId) {
+    const product = products[productId];
+    const selected = document.querySelector('input[name="variant"]:checked');
+    if (!product || !selected) return;
+
+    const variant = product.variants[selected.value];
+    const name = document.getElementById('buyNowName')?.value.trim();
+    const phone = document.getElementById('buyNowPhone')?.value.trim();
+    const email = document.getElementById('detailEmail')?.value.trim() || '';
+
+    if (!name || !phone) {
+        showToast('Vui lòng điền đầy đủ họ tên và SĐT!', 'error');
+        return;
+    }
+
+    // Validate phone
+    const phoneRegex = /(84|0[35789])([0-9]{8})\b/;
+    if (!phoneRegex.test(phone)) {
+        showToast('Số điện thoại không hợp lệ!', 'error');
+        return;
+    }
+
+    const submitBtn = document.getElementById('buyNowSubmitBtn');
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.textContent = '⏳ Đang xử lý...';
+    submitBtn.style.opacity = '0.7';
+
+    const productCode = getProductCode(productId, variant.name);
+    const unitPrice = getVariantPrice(variant, ctvMode ? 'ctv' : 'public');
+
+    const items = [{
+        productCode,
+        quantity: detailQuantity,
+        price: unitPrice,
+        deliveryType: variant.deliveryType || product.deliveryType || 'instant'
+    }];
+
+    const note = '';
+
+    try {
+        const response = await fetch('/.netlify/functions/create-order', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerName: name,
+                customerEmail: email,
+                customerPhone: phone,
+                customerNote: note,
+                items: items,
+                price: unitPrice * detailQuantity,
+                discountCode: detailDiscount ? detailDiscount.code : null
+            })
+        });
+
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseErr) {
+            showToast('Máy chủ trả về lỗi. Vui lòng thử lại.', 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.style.opacity = '1';
+            return;
+        }
+
+        if (!response.ok || !data.success) {
+            let errMsg = data?.message || data?.error || 'Có lỗi xảy ra';
+            if (data?.error === 'INSUFFICIENT_STOCK') {
+                errMsg = `Hết hàng: ${data.product || 'sản phẩm'} chỉ còn ${data.available ?? 0}.`;
+            }
+            showToast(errMsg, 'error');
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalText;
+            submitBtn.style.opacity = '1';
+            return;
+        }
+
+        // Success - close modal
+        document.getElementById('buyNowModal')?.remove();
+
+        const orderCode = data.orderCode;
+        const total = data.amount || (unitPrice * detailQuantity);
+
+        // Store order for invoice
+        lastOrder = {
+            code: orderCode,
+            date: new Date().toLocaleString('vi-VN'),
+            customer: { name, phone },
+            items: [{
+                productId,
+                productName: product.name,
+                variantName: variant.name,
+                price: unitPrice,
+                unitPrice: unitPrice,
+                quantity: detailQuantity,
+                image: product.image
+            }],
+            total: total
+        };
+
+        // Reset detail state
+        detailQuantity = 1;
+        detailDiscount = null;
+
+        // Setup confirmation page
+        if (pollingInterval) clearInterval(pollingInterval);
+        const pendingState = document.getElementById('pendingPaymentState');
+        const successState = document.getElementById('successPaymentState');
+        if (pendingState) pendingState.style.display = 'block';
+        if (successState) { successState.style.display = 'none'; successState.innerHTML = ''; }
+
+        document.getElementById('orderCode').textContent = orderCode;
+        document.getElementById('transferContent').textContent = orderCode;
+        document.getElementById('transferAmount').textContent = formatPrice(total);
+
+        const qrCodeUrl = generateTPBankQR(orderCode, total);
+        const qrContainer = document.getElementById('qrCodeContainer');
+        qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;
+
+        window.location.hash = 'confirmation';
+        startPaymentPolling(orderCode, total);
+
+    } catch (error) {
+        console.error('Buy now error:', error);
+        showToast('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+        submitBtn.style.opacity = '1';
+    }
 }
 
 // SWITCH TAB
@@ -1663,13 +2171,27 @@ function renderCheckoutSummary(skipDiscountReset = false) {
         return;
     }
 
-    container.innerHTML = cart.map(item => {
+    container.innerHTML = cart.map((item, index) => {
         const qty = item.quantity || 1;
         const unitPrice = getItemUnitPrice(item, ctvMode ? 'ctv' : 'public');
         return `
-        <div class="summary-item">
-            <span>${item.productName} - ${item.variantName}${qty > 1 ? ` (x${qty})` : ''}</span>
-            <span>${formatPrice(unitPrice * qty)}</span>
+        <div class="checkout-item">
+            <div class="checkout-item-img">
+                <img src="${item.image}" alt="${item.productName}">
+            </div>
+            <div class="checkout-item-details">
+                <div class="checkout-item-name">${item.productName}</div>
+                <div class="checkout-item-variant">${item.variantName}</div>
+                <div class="checkout-item-bottom">
+                    <div class="checkout-item-qty">
+                        <button class="qty-btn-sm" onclick="updateCheckoutQty(${index}, -1)">−</button>
+                        <span class="qty-val-sm">${qty}</span>
+                        <button class="qty-btn-sm" onclick="updateCheckoutQty(${index}, 1)">+</button>
+                    </div>
+                    <span class="checkout-item-price">${formatPrice(unitPrice * qty)}</span>
+                </div>
+            </div>
+            <button class="checkout-item-remove" onclick="removeCheckoutItem(${index})" title="Xoá">×</button>
         </div>
     `;
     }).join('');
@@ -1698,6 +2220,31 @@ function renderCheckoutSummary(skipDiscountReset = false) {
             document.getElementById('discountAmountDisplay').textContent = formatPrice(discountAmount);
             document.getElementById('checkoutTotal').textContent = formatPrice(ctvTotal);
         }
+    }
+}
+
+// Update quantity from checkout page
+function updateCheckoutQty(index, delta) {
+    const item = cart[index];
+    if (!item) return;
+    const newQty = Math.max(1, (item.quantity || 1) + delta);
+    item.quantity = newQty;
+    const unitPrice = getItemUnitPrice(item, ctvMode ? 'ctv' : 'public');
+    item.unitPrice = unitPrice;
+    item.price = unitPrice * newQty;
+    saveCart();
+    updateCartUI();
+    renderCheckoutSummary(true);
+}
+
+// Remove item from checkout page
+function removeCheckoutItem(index) {
+    cart.splice(index, 1);
+    saveCart();
+    updateCartUI();
+    renderCheckoutSummary();
+    if (cart.length === 0) {
+        showToast('Giỏ hàng trống', 'info');
     }
 }
 
@@ -2831,7 +3378,7 @@ function lookupOrders() {
                                 '<div class="lookup-cred-field">' +
                                 '<div class="lookup-cred-label">Link kích hoạt</div>' +
                                 '<div class="lookup-cred-value">' +
-                                '<span class="lookup-cred-text">' + (isUrl ? '<a href="' + escAttr(c.username) + '" target="_blank" style="color:#4f46e5;word-break:break-all">' + escHtml(c.username) + '</a>' : escHtml(c.username)) + '</span>' +
+                                '<span class="lookup-cred-text">' + (isUrl ? '<a href="' + escAttr(c.username) + '" target="_blank" style="color:#1e3a5f;word-break:break-all">' + escHtml(c.username) + '</a>' : escHtml(c.username)) + '</span>' +
                                 '<button class="lookup-cred-copy" onclick="lookupCopy(\'' + escAttr(c.username).replace(/'/g, "\\'") + '\',this)">Copy</button>' +
                                 '</div></div>';
                             if (c.extraInfo) {

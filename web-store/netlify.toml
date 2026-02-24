@@ -20,6 +20,17 @@
   to = "/index.html"
   status = 200
 
+# ── Security Headers ──
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    X-XSS-Protection = "1; mode=block"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
 # Scheduled function for payment reconciliation (fallback for missed webhooks)
 # Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
 [functions."reconcile-payments"]

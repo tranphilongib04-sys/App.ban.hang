@@ -141,17 +141,10 @@ exports.handler = async function (event, context) {
         } catch (e) {
             console.log('Notice: Failed to create legacy placeholder', e.message);
         }
-        console.log('DEBUG: Legacy Product ID =', legacyProductId);
 
         // --- TRANSACTION START ---
         tx = await db.transaction('write');
         const hasCtv = await hasCtvPriceColumn(tx);
-
-        // VERIFY VISIBILITY
-        if (legacyProductId) {
-            const verify = await tx.execute({ sql: 'SELECT id, code FROM products WHERE id = ?', args: [legacyProductId] });
-            console.log('DEBUG: Verify Legacy Product in TX:', verify.rows);
-        }
 
         let totalAmount = 0;
         let publicTotal = 0;
@@ -386,9 +379,9 @@ exports.handler = async function (event, context) {
                 hasPreorderItems,
                 message: 'Order created',
                 paymentInfo: {
-                    bankName: 'TP Bank',
-                    accountNumber: '00000828511',
-                    accountName: 'TRAN PHI LONG',
+                    bankName: process.env.BANK_NAME || 'TP Bank',
+                    accountNumber: process.env.BANK_ACCOUNT_NUMBER || '***',
+                    accountName: process.env.BANK_ACCOUNT_NAME || '***',
                     amount: totalAmount,
                     content: orderCode
                 }
@@ -397,8 +390,8 @@ exports.handler = async function (event, context) {
 
     } catch (e) {
         if (tx) tx.close();
-        console.error('Create Order Error:', e);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: e.message }) };
+        console.error('Create Order Error:', e.message);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Lỗi hệ thống' }) };
     }
 };
 

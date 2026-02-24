@@ -17,12 +17,18 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
-const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
-};
+// SECURITY: Restrict CORS for admin APIs
+function getAdminHeaders(event) {
+    const allowed = process.env.ALLOWED_ADMIN_ORIGIN || '';
+    const reqOrigin = (event && event.headers) ? (event.headers.origin || event.headers.Origin || '') : '';
+    const origin = (allowed && reqOrigin === allowed) ? allowed : (allowed ? 'null' : '*');
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+}
 
 function checkAuth(event) {
     const token = process.env.ADMIN_API_TOKEN;
@@ -48,6 +54,7 @@ function generateCode() {
 }
 
 exports.handler = async function (event) {
+    const headers = getAdminHeaders(event);
     if (event.httpMethod === 'OPTIONS') return { statusCode: 200, headers, body: '' };
 
     if (!checkAuth(event)) {
@@ -188,7 +195,7 @@ exports.handler = async function (event) {
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     } catch (error) {
-        console.error('Admin Coupons Error:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ error: error.message }) };
+        console.error('Admin Coupons Error:', error.message);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Lỗi hệ thống' }) };
     }
 };

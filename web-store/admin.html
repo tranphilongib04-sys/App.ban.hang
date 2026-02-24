@@ -18,33 +18,35 @@
     }
 
     :root {
-      --bg: #f4f6fb;
-      --bg-page: #f4f6fb;
+      --bg: #f5f0e8;
+      --bg-page: #f5f0e8;
       --surface: #ffffff;
-      --surface2: #f8f9fc;
-      --border: #e2e5ee;
-      --border-light: #eef0f5;
-      --text: #111827;
+      --surface2: #faf6ef;
+      --border: #e0d5c4;
+      --border-light: #ece4d6;
+      --text: #1a2a4a;
       --text2: #6b7280;
       --text-muted: #9ca3af;
-      --accent: #4f6ef7;
-      --accent-dim: rgba(79, 110, 247, 0.08);
-      --accent-strong: #3b5de7;
-      --green: #22c55e;
-      --green-dim: #f0fdf4;
-      --yellow: #f59e0b;
-      --yellow-dim: #fffbeb;
-      --red: #ef4444;
-      --red-dim: #fef2f2;
-      --purple: #8b5cf6;
-      --purple-dim: #f5f3ff;
-      --orange: #f97316;
-      --orange-dim: #fff7ed;
+      --accent: #c9a96e;
+      --accent-dim: rgba(201, 169, 110, 0.10);
+      --accent-strong: #b8943f;
+      --navy: #1a2a4a;
+      --navy-light: #243656;
+      --green: #2d8a5e;
+      --green-dim: #f0f9f4;
+      --yellow: #c9a96e;
+      --yellow-dim: #faf6ef;
+      --red: #c0392b;
+      --red-dim: #fdf0ee;
+      --purple: #6c5b7b;
+      --purple-dim: #f5f2f7;
+      --orange: #d4873a;
+      --orange-dim: #fdf5eb;
       --radius: 14px;
       --radius-sm: 10px;
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.04);
-      --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.06);
-      --shadow-lg: 0 8px 30px rgba(0, 0, 0, 0.08);
+      --shadow-sm: 0 1px 3px rgba(26, 42, 74, 0.04);
+      --shadow-md: 0 2px 8px rgba(26, 42, 74, 0.06);
+      --shadow-lg: 0 8px 30px rgba(26, 42, 74, 0.08);
       --font: 'Be Vietnam Pro', 'Inter', system-ui, -apple-system, sans-serif;
     }
 
@@ -66,7 +68,7 @@
 
     .sidebar {
       width: 230px;
-      background: #1a1f36;
+      background: linear-gradient(180deg, #1a2a4a 0%, #152240 100%);
       padding: 24px 0;
       display: flex;
       flex-direction: column;
@@ -112,7 +114,7 @@
 
     .nav-item.active {
       border-left-color: var(--accent);
-      background: rgba(79, 110, 247, 0.15);
+      background: rgba(201, 169, 110, 0.15);
       color: #fff;
       font-weight: 600
     }
@@ -354,7 +356,7 @@
     }
 
     tr:hover td {
-      background: rgba(79, 110, 247, 0.03)
+      background: rgba(201, 169, 110, 0.05)
     }
 
     /* ───── badges ───── */
@@ -520,8 +522,8 @@
       border-radius: 8px;
       font-size: 12px;
       background: var(--accent-dim);
-      color: var(--accent);
-      border: 1px solid rgba(79, 110, 247, 0.2);
+      color: var(--accent-strong);
+      border: 1px solid rgba(201, 169, 110, 0.25);
       cursor: pointer;
       text-decoration: none;
       display: inline-block;
@@ -637,7 +639,7 @@
     .login-overlay {
       position: fixed;
       inset: 0;
-      background: linear-gradient(135deg, #1a1f36 0%, #2d3561 50%, #1a1f36 100%);
+      background: linear-gradient(135deg, #1a2a4a 0%, #243656 50%, #1a2a4a 100%);
       z-index: 999;
       display: flex;
       align-items: center;
@@ -646,7 +648,7 @@
     }
 
     .login-box {
-      background: #fff;
+      background: #fffcf5;
       border: none;
       border-radius: 20px;
       padding: 48px 40px 40px;
@@ -660,7 +662,7 @@
       margin-bottom: 6px;
       font-size: 26px;
       font-weight: 700;
-      color: #1a1f36;
+      color: #1a2a4a;
       letter-spacing: -0.5px
     }
 
@@ -692,7 +694,7 @@
     .login-box button {
       width: 100%;
       padding: 14px;
-      background: var(--accent);
+      background: linear-gradient(135deg, #c9a96e, #b8943f);
       border: none;
       border-radius: var(--radius-sm);
       color: #fff;
@@ -701,13 +703,13 @@
       cursor: pointer;
       transition: all .2s;
       font-family: inherit;
-      box-shadow: 0 4px 12px rgba(79, 110, 247, 0.35)
+      box-shadow: 0 4px 12px rgba(201, 169, 110, 0.35)
     }
 
     .login-box button:hover {
-      background: var(--accent-strong);
+      background: linear-gradient(135deg, #b8943f, #a6832e);
       transform: translateY(-1px);
-      box-shadow: 0 6px 20px rgba(79, 110, 247, 0.4)
+      box-shadow: 0 6px 20px rgba(201, 169, 110, 0.4)
     }
 
     .login-box button:active {
@@ -737,7 +739,495 @@
       font-size: 14px
     }
 
-    /* ───── SKU Card Grid (nhập kho nhanh) ───── */
+    /* ═══════════════════════════════════════════════════════════
+       INVENTORY V2 — Inspired by MMO Warehouse Systems
+       ═══════════════════════════════════════════════════════════ */
+
+    /* ───── Inventory Stats Row ───── */
+    .inv-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .inv-stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      position: relative;
+      overflow: hidden;
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .inv-stat:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .inv-stat::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 4px 0 0 4px;
+    }
+
+    .inv-stat.blue::before {
+      background: var(--accent);
+    }
+
+    .inv-stat.green::before {
+      background: var(--green);
+    }
+
+    .inv-stat.yellow::before {
+      background: var(--yellow);
+    }
+
+    .inv-stat.red::before {
+      background: var(--red);
+    }
+
+    .inv-stat .inv-stat-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text2);
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .inv-stat .inv-stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      line-height: 1.1;
+    }
+
+    .inv-stat.blue .inv-stat-value {
+      color: var(--accent);
+    }
+
+    .inv-stat.green .inv-stat-value {
+      color: var(--green);
+    }
+
+    .inv-stat.yellow .inv-stat-value {
+      color: var(--yellow);
+    }
+
+    .inv-stat.red .inv-stat-value {
+      color: var(--red);
+    }
+
+    .inv-stat .inv-stat-sub {
+      font-size: 11px;
+      color: var(--text2);
+      margin-top: 4px;
+    }
+
+    /* ───── Inventory Search & Filter Bar ───── */
+    .inv-toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .inv-search {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .inv-search input {
+      width: 100%;
+      padding: 10px 14px 10px 38px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      transition: border-color .2s;
+    }
+
+    .inv-search input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-dim);
+    }
+
+    .inv-search::before {
+      content: '🔍';
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 14px;
+      pointer-events: none;
+    }
+
+    .inv-filter-select {
+      padding: 10px 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text);
+      font-size: 13px;
+      font-family: inherit;
+      cursor: pointer;
+    }
+
+    .inv-filter-select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .inv-batch-bar {
+      display: none;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      margin-bottom: 16px;
+      background: rgba(79, 110, 247, .06);
+      border: 1px solid rgba(79, 110, 247, .2);
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .inv-batch-bar.show {
+      display: flex;
+    }
+
+    .inv-batch-bar button {
+      padding: 6px 14px;
+      border: 1px solid var(--red);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--red);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .inv-batch-bar button:hover {
+      background: var(--red);
+      color: #fff;
+    }
+
+    /* ───── Inventory Table V2 ───── */
+    .inv-table-wrap {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .inv-table-wrap table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .inv-table-wrap th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--text2);
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      white-space: nowrap;
+      background: var(--surface2);
+      cursor: pointer;
+      user-select: none;
+      transition: color .15s;
+    }
+
+    .inv-table-wrap th:hover {
+      color: var(--accent);
+    }
+
+    .inv-table-wrap th .sort-arrow {
+      font-size: 10px;
+      margin-left: 4px;
+      opacity: .4;
+    }
+
+    .inv-table-wrap th .sort-arrow.active {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .inv-table-wrap td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-light);
+      white-space: nowrap;
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .inv-table-wrap tr:last-child td {
+      border-bottom: none;
+    }
+
+    .inv-table-wrap tr:hover td {
+      background: rgba(79, 110, 247, .03);
+    }
+
+    .inv-table-wrap tr.out-of-stock td {
+      background: rgba(239, 68, 68, .03);
+    }
+
+    .inv-table-wrap tr.selected td {
+      background: rgba(79, 110, 247, .08);
+    }
+
+    /* ───── Stock Badge V2 ───── */
+    .stock-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 36px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    .stock-badge.green {
+      background: rgba(16, 185, 129, .12);
+      color: var(--green);
+    }
+
+    .stock-badge.orange {
+      background: rgba(245, 158, 11, .12);
+      color: var(--orange);
+    }
+
+    .stock-badge.red {
+      background: rgba(239, 68, 68, .12);
+      color: var(--red);
+      animation: pulse-red 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-red {
+
+      0%,
+      100% {
+        box-shadow: none;
+      }
+
+      50% {
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, .12);
+      }
+    }
+
+    /* ───── Detail Panel (Slide-in from right) ───── */
+    .inv-detail-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, .3);
+      backdrop-filter: blur(2px);
+      z-index: 1000;
+      display: none;
+      opacity: 0;
+      transition: opacity .25s;
+    }
+
+    .inv-detail-overlay.show {
+      display: block;
+      opacity: 1;
+    }
+
+    .inv-detail-panel {
+      position: fixed;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 60%;
+      max-width: 720px;
+      min-width: 380px;
+      background: var(--surface);
+      border-left: 1px solid var(--border);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      transform: translateX(100%);
+      transition: transform .3s cubic-bezier(.4, 0, .2, 1);
+      box-shadow: -8px 0 30px rgba(0, 0, 0, .15);
+    }
+
+    .inv-detail-panel.show {
+      transform: translateX(0);
+    }
+
+    .inv-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .inv-detail-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .inv-detail-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface2);
+      color: var(--text2);
+      font-size: 18px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all .15s;
+    }
+
+    .inv-detail-close:hover {
+      background: var(--red);
+      color: #fff;
+      border-color: var(--red);
+    }
+
+    .inv-detail-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 2px solid var(--border-light);
+      padding: 0 24px;
+      flex-shrink: 0;
+    }
+
+    .inv-detail-tab {
+      padding: 12px 20px;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      cursor: pointer;
+      border: none;
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all .15s;
+      font-family: inherit;
+    }
+
+    .inv-detail-tab:hover {
+      color: var(--text);
+    }
+
+    .inv-detail-tab.active {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+    }
+
+    .inv-detail-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 24px;
+    }
+
+    .inv-detail-section {
+      display: none;
+    }
+
+    .inv-detail-section.active {
+      display: block;
+    }
+
+    /* Detail: stock list */
+    .inv-stock-toolbar {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .inv-stock-search {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      color: var(--text);
+      font-size: 12px;
+      font-family: inherit;
+    }
+
+    .inv-stock-search:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .inv-stock-count {
+      font-size: 12px;
+      color: var(--text2);
+      font-weight: 600;
+    }
+
+    /* Detail: import area */
+    .inv-import-textarea {
+      width: 100%;
+      min-height: 120px;
+      max-height: 200px;
+      padding: 12px 14px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      background: var(--surface2);
+      color: var(--text);
+      resize: vertical;
+      transition: border-color .2s, background .2s;
+    }
+
+    .inv-import-textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      border-style: solid;
+      background: var(--surface);
+    }
+
+    .inv-import-textarea.drag-over {
+      border-color: var(--accent);
+      background: rgba(79, 110, 247, .04);
+    }
+
+    .inv-import-hint {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .inv-import-hint span {
+      padding: 2px 8px;
+      background: var(--surface2);
+      border-radius: 4px;
+      font-size: 11px;
+      color: var(--text2);
+      font-family: 'SF Mono', monospace;
+    }
+
+    /* ───── SKU Card Grid (nhập kho nhanh) — KEPT ───── */
     .sku-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -745,116 +1235,64 @@
       margin-bottom: 24px
     }
 
-    .sku-card {
-      background: var(--surface);
-      border: 2px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      cursor: pointer;
-      transition: all .2s;
-      box-shadow: var(--shadow-sm);
-      position: relative;
-      overflow: hidden
-    }
+    /* (sku-card styles removed — now using inv-table-wrap rows) */
 
-    .sku-card:hover {
-      border-color: var(--accent);
-      box-shadow: var(--shadow-md);
-      transform: translateY(-2px)
-    }
-
-    .sku-card:active {
-      transform: translateY(0)
-    }
-
-    .sku-card.in-stock {
-      border-color: var(--green)
-    }
-
-    .sku-card.low-stock {
-      border-color: var(--orange)
-    }
-
-    .sku-card.out-of-stock {
-      border-color: var(--red);
-      opacity: .85
-    }
-
-    .sku-card .sku-icon {
-      font-size: 32px;
-      margin-bottom: 10px;
-      line-height: 1
-    }
-
-    .sku-card .sku-name {
-      font-size: 14px;
-      font-weight: 700;
-      color: var(--text);
-      margin-bottom: 4px;
-      line-height: 1.3
-    }
-
-    .sku-card .sku-code {
-      font-size: 11px;
-      color: var(--text-muted);
-      font-family: monospace;
-      margin-bottom: 12px
-    }
-
-    .sku-card .sku-stock {
-      display: flex;
-      align-items: center;
-      gap: 8px
-    }
-
-    .sku-card .sku-stock-count {
-      font-size: 24px;
-      font-weight: 700
-    }
-
-    .sku-card.in-stock .sku-stock-count {
-      color: var(--green)
-    }
-
-    .sku-card.low-stock .sku-stock-count {
-      color: var(--orange)
-    }
-
-    .sku-card.out-of-stock .sku-stock-count {
-      color: var(--red)
-    }
-
-    .sku-card .sku-stock-label {
-      font-size: 12px;
-      color: var(--text2)
-    }
-
-    .sku-card .sku-import-hint {
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--accent);
-      color: #fff;
-      text-align: center;
-      padding: 6px;
-      font-size: 12px;
-      font-weight: 600;
-      transform: translateY(100%);
-      transition: transform .2s
-    }
-
-    .sku-card:hover .sku-import-hint {
-      transform: translateY(0)
-    }
-
-    /* ───── Quick Import — Minimal Design ───── */
+    /* ───── Quick Import — Collapsible Panel ───── */
     .qi-panel {
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: var(--radius);
       margin-bottom: 24px;
       overflow: hidden;
+    }
+
+    .qi-toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 18px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      background: transparent;
+      border: none;
+      width: 100%;
+      font-family: inherit;
+      transition: background .15s;
+    }
+
+    .qi-toggle:hover {
+      background: var(--surface2);
+    }
+
+    .qi-toggle .qi-toggle-arrow {
+      transition: transform .2s;
+      font-size: 10px;
+      color: var(--text2);
+    }
+
+    .qi-toggle.open .qi-toggle-arrow {
+      transform: rotate(90deg);
+    }
+
+    .qi-toggle .qi-toggle-badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: var(--accent-dim);
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .qi-collapsible {
+      display: none;
+      border-top: 1px solid var(--border);
+    }
+
+    .qi-collapsible.show {
+      display: block;
     }
 
     .qi-top {
@@ -882,6 +1320,11 @@
       border-color: var(--accent);
       border-style: solid;
       background: var(--surface);
+    }
+
+    .qi-textarea.drag-over {
+      border-color: var(--accent);
+      background: rgba(79, 110, 247, .04);
     }
 
     .qi-textarea::placeholder {
@@ -970,8 +1413,13 @@
       gap: 6px;
     }
 
-    .qi-btn:hover { background: var(--accent-dark, #1d4ed8); }
-    .qi-btn:active { transform: scale(0.97); }
+    .qi-btn:hover {
+      background: var(--accent-dark, #1d4ed8);
+    }
+
+    .qi-btn:active {
+      transform: scale(0.97);
+    }
 
     .qi-btn-sm {
       padding: 6px 12px;
@@ -985,7 +1433,10 @@
       white-space: nowrap;
     }
 
-    .qi-btn-sm:hover { border-color: var(--accent); color: var(--accent); }
+    .qi-btn-sm:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
 
     .qi-btn-confirm {
       width: 100%;
@@ -996,7 +1447,9 @@
       border-radius: var(--radius);
     }
 
-    .qi-btn-confirm:hover { background: #222; }
+    .qi-btn-confirm:hover {
+      background: #222;
+    }
 
     .qi-hints {
       display: flex;
@@ -1046,9 +1499,17 @@
       gap: 12px;
     }
 
-    .qi-preview-stats .qs-valid { color: var(--green); }
-    .qi-preview-stats .qs-error { color: var(--red); }
-    .qi-preview-stats .qs-date { color: var(--orange); }
+    .qi-preview-stats .qs-valid {
+      color: var(--green);
+    }
+
+    .qi-preview-stats .qs-error {
+      color: var(--red);
+    }
+
+    .qi-preview-stats .qs-date {
+      color: var(--orange);
+    }
 
     .qi-preview-actions {
       display: flex;
@@ -1076,11 +1537,13 @@
       transition: border-color .15s;
     }
 
-    .qi-card:hover { border-color: var(--accent); }
+    .qi-card:hover {
+      border-color: var(--accent);
+    }
 
     .qi-card.qi-error {
-      border-color: rgba(239,68,68,.3);
-      background: rgba(239,68,68,.04);
+      border-color: rgba(239, 68, 68, .3);
+      background: rgba(239, 68, 68, .04);
       opacity: .6;
     }
 
@@ -1137,10 +1600,25 @@
       white-space: nowrap;
     }
 
-    .qi-badge-pw { background: rgba(107,114,128,.1); color: var(--text2); }
-    .qi-badge-2fa { background: rgba(37,99,235,.1); color: var(--accent); }
-    .qi-badge-date { background: rgba(245,158,11,.1); color: var(--orange); }
-    .qi-badge-err { background: rgba(239,68,68,.1); color: var(--red); }
+    .qi-badge-pw {
+      background: rgba(107, 114, 128, .1);
+      color: var(--text2);
+    }
+
+    .qi-badge-2fa {
+      background: rgba(37, 99, 235, .1);
+      color: var(--accent);
+    }
+
+    .qi-badge-date {
+      background: rgba(245, 158, 11, .1);
+      color: var(--orange);
+    }
+
+    .qi-badge-err {
+      background: rgba(239, 68, 68, .1);
+      color: var(--red);
+    }
 
     .qi-card-sku {
       flex-shrink: 0;
@@ -1170,201 +1648,9 @@
       background: var(--surface2);
     }
 
-    /* ───── Inventory table stock badges ───── */
-    .stock-badge {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      min-width: 32px;
-      padding: 4px 10px;
-      border-radius: 20px;
-      font-weight: 700;
-      font-size: 14px;
-    }
+    /* (stock-badge styles moved to V2 section above) */
 
-    .stock-badge.green {
-      background: rgba(16, 185, 129, .12);
-      color: var(--green);
-    }
-
-    .stock-badge.orange {
-      background: rgba(245, 158, 11, .12);
-      color: var(--orange);
-    }
-
-    .stock-badge.red {
-      background: rgba(239, 68, 68, .12);
-      color: var(--red);
-    }
-
-    /* ───── Nhập kho nâng cao (collapsible) ───── */
-    .advanced-import {
-      margin-bottom: 24px
-    }
-
-    .advanced-toggle {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      cursor: pointer;
-      font-size: 13px;
-      color: var(--text2);
-      transition: .15s;
-      width: 100%
-    }
-
-    .advanced-toggle:hover {
-      border-color: var(--accent);
-      color: var(--accent)
-    }
-
-    .advanced-toggle .toggle-arrow {
-      transition: transform .2s;
-      font-size: 10px
-    }
-
-    .advanced-toggle.open .toggle-arrow {
-      transform: rotate(90deg)
-    }
-
-    .advanced-content {
-      display: none;
-      margin-top: 8px
-    }
-
-    .advanced-content.show {
-      display: block
-    }
-
-    .quick-import-super {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 20px;
-      margin-bottom: 20px;
-      box-shadow: var(--shadow-md)
-    }
-
-    .quick-import-super h3 {
-      margin-bottom: 8px;
-      font-size: 16px;
-      color: var(--text)
-    }
-
-    .quick-import-super .paste-area {
-      width: 100%;
-      min-height: 140px;
-      padding: 12px;
-      font-family: monospace;
-      font-size: 13px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--surface2);
-      color: var(--text);
-      resize: vertical;
-      margin-bottom: 12px
-    }
-
-    .quick-import-super .tool-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px
-    }
-
-    .quick-import-super .tool-row select {
-      padding: 6px 10px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
-      font-family: inherit
-    }
-
-    .quick-import-super .preview-wrap {
-      overflow-x: auto;
-      margin-bottom: 12px;
-      max-height: 320px;
-      overflow-y: auto
-    }
-
-    .quick-import-super .preview-table {
-      font-size: 12px
-    }
-
-    .quick-import-super .preview-table th,
-    .quick-import-super .preview-table td {
-      padding: 8px 10px;
-      white-space: nowrap
-    }
-
-    .quick-import-super .preview-table .col-account {
-      max-width: 180px;
-      overflow: hidden;
-      text-overflow: ellipsis
-    }
-
-    .quick-import-super .preview-table .col-secret {
-      font-family: monospace;
-      color: var(--text2)
-    }
-
-    .quick-import-super .preview-table .col-secret.masked {
-      filter: blur(4px);
-      user-select: none
-    }
-
-    .quick-import-super .preview-table .cell-copy {
-      cursor: pointer;
-      opacity: .7
-    }
-
-    .quick-import-super .row-status-valid {
-      color: var(--green)
-    }
-
-    .quick-import-super .row-status-error {
-      color: var(--red)
-    }
-
-    .quick-import-super .confidence-bar {
-      display: inline-block;
-      height: 6px;
-      border-radius: 3px;
-      background: var(--border);
-      min-width: 40px;
-      vertical-align: middle
-    }
-
-    .quick-import-super .confidence-bar span {
-      display: block;
-      height: 100%;
-      border-radius: 3px;
-      background: var(--green)
-    }
-
-    .quick-import-super .sku-panel {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 12px;
-      padding: 12px;
-      background: var(--surface2);
-      border-radius: var(--radius-sm)
-    }
-
-    .quick-import-super .import-result {
-      margin-top: 12px;
-      padding: 12px;
-      border-radius: var(--radius-sm);
-      font-size: 13px
-    }
+    /* (advanced-import styles removed — replaced by qi-panel collapsible) */
 
     /* ───── Modal ───── */
     .modal-overlay {
@@ -1971,7 +2257,7 @@
 
     .coupon-result {
       margin-top: 16px;
-      padding: 16px;
+      padding: 16px 20px;
       border-radius: var(--radius);
       border: 1px solid #10b981;
       background: #ecfdf5;
@@ -1983,32 +2269,143 @@
       display: block
     }
 
-    .coupon-result .coupon-code-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 6px 0;
-      border-bottom: 1px solid rgba(16, 185, 129, .2)
+    .coupon-result-title {
+      font-weight: 700;
+      font-size: 14px;
+      color: #065f46;
+      margin-bottom: 12px;
     }
 
-    .coupon-result .coupon-code-row:last-child {
-      border-bottom: none
+    .coupon-card {
+      background: #fff;
+      border: 1px solid rgba(16, 185, 129, .25);
+      border-radius: 10px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+    }
+
+    .coupon-card:last-child {
+      margin-bottom: 0;
+    }
+
+    .coupon-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 8px;
+    }
+
+    .coupon-card-header .code-chip {
+      font-size: 15px;
+      padding: 5px 14px;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .coupon-card-header .code-chip:hover {
+      background: #e2e8f0;
+    }
+
+    .coupon-card-actions {
+      display: flex;
+      gap: 6px;
+      margin-left: auto;
+    }
+
+    .coupon-card-meta {
+      font-size: 12px;
+      color: var(--text2);
+      margin-bottom: 6px;
+    }
+
+    .sku-tags-wrap {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 6px;
+    }
+
+    .sku-tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 6px;
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      font-size: 11px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      color: var(--text2);
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    .sku-tag.all {
+      background: #dbeafe;
+      border-color: #93c5fd;
+      color: #1e40af;
+      font-family: inherit;
+      font-style: italic;
     }
 
     .coupon-link-btn {
-      padding: 3px 8px;
+      padding: 4px 10px;
       border: 1px solid var(--accent);
       border-radius: 6px;
       background: var(--accent-dim);
       color: var(--accent);
       font-size: 11px;
       cursor: pointer;
-      font-weight: 600
+      font-weight: 600;
+      white-space: nowrap;
     }
 
     .coupon-link-btn:hover {
       background: var(--accent);
       color: #fff
+    }
+
+    .coupon-copy-btn {
+      padding: 4px 10px;
+      border: 1px solid #10b981;
+      border-radius: 6px;
+      background: #ecfdf5;
+      color: #065f46;
+      font-size: 11px;
+      cursor: pointer;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .coupon-copy-btn:hover {
+      background: #10b981;
+      color: #fff;
+    }
+
+    /* Clickable code chip */
+    .code-chip[data-copy] {
+      cursor: pointer;
+      position: relative;
+    }
+
+    .code-chip[data-copy]:hover {
+      background: #e2e8f0;
+    }
+
+    .code-chip[data-copy]::after {
+      content: '📋';
+      margin-left: 6px;
+      font-size: 10px;
+      opacity: 0;
+      transition: opacity .15s;
+    }
+
+    .code-chip[data-copy]:hover::after {
+      opacity: 1;
+    }
+
+    /* Table SKU cell */
+    td .sku-tags-wrap {
+      max-width: 220px;
     }
 
     .pill.expired {
@@ -2266,12 +2663,12 @@
         </div>
       </div>
 
-      <!-- INVENTORY -->
+      <!-- INVENTORY V2 -->
       <div class="page" id="page-inventory">
         <div class="page-header">
           <div>
-            <h1>Kho hàng</h1>
-            <p style="color:var(--text2);font-size:13px;margin-top:4px">Bấm vào sản phẩm để nhập tk|mk|2fa</p>
+            <h1>📦 Kho hàng</h1>
+            <p style="color:var(--text2);font-size:13px;margin-top:4px">Quản lý tồn kho, nhập hàng, theo dõi lịch sử</p>
           </div>
           <div class="header-right">
             <span id="inventoryStatus" class="inventory-status"></span>
@@ -2279,112 +2676,147 @@
           </div>
         </div>
 
-        <!-- Quick Import Section -->
-        <div class="qi-panel">
-          <div class="qi-top">
-            <textarea id="superPasteRaw" class="qi-textarea"
-              placeholder="Dán tài khoản vào đây — mỗi dòng 1 tài khoản&#10;&#10;email@gmail.com|matkhau123 (Date 29.04)&#10;user2@mail.com|pass456|2fa_code"></textarea>
-            <div class="qi-type-bar">
-              <div class="qi-type-chips" id="qiTypeChips">
-                <button type="button" class="qi-chip active" data-sku="" onclick="selectSkuChip(this)">🔍 Tự đoán</button>
-              </div>
-              <button type="button" class="qi-btn" onclick="doQuickImport()">
-                📥 Nhập kho
-              </button>
-            </div>
-            <div class="qi-hints">
-              <span>tk|mk</span>
-              <span>tk|mk|2fa</span>
-              <span>(Date 29.04)</span>
-            </div>
-            <!-- Hidden select for backward compat -->
-            <select id="superProfileSku" style="display:none"></select>
+        <!-- Stats Dashboard -->
+        <div class="inv-stats" id="invStats">
+          <div class="inv-stat blue">
+            <div class="inv-stat-label">Tổng SKU</div>
+            <div class="inv-stat-value" id="invStatSkus">--</div>
+            <div class="inv-stat-sub">sản phẩm đang hoạt động</div>
           </div>
-
-          <!-- Preview (hidden until analyzed) -->
-          <div id="superPreviewWrap" class="qi-preview" style="display:none;">
-            <div class="qi-preview-header">
-              <div class="qi-preview-stats" id="qiPreviewStats"></div>
-              <div class="qi-preview-actions">
-                <select id="superApplySkuSelect" class="qi-sku-select qi-sku-sm"></select>
-                <button type="button" class="qi-btn-sm" onclick="applySkuToAllValid()">Đổi SKU tất cả</button>
-              </div>
-            </div>
-            <div class="qi-cards" id="superPreviewCards"></div>
-            <div class="qi-footer">
-              <div id="superImportResult" class="qi-result" style="display:none;"></div>
-              <button type="button" class="qi-btn qi-btn-confirm" onclick="doSuperImport()">
-                ✅ Xác nhận nhập <span id="qiConfirmCount"></span> tài khoản
-              </button>
-            </div>
+          <div class="inv-stat green">
+            <div class="inv-stat-label">Tồn kho</div>
+            <div class="inv-stat-value" id="invStatStock">--</div>
+            <div class="inv-stat-sub">tài khoản sẵn sàng</div>
           </div>
-          <div id="superParseFeedback" class="qi-feedback"></div>
+          <div class="inv-stat yellow">
+            <div class="inv-stat-label">Giá trị kho</div>
+            <div class="inv-stat-value" id="invStatValue">--</div>
+            <div class="inv-stat-sub">ước tính theo giá bán</div>
+          </div>
+          <div class="inv-stat red">
+            <div class="inv-stat-label">Hết hàng</div>
+            <div class="inv-stat-value" id="invStatEmpty">--</div>
+            <div class="inv-stat-sub">SKU cần nhập thêm</div>
+          </div>
         </div>
 
-        <!-- Inventory List Table -->
-        <div class="table-wrap">
+        <!-- Quick Import (Collapsible) -->
+        <div class="qi-panel">
+          <button type="button" class="qi-toggle" id="qiToggle" onclick="toggleQuickImport()">
+            <span class="qi-toggle-arrow">▶</span>
+            📥 Nhập kho nhanh
+            <span class="qi-toggle-badge">Paste &amp; Import</span>
+          </button>
+          <div class="qi-collapsible" id="qiCollapsible">
+            <div class="qi-top">
+              <textarea id="superPasteRaw" class="qi-textarea"
+                placeholder="Dán tài khoản vào đây — mỗi dòng 1 tài khoản&#10;&#10;email@gmail.com|matkhau123 (Date 29.04)&#10;user2@mail.com|pass456|2fa_code"></textarea>
+              <div class="qi-type-bar">
+                <div class="qi-type-chips" id="qiTypeChips">
+                  <button type="button" class="qi-chip active" data-sku="" onclick="selectSkuChip(this)">🔍 Tự
+                    đoán</button>
+                </div>
+                <button type="button" class="qi-btn" onclick="doQuickImport()">📥 Nhập kho</button>
+              </div>
+              <div class="qi-hints">
+                <span>tk|mk</span><span>tk|mk|2fa</span><span>(Date 29.04)</span>
+              </div>
+              <select id="superProfileSku" style="display:none"></select>
+            </div>
+            <div id="superPreviewWrap" class="qi-preview" style="display:none;">
+              <div class="qi-preview-header">
+                <div class="qi-preview-stats" id="qiPreviewStats"></div>
+                <div class="qi-preview-actions">
+                  <select id="superApplySkuSelect" class="qi-sku-select qi-sku-sm"></select>
+                  <button type="button" class="qi-btn-sm" onclick="applySkuToAllValid()">Đổi SKU tất cả</button>
+                </div>
+              </div>
+              <div class="qi-cards" id="superPreviewCards"></div>
+              <div class="qi-footer">
+                <div id="superImportResult" class="qi-result" style="display:none;"></div>
+                <button type="button" class="qi-btn qi-btn-confirm" onclick="doSuperImport()">✅ Xác nhận nhập <span
+                    id="qiConfirmCount"></span> tài khoản</button>
+              </div>
+            </div>
+            <div id="superParseFeedback" class="qi-feedback"></div>
+          </div>
+        </div>
+
+        <!-- Search & Filter Toolbar -->
+        <div class="inv-toolbar">
+          <div class="inv-search">
+            <input type="text" id="invSearchInput" placeholder="Tìm SKU, tên sản phẩm..."
+              oninput="filterInventoryTable()">
+          </div>
+          <select class="inv-filter-select" id="invCategoryFilter" onchange="filterInventoryTable()">
+            <option value="">Tất cả danh mục</option>
+          </select>
+          <select class="inv-filter-select" id="invStockFilter" onchange="filterInventoryTable()">
+            <option value="">Tất cả trạng thái</option>
+            <option value="out">🔴 Hết hàng</option>
+            <option value="low">🟡 Sắp hết (≤3)</option>
+            <option value="ok">🟢 Còn hàng (4+)</option>
+          </select>
+        </div>
+
+        <!-- Master Inventory Table -->
+        <div class="inv-table-wrap">
           <table>
             <thead>
               <tr>
                 <th style="width:40px"></th>
-                <th>SKU</th>
-                <th>Tên sản phẩm</th>
-                <th>Có sẵn</th>
-                <th>Đã bán</th>
-                <th>Tổng</th>
+                <th onclick="sortInventory('sku')">SKU <span class="sort-arrow" id="sort-sku">↕</span></th>
+                <th onclick="sortInventory('name')">Tên sản phẩm <span class="sort-arrow" id="sort-name">↕</span></th>
+                <th onclick="sortInventory('category')">Danh mục <span class="sort-arrow" id="sort-category">↕</span>
+                </th>
+                <th onclick="sortInventory('available')">Tồn kho <span class="sort-arrow" id="sort-available">↕</span>
+                </th>
+                <th onclick="sortInventory('sold')">Đã bán <span class="sort-arrow" id="sort-sold">↕</span></th>
+                <th onclick="sortInventory('total')">Tổng <span class="sort-arrow" id="sort-total">↕</span></th>
+                <th onclick="sortInventory('price')">Giá <span class="sort-arrow" id="sort-price">↕</span></th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody id="skuListBody">
               <tr>
-                <td colspan="7" class="loading">Đang tải...</td>
+                <td colspan="9" class="loading">Đang tải...</td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <!-- Inventory summary table (hidden - replaced by SKU card grid) -->
         <div class="table-wrap" id="inventorySummaryTable" style="display:none">
           <table>
-            <thead>
-              <tr>
-                <th>SKU</th>
-                <th>Có sẵn</th>
-                <th>Đã bán</th>
-                <th>Đã giữ</th>
-                <th>Tổng</th>
-              </tr>
-            </thead>
-            <tbody id="inventoryBody">
-              <tr>
-                <td colspan="5" class="loading">Đang tải...</td>
-              </tr>
-            </tbody>
+            <tbody id="inventoryBody"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Modal: Paste Import / View Stock (click SKU card) -->
-      <div id="pasteImportModal" class="modal-overlay" onclick="if(event.target===this)closePasteImportModal()">
-        <div class="modal-box paste-import-box" onclick="event.stopPropagation()" style="max-width: 700px;">
-          <h4 id="pasteImportTitle" style="margin-bottom: 12px;">Quản lý kho</h4>
-
-          <div class="paste-import-tabs">
-            <div class="paste-tab active" onclick="switchPasteTab('list')" id="tab-list">Danh sách</div>
-            <div class="paste-tab" onclick="switchPasteTab('import')" id="tab-import">Nhập hàng</div>
-          </div>
-
-          <!-- Tab Content: List -->
-          <div id="content-list" class="tab-content active">
-            <div class="order-toolbar" style="margin-bottom: 12px;">
-              <button class="refresh-btn" onclick="loadSkuDetails()">Làm mới</button>
-              <span id="skuListCount" style="margin-left:auto; font-size:13px; color:var(--text2)"></span>
+      <!-- SLIDE-IN DETAIL PANEL -->
+      <div class="inv-detail-overlay" id="invDetailOverlay" onclick="closeDetailPanel()"></div>
+      <div class="inv-detail-panel" id="invDetailPanel">
+        <div class="inv-detail-header">
+          <h3 id="invDetailTitle">📦 Chi tiết SKU</h3>
+          <button class="inv-detail-close" onclick="closeDetailPanel()">✕</button>
+        </div>
+        <div class="inv-detail-tabs">
+          <button type="button" class="inv-detail-tab active" onclick="switchDetailTab('stock')">📋 Tồn kho</button>
+          <button type="button" class="inv-detail-tab" onclick="switchDetailTab('import')">📥 Nhập hàng</button>
+          <button type="button" class="inv-detail-tab" onclick="switchDetailTab('sold')">📊 Đã bán</button>
+        </div>
+        <div class="inv-detail-body">
+          <div class="inv-detail-section active" id="detailSection-stock">
+            <div class="inv-stock-toolbar">
+              <input type="text" class="inv-stock-search" id="detailStockSearch" placeholder="Tìm tài khoản..."
+                oninput="filterDetailStock()">
+              <span class="inv-stock-count" id="detailStockCount"></span>
+              <button class="btn-ghost primary" onclick="loadSkuDetails()" style="font-size:11px">Làm mới</button>
             </div>
-            <div
-              style="max-height: 400px; overflow-y: auto; border: 1px solid var(--border); border-radius: var(--radius-sm);">
+            <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
               <table class="stock-list-table">
                 <thead>
                   <tr>
+                    <th style="width:32px"><input type="checkbox" id="detailSelectAll"
+                        onchange="toggleSelectAllStock(this)"></th>
                     <th>#</th>
                     <th>Tài khoản / Key</th>
                     <th>Ghi chú / 2FA</th>
@@ -2395,33 +2827,52 @@
                 </thead>
                 <tbody id="skuDetailsBody">
                   <tr>
-                    <td colspan="6" class="loading">Đang tải...</td>
+                    <td colspan="7" class="loading">Chọn 1 SKU để xem</td>
                   </tr>
                 </tbody>
               </table>
             </div>
-            <div class="modal-actions">
-              <button type="button" class="btn-secondary" onclick="closePasteImportModal()">Đóng</button>
+            <div id="detailBatchBar" class="inv-batch-bar" style="margin-top:12px">
+              <span id="detailBatchCount">0</span> mục đã chọn
+              <button onclick="batchDeleteDetailItems()">🗑️ Xoá đã chọn</button>
             </div>
           </div>
-
-          <!-- Tab Content: Import -->
-          <div id="content-import" class="tab-content">
-            <p class="paste-import-hint">Mỗi dòng một tài khoản. Định dạng: <code>email|mật_khẩu|2fa</code> (2fa có thể
-              bỏ trống).</p>
-            <textarea id="pasteImportText" placeholder="user@mail.com|password123|abc2fa&#10;user2@mail.com|pass2|"
-              rows="8" oninput="previewPasteLines()"></textarea>
-            <div id="pastePreview" class="paste-preview"></div>
+          <div class="inv-detail-section" id="detailSection-import">
+            <p style="font-size:13px;color:var(--text2);margin-bottom:12px">Mỗi dòng một tài khoản:
+              <code>email|mật_khẩu|2fa</code>
+            </p>
+            <textarea id="pasteImportText" class="inv-import-textarea"
+              placeholder="user@mail.com|password123|abc2fa&#10;user2@mail.com|pass2|"
+              oninput="previewPasteLines()"></textarea>
+            <div class="inv-import-hint"><span>tk|mk</span><span>tk|mk|2fa</span><span>(Date 29.04)</span></div>
+            <div id="pastePreview" class="paste-preview" style="margin-top:12px"></div>
             <div id="pasteImportFeedback" style="font-size:13px;margin-top:8px;min-height:20px;color:var(--text2)">
             </div>
-            <div class="modal-actions">
-              <button type="button" class="btn-primary" onclick="submitPasteImport()">Nhập kho</button>
-              <button type="button" class="btn-secondary" onclick="closePasteImportModal()">Huỷ</button>
+            <div style="margin-top:14px"><button type="button" class="btn-primary-sm" onclick="submitPasteImport()">📥
+                Nhập kho</button></div>
+          </div>
+          <div class="inv-detail-section" id="detailSection-sold">
+            <div style="max-height:60vh;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm)">
+              <table>
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Tài khoản</th>
+                    <th>Mã đơn</th>
+                    <th>Ngày bán</th>
+                  </tr>
+                </thead>
+                <tbody id="detailSoldBody">
+                  <tr>
+                    <td colspan="4" class="loading">Chọn tab để xem</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
-
         </div>
       </div>
+
 
       <!-- AUDIT LOGS -->
       <div class="page" id="page-logs">
@@ -2905,37 +3356,7 @@
       color: var(--text);
     }
 
-    /* Coupon Result */
-    .coupon-result {
-      margin-top: 15px;
-      padding: 10px 15px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      display: none;
-      /* Hidden by default */
-    }
-
-    .coupon-result.error {
-      background-color: var(--red-light);
-      color: var(--red);
-      border: 1px solid var(--red);
-    }
-
-    .coupon-result.success {
-      background-color: var(--green-light);
-      color: var(--green);
-      border: 1px solid var(--green);
-    }
-
-    .coupon-link-btn {
-      background: var(--accent);
-      color: #fff;
-      border: none;
-      padding: 6px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      cursor: pointer;
-    }
+    /* Coupon Result (styles defined in main CSS block above) */
   </style>
 
   <script>
@@ -3013,6 +3434,7 @@
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('shell').style.display = 'flex';
         startAutoRefresh();
+        resetSessionTimer();
         loadDashboard();
       } catch (e) {
         console.error('Login error:', e);
@@ -3028,6 +3450,21 @@
       var saved = sessionStorage.getItem('tbq_admin_token');
       if (saved) ADMIN_TOKEN = saved;
     })();
+
+    // SECURITY: Session timeout — auto-logout after 30 min inactivity
+    var SESSION_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+    var _sessionTimer = null;
+    function resetSessionTimer() {
+      if (_sessionTimer) clearTimeout(_sessionTimer);
+      if (!ADMIN_TOKEN) return;
+      _sessionTimer = setTimeout(function () {
+        handleUnauth();
+        showAdminToast && showAdminToast('Phiên đăng nhập hết hạn do không hoạt động', 'error');
+      }, SESSION_TIMEOUT_MS);
+    }
+    ['click', 'keydown', 'mousemove', 'touchstart'].forEach(function (evt) {
+      document.addEventListener(evt, resetSessionTimer, { passive: true });
+    });
 
     // ── NAV ─────────────────────────────────────────────────────
     function nav(page) {
@@ -3391,7 +3828,12 @@
       copyText(text);
     }
 
-    // ── INVENTORY ───────────────────────────────────────────────
+    // ── INVENTORY V2 ─────────────────────────────────────────────
+    var _invSort = { col: 'name', dir: 'asc' };
+    var _invAllRows = [];
+    var _detailSku = '';
+    var _detailStockItems = [];
+
     function setInventoryStatus(msg, isError) {
       var el = document.getElementById('inventoryStatus');
       if (el) { el.textContent = msg; el.className = 'inventory-status' + (isError ? ' error' : ''); }
@@ -3407,28 +3849,38 @@
         var data = await r.json();
         var rows = data.inventory || [];
         window._lastInventoryRows = rows;
+        _invAllRows = rows.filter(function (r) {
+          var sku = (r.sku || r.product_code || '').trim();
+          return (r.delivery_type || 'auto') === 'auto' && !SKU_HIDDEN[sku];
+        });
 
-        // Render SKU card grid (only auto delivery = giao lien)
-        renderSkuGrid(rows);
+        // Stats
+        var totalSkus = _invAllRows.length;
+        var totalStock = 0, totalValue = 0, emptyCount = 0;
+        _invAllRows.forEach(function (r) {
+          var avail = r.available || 0;
+          totalStock += avail;
+          totalValue += avail * (r.price || 0);
+          if (avail === 0) emptyCount++;
+        });
+        document.getElementById('invStatSkus').textContent = totalSkus;
+        document.getElementById('invStatStock').textContent = totalStock;
+        document.getElementById('invStatValue').textContent = totalValue > 0 ? fmtVND(totalValue) : '--';
+        document.getElementById('invStatEmpty').textContent = emptyCount;
 
-        // Populate advanced import SKU dropdown
+        // Category filter
+        var cats = {};
+        _invAllRows.forEach(function (r) { var c = r.category || 'Khác'; cats[c] = true; });
+        var catSel = document.getElementById('invCategoryFilter');
+        if (catSel) {
+          var catVal = catSel.value;
+          catSel.innerHTML = '<option value="">Tất cả danh mục</option>' +
+            Object.keys(cats).sort().map(function (c) { return '<option value="' + escAttr(c) + '">' + escHtml(c) + '</option>'; }).join('');
+          catSel.value = catVal;
+        }
+
+        renderInventoryTable();
         populateSkuDropdown(rows);
-
-        // Render summary table (exclude hidden SKUs)
-        var visibleRows = rows.filter(function (r) { return !SKU_HIDDEN[(r.sku || r.product_code || '').trim()]; });
-        document.getElementById('inventoryBody').innerHTML = visibleRows.length
-          ? visibleRows.map(function (i) {
-            var avail = i.available || i.available_units || 0;
-            var isPreorder = (i.delivery_type || 'auto') === 'owner_upgrade';
-            return '<tr>' +
-              '<td style="font-weight:600">' + escHtml(i.sku || i.code || i.product_code) + '</td>' +
-              '<td style="color:var(--green);font-weight:600">' + (isPreorder ? 'N/A' : avail) + '</td>' +
-              '<td style="color:var(--red)">' + (i.sold_units || i.sold || 0) + '</td>' +
-              '<td style="color:var(--yellow)">' + (i.reserved_units || i.reserved || 0) + '</td>' +
-              '<td>' + (i.total || i.total_units || 0) + '</td></tr>';
-          }).join('')
-          : '<tr><td colspan="5" class="empty">Chưa có hàng trong kho</td></tr>';
-
         setInventoryStatus('');
         updateClock();
       } catch (e) {
@@ -3438,51 +3890,291 @@
       if (btn) btn.disabled = false;
     }
 
-    function renderSkuGrid(rows) {
+    function renderInventoryTable() {
       var tbody = document.getElementById('skuListBody');
       if (!tbody) return;
+      var rows = getFilteredInventory();
 
-      // Filter to only auto delivery (giao lien) SKUs, exclude hidden
-      var autoSkus = rows.filter(function (r) {
-        var sku = (r.sku || r.product_code || '').trim();
-        return (r.delivery_type || 'auto') === 'auto' && !SKU_HIDDEN[sku];
+      // Sort
+      rows.sort(function (a, b) {
+        var col = _invSort.col, dir = _invSort.dir === 'asc' ? 1 : -1;
+        var av, bv;
+        if (col === 'sku') { av = a.sku || a.product_code || ''; bv = b.sku || b.product_code || ''; }
+        else if (col === 'name') { av = getSkuName(a.sku || a.product_code); bv = getSkuName(b.sku || b.product_code); }
+        else if (col === 'category') { av = a.category || 'Khác'; bv = b.category || 'Khác'; }
+        else if (col === 'available') { av = a.available || 0; bv = b.available || 0; return (av - bv) * dir; }
+        else if (col === 'sold') { av = a.sold_units || a.sold || 0; bv = b.sold_units || b.sold || 0; return (av - bv) * dir; }
+        else if (col === 'total') { av = a.total || a.total_units || 0; bv = b.total || b.total_units || 0; return (av - bv) * dir; }
+        else if (col === 'price') { av = Number(a.price) || 0; bv = Number(b.price) || 0; return (av - bv) * dir; }
+        else { av = ''; bv = ''; }
+        return (typeof av === 'string') ? av.localeCompare(bv) * dir : (av - bv) * dir;
       });
 
-      if (autoSkus.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty">Chưa có SKU giao liền nào</td></tr>';
+      // Update sort arrows
+      document.querySelectorAll('.sort-arrow').forEach(function (el) {
+        var id = el.id.replace('sort-', '');
+        if (id === _invSort.col) {
+          el.textContent = _invSort.dir === 'asc' ? '↑' : '↓';
+          el.classList.add('active');
+        } else {
+          el.textContent = '↕';
+          el.classList.remove('active');
+        }
+      });
+
+      if (rows.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">Không có SKU phù hợp</td></tr>';
         return;
       }
 
-      // Sort: out of stock first, then by name
-      autoSkus.sort(function (a, b) {
-        var aAvail = a.available || 0;
-        var bAvail = b.available || 0;
-        if (aAvail === 0 && bAvail > 0) return -1;
-        if (aAvail > 0 && bAvail === 0) return 1;
-        return (getSkuName(a.sku || a.product_code) || '').localeCompare(getSkuName(b.sku || b.product_code) || '');
-      });
-
-      tbody.innerHTML = autoSkus.map(function (r) {
+      tbody.innerHTML = rows.map(function (r) {
         var sku = r.sku || r.product_code || '';
         var avail = r.available || 0;
         var sold = r.sold_units || r.sold || 0;
         var total = r.total || r.total_units || 0;
+        var cat = r.category || 'Khác';
         var badgeClass = avail === 0 ? 'red' : avail <= 3 ? 'orange' : 'green';
+        var rowClass = avail === 0 ? ' class="out-of-stock"' : '';
 
-        return '<tr style="cursor:pointer" onclick="openPasteImportForSku(\'' + escAttr(sku) + '\')">' +
+        var priceVal = r.price != null ? Number(r.price) : 0;
+        return '<tr' + rowClass + ' style="cursor:pointer" onclick="openDetailPanel(\'' + escAttr(sku) + '\')">' +
           '<td style="font-size:24px;text-align:center">' + getSkuIcon(sku) + '</td>' +
           '<td><code style="font-size:12px;color:var(--text2)">' + escHtml(sku) + '</code></td>' +
           '<td style="font-weight:600">' + escHtml(getSkuName(sku)) + '</td>' +
+          '<td style="color:var(--text2);font-size:12px">' + escHtml(cat) + '</td>' +
           '<td><span class="stock-badge ' + badgeClass + '">' + avail + '</span></td>' +
           '<td style="color:var(--text2)">' + sold + '</td>' +
           '<td style="font-weight:600">' + total + '</td>' +
-          '<td><button class="btn-primary-sm" onclick="event.stopPropagation();openPasteImportForSku(\'' + escAttr(sku) + '\')">+ Nhập kho</button></td>' +
+          '<td style="font-weight:600;color:var(--accent)">' + (priceVal > 0 ? fmtVND(priceVal) : '--') + '</td>' +
+          '<td><button class="btn-primary-sm" style="font-size:12px;padding:6px 12px" onclick="event.stopPropagation();openDetailPanel(\'' + escAttr(sku) + '\',\'import\')">+ Nhập</button></td>' +
           '</tr>';
       }).join('');
     }
 
+    function getFilteredInventory() {
+      var search = (document.getElementById('invSearchInput') && document.getElementById('invSearchInput').value || '').toLowerCase().trim();
+      var catFilter = (document.getElementById('invCategoryFilter') && document.getElementById('invCategoryFilter').value) || '';
+      var stockFilter = (document.getElementById('invStockFilter') && document.getElementById('invStockFilter').value) || '';
+
+      return _invAllRows.filter(function (r) {
+        var sku = (r.sku || r.product_code || '').toLowerCase();
+        var name = getSkuName(r.sku || r.product_code).toLowerCase();
+        var cat = r.category || 'Khác';
+        var avail = r.available || 0;
+
+        if (search && sku.indexOf(search) === -1 && name.indexOf(search) === -1) return false;
+        if (catFilter && cat !== catFilter) return false;
+        if (stockFilter === 'out' && avail > 0) return false;
+        if (stockFilter === 'low' && (avail === 0 || avail > 3)) return false;
+        if (stockFilter === 'ok' && avail < 4) return false;
+        return true;
+      });
+    }
+
+    function sortInventory(col) {
+      if (_invSort.col === col) {
+        _invSort.dir = _invSort.dir === 'asc' ? 'desc' : 'asc';
+      } else {
+        _invSort.col = col;
+        _invSort.dir = 'asc';
+      }
+      renderInventoryTable();
+    }
+
+    function filterInventoryTable() { renderInventoryTable(); }
+
+    // ── QUICK IMPORT (Collapsible) ──────────────────────────────
+    function toggleQuickImport() {
+      var toggle = document.getElementById('qiToggle');
+      var body = document.getElementById('qiCollapsible');
+      if (!toggle || !body) return;
+      toggle.classList.toggle('open');
+      body.classList.toggle('show');
+    }
+
+    // ── DETAIL PANEL (Slide-in) ─────────────────────────────────
+    function openDetailPanel(skuCode, initialTab) {
+      _detailSku = skuCode;
+      window._pasteImportSku = skuCode;
+      var overlay = document.getElementById('invDetailOverlay');
+      var panel = document.getElementById('invDetailPanel');
+      var title = document.getElementById('invDetailTitle');
+      title.innerHTML = getSkuIcon(skuCode) + ' ' + escHtml(getSkuName(skuCode));
+      overlay.classList.add('show');
+      setTimeout(function () { panel.classList.add('show'); }, 10);
+      switchDetailTab(initialTab || 'stock');
+    }
+
+    function closeDetailPanel() {
+      var overlay = document.getElementById('invDetailOverlay');
+      var panel = document.getElementById('invDetailPanel');
+      panel.classList.remove('show');
+      setTimeout(function () { overlay.classList.remove('show'); }, 300);
+      _detailSku = '';
+      window._pasteImportSku = '';
+    }
+
+    function switchDetailTab(tab) {
+      document.querySelectorAll('.inv-detail-tab').forEach(function (t, i) {
+        var tabs = ['stock', 'import', 'sold'];
+        t.classList.toggle('active', tabs[i] === tab);
+      });
+      document.querySelectorAll('.inv-detail-section').forEach(function (s) { s.classList.remove('active'); });
+      var section = document.getElementById('detailSection-' + tab);
+      if (section) section.classList.add('active');
+
+      if (tab === 'stock') loadSkuDetails();
+      else if (tab === 'import') {
+        var ta = document.getElementById('pasteImportText');
+        if (ta) { ta.value = ''; setTimeout(function () { ta.focus(); }, 100); }
+        var fb = document.getElementById('pasteImportFeedback');
+        if (fb) fb.textContent = '';
+        var pv = document.getElementById('pastePreview');
+        if (pv) pv.innerHTML = '';
+      }
+      else if (tab === 'sold') loadSoldHistory();
+    }
+
+    async function loadSkuDetails() {
+      if (!_detailSku) return;
+      var tbody = document.getElementById('skuDetailsBody');
+      tbody.innerHTML = '<tr><td colspan="7" class="loading">Đang tải...</td></tr>';
+      var countEl = document.getElementById('detailStockCount');
+
+      try {
+        var r = await fetch(BASE + '/admin-inventory?action=sku_details&sku=' + _detailSku, { headers: authHeaders() });
+        if (r.status === 401) return handleUnauth();
+        var data = await r.json();
+        _detailStockItems = data.items || [];
+        if (countEl) countEl.textContent = _detailStockItems.length + ' mục';
+        renderDetailStock();
+      } catch (e) {
+        console.error(e);
+        tbody.innerHTML = '<tr><td colspan="7" class="loading" style="color:var(--red)">Lỗi tải dữ liệu</td></tr>';
+      }
+    }
+
+    function renderDetailStock(filterText) {
+      var tbody = document.getElementById('skuDetailsBody');
+      if (!tbody) return;
+      var items = _detailStockItems;
+      if (filterText) {
+        var q = filterText.toLowerCase();
+        items = items.filter(function (item) {
+          return (item.account_info || '').toLowerCase().indexOf(q) !== -1 ||
+            (item.note || '').toLowerCase().indexOf(q) !== -1;
+        });
+      }
+
+      if (items.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Chưa có hàng trong kho</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = items.map(function (item, i) {
+        var isSold = item.status === 'sold';
+        var statusClass = item.status === 'available' ? 'badge-fulfilled' : (isSold ? 'badge-cancelled' : 'badge-pending');
+        var statusLabel = item.status === 'available' ? 'Sẵn sàng' : (isSold ? 'Đã bán' : 'Đang giữ');
+
+        var note = item.note || '';
+        var twofa = '';
+        if (note.indexOf('2FA:') === 0) {
+          var parts = note.split('|');
+          twofa = parts[0].replace('2FA:', '').trim();
+          note = parts.slice(1).join('|').trim();
+        } else if (note && !note.includes(' ') && note.length < 40) {
+          twofa = note; note = '';
+        }
+        var displayNote = (twofa ? '<span style="color:var(--accent);font-family:monospace">2FA: ' + escHtml(twofa) + '</span>' : '') +
+          (note ? (twofa ? '<br>' : '') + '<span style="color:var(--text2)">' + escHtml(note) + '</span>' : '');
+        var soldInfo = isSold && item.order_code ? '<div style="font-size:11px;color:var(--text2)">Đơn: ' + escHtml(item.order_code) + '</div>' : '';
+
+        var actionHtml = item.status === 'available'
+          ? '<button class="btn-ghost primary" style="font-size:11px;margin-right:4px" onclick="openEditStockItemModal(\'' + item.id + '\',\'' + escAttr(item.account_info || '') + '\',\'' + escAttr(item.secret_key || '') + '\',\'' + escAttr(item.note || '') + '\')">Sửa</button>' +
+          '<button class="btn-del" onclick="deleteStockItem(\'' + item.id + '\')">Xoá</button>'
+          : '<span style="color:var(--text-muted);font-size:11px">--</span>';
+
+        return '<tr>' +
+          '<td><input type="checkbox" class="detail-stock-cb" data-id="' + item.id + '" onchange="updateDetailBatch()"></td>' +
+          '<td>' + (i + 1) + '</td>' +
+          '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="' + escAttr(item.account_info) + '">' +
+          '<div style="font-weight:600">' + escHtml(item.account_info) + '</div>' +
+          '<div style="font-family:monospace;color:var(--text2);font-size:11px">' +
+          '<span class="blurred" onclick="this.classList.remove(\'blurred\')">' + escHtml(item.secret_key || '--') + '</span>' +
+          '<button style="border:none;background:none;cursor:pointer;opacity:0.6" onclick="copyText(\'' + escAttr(item.secret_key) + '\')">📋</button>' +
+          '</div>' +
+          '</td>' +
+          '<td>' + (displayNote || '--') + '</td>' +
+          '<td><span class="badge ' + statusClass + '" style="padding:2px 8px;font-size:10px">' + statusLabel + '</span>' + soldInfo + '</td>' +
+          '<td style="color:var(--text2);font-size:11px">' + fmtTime(item.created_at) + '</td>' +
+          '<td class="col-actions">' + actionHtml + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    function filterDetailStock() {
+      var q = (document.getElementById('detailStockSearch') && document.getElementById('detailStockSearch').value) || '';
+      renderDetailStock(q.trim());
+    }
+
+    function toggleSelectAllStock(cb) {
+      document.querySelectorAll('.detail-stock-cb').forEach(function (c) { c.checked = cb.checked; });
+      updateDetailBatch();
+    }
+
+    function updateDetailBatch() {
+      var checked = document.querySelectorAll('.detail-stock-cb:checked');
+      var bar = document.getElementById('detailBatchBar');
+      var count = document.getElementById('detailBatchCount');
+      if (bar) bar.classList.toggle('show', checked.length > 0);
+      if (count) count.textContent = checked.length;
+    }
+
+    async function batchDeleteDetailItems() {
+      var ids = [];
+      document.querySelectorAll('.detail-stock-cb:checked').forEach(function (cb) { ids.push(cb.dataset.id); });
+      if (ids.length === 0) return;
+      if (!confirm('Xoá ' + ids.length + ' mục đã chọn?')) return;
+      try {
+        for (var i = 0; i < ids.length; i++) {
+          await fetch(BASE + '/admin-inventory?action=delete_item', {
+            method: 'POST', headers: authHeaders(), body: JSON.stringify({ id: ids[i] })
+          });
+        }
+        showToast('Đã xoá ' + ids.length + ' mục');
+        loadSkuDetails();
+        loadInventory();
+      } catch (e) { alert('Lỗi: ' + e.message); }
+    }
+
+    async function loadSoldHistory() {
+      if (!_detailSku) return;
+      var tbody = document.getElementById('detailSoldBody');
+      tbody.innerHTML = '<tr><td colspan="4" class="loading">Đang tải...</td></tr>';
+      try {
+        var r = await fetch(BASE + '/admin-inventory?action=sku_details&sku=' + _detailSku + '&status=sold', { headers: authHeaders() });
+        if (r.status === 401) return handleUnauth();
+        var data = await r.json();
+        var items = (data.items || []).filter(function (i) { return i.status === 'sold'; });
+        if (items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty">Chưa bán sản phẩm nào</td></tr>';
+          return;
+        }
+        tbody.innerHTML = items.map(function (item, i) {
+          return '<tr>' +
+            '<td>' + (i + 1) + '</td>' +
+            '<td style="max-width:180px;overflow:hidden;text-overflow:ellipsis">' + escHtml(item.account_info || '--') + '</td>' +
+            '<td style="color:var(--accent);font-weight:600">' + escHtml(item.order_code || '--') + '</td>' +
+            '<td style="color:var(--text2)">' + fmtTime(item.updated_at || item.created_at) + '</td>' +
+            '</tr>';
+        }).join('');
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="4" class="loading" style="color:var(--red)">Lỗi</td></tr>';
+      }
+    }
+
+    // ── SKU CHIP + DROPDOWN ─────────────────────────────────────
     function populateSkuDropdown(rows) {
-      // Hidden select (backward compat)
       var sel = document.getElementById('superProfileSku');
       var autoSkus = rows.filter(function (r) { var sku = (r.sku || r.product_code || '').trim(); return (r.delivery_type || 'auto') === 'auto' && !SKU_HIDDEN[sku]; });
       if (sel) {
@@ -3492,7 +4184,6 @@
             return '<option value="' + escAttr(sku) + '">' + escHtml(getSkuName(sku)) + '</option>';
           }).join('');
       }
-      // Render chips
       var chipContainer = document.getElementById('qiTypeChips');
       if (!chipContainer) return;
       var chipsHtml = '<button type="button" class="qi-chip active" data-sku="" onclick="selectSkuChip(this)">🔍 Tự đoán</button>';
@@ -3511,161 +4202,44 @@
     }
 
     function selectSkuChip(el) {
-      // Toggle active state
       var container = el.parentElement;
       container.querySelectorAll('.qi-chip').forEach(function (c) { c.classList.remove('active'); });
       el.classList.add('active');
-      // Sync to hidden select
       var sku = el.dataset.sku || '';
       var sel = document.getElementById('superProfileSku');
       if (sel) sel.value = sku;
     }
 
-    // ── PASTE IMPORT / VIEW STOCK MODAL ─────────────────────────
+    // ── PASTE IMPORT (in detail panel) ──────────────────────────
     window._pasteImportSku = '';
 
-    function openPasteImportForSku(skuCode) {
-      window._pasteImportSku = skuCode;
-      document.getElementById('pasteImportTitle').textContent = 'Quản lý kho: ' + getSkuName(skuCode);
-
-      // Reset tabs
-      switchPasteTab('list');
-
-      document.getElementById('pasteImportModal').classList.add('show');
-    }
-
-    function closePasteImportModal() {
-      document.getElementById('pasteImportModal').classList.remove('show');
-      window._pasteImportSku = '';
-    }
-
+    // Backward compat wrappers
+    function openPasteImportForSku(skuCode) { openDetailPanel(skuCode, 'import'); }
+    function closePasteImportModal() { closeDetailPanel(); }
     function switchPasteTab(tab) {
-      document.querySelectorAll('.paste-tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-
-      document.getElementById('tab-' + tab).classList.add('active');
-      document.getElementById('content-' + tab).classList.add('active');
-
-      if (tab === 'list') {
-        loadSkuDetails();
-      } else if (tab === 'import') {
-        document.getElementById('pasteImportText').value = '';
-        document.getElementById('pasteImportFeedback').textContent = '';
-        document.getElementById('pastePreview').innerHTML = '';
-        setTimeout(() => document.getElementById('pasteImportText').focus(), 100);
-      }
-    }
-
-    async function loadSkuDetails() {
-      if (!window._pasteImportSku) return;
-      const tbody = document.getElementById('skuDetailsBody');
-      tbody.innerHTML = '<tr><td colspan="6" class="loading">Đang tải...</td></tr>';
-      document.getElementById('skuListCount').textContent = '';
-
-      try {
-        const r = await fetch(BASE + '/admin-inventory?action=sku_details&sku=' + window._pasteImportSku, { headers: authHeaders() });
-        if (r.status === 401) return handleUnauth();
-        const data = await r.json();
-        const items = data.items || [];
-
-        document.getElementById('skuListCount').textContent = items.length + ' mục';
-
-        if (items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="6" class="empty">Chưa có hàng trong kho</td></tr>';
-          return;
-        }
-
-        tbody.innerHTML = items.map((item, i) => {
-          const isSold = item.status === 'sold';
-          const statusClass = item.status === 'available' ? 'badge-fulfilled' : (isSold ? 'badge-cancelled' : 'badge-pending');
-          const statusLabel = item.status === 'available' ? 'Sẵn sàng' : (isSold ? 'Đã bán' : 'Đang giữ');
-
-          // Note logic
-          let note = item.note || '';
-          let twofa = '';
-          if (note.indexOf('2FA:') === 0) {
-            const parts = note.split('|');
-            twofa = parts[0].replace('2FA:', '').trim();
-            note = parts.slice(1).join('|').trim();
-          } else if (note && !note.includes(' ') && note.length < 40) {
-            twofa = note;
-            note = '';
-          }
-          const displayNote = (twofa ? '<span style="color:var(--accent);font-family:monospace">2FA: ' + escHtml(twofa) + '</span>' : '') +
-            (note ? (twofa ? '<br>' : '') + '<span style="color:var(--text2)">' + escHtml(note) + '</span>' : '');
-
-          // Sold info
-          const soldInfo = isSold && item.order_code ? '<div style="font-size:11px;color:var(--text2)">Đơn: ' + escHtml(item.order_code) + '</div>' : '';
-
-          // Actions: Edit + Delete for available items
-          const actionHtml = item.status === 'available'
-            ? '<button class="btn-ghost primary" style="font-size:11px;margin-right:4px" onclick="openEditStockItemModal(\'' + item.id + '\',\'' + escAttr(item.account_info || '') + '\',\'' + escAttr(item.secret_key || '') + '\',\'' + escAttr(item.note || '') + '\')">Sửa</button>' +
-            '<button class="btn-del" onclick="deleteStockItem(\'' + item.id + '\')">Xoá</button>'
-            : '<span style="color:var(--text-muted);font-size:11px">--</span>';
-
-          return `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis" title="${escAttr(item.account_info)}">
-                        <div style="font-weight:600">${escHtml(item.account_info)}</div>
-                        <div style="font-family:monospace;color:var(--text2);font-size:11px">
-                             <span class="blurred" onclick="this.classList.remove('blurred')">${escHtml(item.secret_key || '--')}</span>
-                             <button style="border:none;background:none;cursor:pointer;opacity:0.6" onclick="copyText('${escAttr(item.secret_key)}')">📋</button>
-                        </div>
-                    </td>
-                    <td>${displayNote || '--'}</td>
-                    <td>
-                        <span class="badge ${statusClass}" style="padding:2px 8px;font-size:10px">${statusLabel}</span>
-                        ${soldInfo}
-                    </td>
-                    <td style="color:var(--text2);font-size:11px">${fmtTime(item.created_at)}</td>
-                    <td class="col-actions">${actionHtml}</td>
-                </tr>
-            `;
-        }).join('');
-
-      } catch (e) {
-        console.error(e);
-        tbody.innerHTML = '<tr><td colspan="6" class="loading" style="color:var(--red)">Lỗi tải dữ liệu</td></tr>';
-      }
+      if (tab === 'list') switchDetailTab('stock');
+      else if (tab === 'import') switchDetailTab('import');
     }
 
     async function deleteStockItem(id) {
       if (!confirm('Bạn có chắc chắn muốn xoá mục này khỏi kho?')) return;
       try {
-        const r = await fetch(BASE + '/admin-inventory?action=delete_item', {
-          method: 'POST',
-          headers: authHeaders(),
-          body: JSON.stringify({ id: id })
+        var r = await fetch(BASE + '/admin-inventory?action=delete_item', {
+          method: 'POST', headers: authHeaders(), body: JSON.stringify({ id: id })
         });
-        const data = await r.json();
-        if (data.success) {
-          showToast('Đã xoá thành công');
-          loadSkuDetails(); // Reload list
-          loadInventory();   // Reload summaries
-        } else {
-          alert('Lỗi: ' + (data.error || 'Không thể xoá'));
-        }
-      } catch (e) {
-        alert('Lỗi mạng: ' + e.message);
-      }
+        var data = await r.json();
+        if (data.success) { showToast('Đã xoá thành công'); loadSkuDetails(); loadInventory(); }
+        else { alert('Lỗi: ' + (data.error || 'Không thể xoá')); }
+      } catch (e) { alert('Lỗi mạng: ' + e.message); }
     }
 
     function parsePasteLines(text) {
       return text.split(/\n/).map(function (line) {
         var trimmed = line.trim();
         if (!trimmed) return null;
-        // Support: pipe, colon, tab, multiple spaces
         var parts = trimmed.split(/[|:\t]+/);
-        if (parts.length < 2) {
-          // Try splitting by 2+ spaces
-          parts = trimmed.split(/\s{2,}/);
-        }
-        return {
-          account_info: (parts[0] || '').trim(),
-          secret_key: (parts[1] || '').trim(),
-          note: (parts[2] || '').trim()
-        };
+        if (parts.length < 2) parts = trimmed.split(/\s{2,}/);
+        return { account_info: (parts[0] || '').trim(), secret_key: (parts[1] || '').trim(), note: (parts[2] || '').trim() };
       }).filter(function (row) { return row && row.account_info !== ''; });
     }
 
@@ -3673,21 +4247,14 @@
       var text = (document.getElementById('pasteImportText').value || '').trim();
       var previewEl = document.getElementById('pastePreview');
       if (!text) { previewEl.innerHTML = ''; return; }
-
       var rows = parsePasteLines(text);
       if (rows.length === 0) { previewEl.innerHTML = ''; return; }
-
       var html = '<div style="font-size:11px;color:var(--text-muted);margin-bottom:4px">' + rows.length + ' tài khoản</div>';
       rows.slice(0, 10).forEach(function (r) {
-        html += '<div class="preview-line">' +
-          '<span class="pv-account">' + escHtml(r.account_info) + '</span>' +
-          '<span class="pv-pass">' + (r.secret_key ? '******' : '--') + '</span>' +
-          (r.note ? '<span class="pv-2fa">' + escHtml(r.note) + '</span>' : '') +
-          '</div>';
+        html += '<div class="preview-line"><span class="pv-account">' + escHtml(r.account_info) + '</span><span class="pv-pass">' + (r.secret_key ? '******' : '--') + '</span>' +
+          (r.note ? '<span class="pv-2fa">' + escHtml(r.note) + '</span>' : '') + '</div>';
       });
-      if (rows.length > 10) {
-        html += '<div style="color:var(--text-muted);font-size:11px;padding:4px 0">... và ' + (rows.length - 10) + ' dòng nữa</div>';
-      }
+      if (rows.length > 10) html += '<div style="color:var(--text-muted);font-size:11px;padding:4px 0">... và ' + (rows.length - 10) + ' dòng nữa</div>';
       previewEl.innerHTML = html;
     }
 
@@ -3697,54 +4264,32 @@
       var raw = (document.getElementById('pasteImportText').value || '').trim();
       var fb = document.getElementById('pasteImportFeedback');
       if (!raw) { fb.textContent = 'Dán ít nhất một dòng tk|mk|2fa.'; fb.style.color = 'var(--yellow)'; return; }
-
       var rows = parsePasteLines(raw);
       if (rows.length === 0) { fb.textContent = 'Mỗi dòng cần có ít nhất phần tài khoản.'; fb.style.color = 'var(--yellow)'; return; }
-
-      fb.textContent = 'Đang nhập ' + rows.length + ' dòng...';
-      fb.style.color = 'var(--text2)';
-
-      var items = rows.map(function (r) {
-        var note = r.note ? ('2FA: ' + r.note) : '';
-        return { sku_code: sku, account_info: r.account_info, secret_key: r.secret_key, note: note };
-      });
-
+      fb.textContent = 'Đang nhập ' + rows.length + ' dòng...'; fb.style.color = 'var(--text2)';
+      var items = rows.map(function (r) { return { sku_code: sku, account_info: r.account_info, secret_key: r.secret_key, note: r.note ? ('2FA: ' + r.note) : '' }; });
       try {
-        var r = await fetch(BASE + '/import-stock', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: items })
-        });
+        var r = await fetch(BASE + '/import-stock', { method: 'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: items }) });
         var data = await r.json().catch(function () { return {}; });
         if (r.status === 401) { fb.textContent = 'Token hết hạn - đăng nhập lại.'; fb.style.color = 'var(--red)'; return; }
         if (!r.ok) { fb.textContent = 'Lỗi: ' + (data.error || data.message || r.status); fb.style.color = 'var(--red)'; return; }
-
         fb.style.color = 'var(--green)';
         fb.textContent = 'Đã thêm ' + (data.inserted || 0) + ', trùng ' + (data.skipped_duplicate || 0) + '.';
         showToast('Đã nhập ' + (data.inserted || 0) + ' tài khoản vào ' + getSkuName(sku));
         loadInventory();
+        loadSkuDetails();
         document.getElementById('pasteImportText').value = '';
         document.getElementById('pastePreview').innerHTML = '';
-        setTimeout(closePasteImportModal, 1200);
-      } catch (e) {
-        fb.textContent = 'Lỗi mạng: ' + e.message;
-        fb.style.color = 'var(--red)';
-      }
+      } catch (e) { fb.textContent = 'Lỗi mạng: ' + e.message; fb.style.color = 'var(--red)'; }
     }
 
-    // ── ADVANCED IMPORT (toggle) ─────────────────────────────────
-    function toggleAdvancedImport() {
-      var btn = document.getElementById('advancedToggle');
-      var content = document.getElementById('advancedContent');
-      btn.classList.toggle('open');
-      content.classList.toggle('show');
-    }
+    // ── ADVANCED IMPORT (backward compat) ────────────────────────
+    function toggleAdvancedImport() { toggleQuickImport(); }
 
     // ── NHAP KHO SIEU NHANH (parse -> preview -> import) ─────────
     var LAST_USED_SKU_KEY = 'tbq_last_used_sku';
     var _superParsedRows = [];
 
-    /* ── Quick Import: 1-click parse + preview ── */
     async function doQuickImport() {
       var raw = (document.getElementById('superPasteRaw') && document.getElementById('superPasteRaw').value) ? document.getElementById('superPasteRaw').value.trim() : '';
       var fb = document.getElementById('superParseFeedback');
@@ -3766,20 +4311,15 @@
         renderPreviewCards();
         document.getElementById('superPreviewWrap').style.display = '';
         fillSuperApplySkuSelect();
-      } catch (e) {
-        if (fb) fb.textContent = 'Lỗi: ' + e.message;
-      }
+      } catch (e) { if (fb) fb.textContent = 'Lỗi: ' + e.message; }
     }
 
-    // Also keep doParseStock as alias
     var doParseStock = doQuickImport;
 
     function fillSuperApplySkuSelect() {
       var sel = document.getElementById('superApplySkuSelect');
       if (!sel) return;
-      var rows = (window._lastInventoryRows || []).filter(function (r) {
-        return (r.delivery_type || 'auto') === 'auto';
-      });
+      var rows = (window._lastInventoryRows || []).filter(function (r) { return (r.delivery_type || 'auto') === 'auto'; });
       sel.innerHTML = '<option value="">-- SKU --</option>' + rows.map(function (r) {
         var sku = r.sku_code || '';
         return '<option value="' + escAttr(sku) + '">' + escHtml(getSkuName(sku)) + '</option>';
@@ -3793,57 +4333,39 @@
       if (!container) return;
       var rows = _superParsedRows;
       if (!rows.length) { container.innerHTML = '<div style="padding:20px;text-align:center;color:var(--text2)">Không có dòng nào</div>'; return; }
-
       var validCount = rows.filter(function (r) { return r.status === 'valid'; }).length;
       var errorCount = rows.length - validCount;
       var dateCount = rows.filter(function (r) { return r.date; }).length;
-
-      // Stats header
       var statsHtml = '<span class="qs-valid">✓ ' + validCount + ' hợp lệ</span>';
       if (errorCount > 0) statsHtml += '<span class="qs-error">✗ ' + errorCount + ' lỗi</span>';
       if (dateCount > 0) statsHtml += '<span class="qs-date">📅 ' + dateCount + ' có hạn</span>';
       if (statsEl) statsEl.innerHTML = statsHtml;
       if (countEl) countEl.textContent = validCount;
 
-      // Cards
       var html = rows.map(function (row, i) {
         var suggested = row.suggested_skus || [];
         var top = suggested[0];
         var selected = row.selected_sku || (top && top.sku_code) || '';
         var isValid = row.status === 'valid';
-
-        // SKU dropdown
         var opts = suggested.map(function (s) {
           return '<option value="' + escAttr(s.sku_code) + '"' + (s.sku_code === selected ? ' selected' : '') + '>' + getSkuName(s.sku_code) + '</option>';
         }).join('');
         if (selected && suggested.every(function (s) { return s.sku_code !== selected; })) {
           opts = '<option value="' + escAttr(selected) + '" selected>' + getSkuName(selected) + '</option>' + opts;
         }
-
-        // Meta badges
         var meta = '';
         if (row.password) meta += '<span class="qi-badge qi-badge-pw">🔑 MK</span>';
         if (row.twofa) meta += '<span class="qi-badge qi-badge-2fa">🔐 2FA</span>';
         if (row.date) meta += '<span class="qi-badge qi-badge-date">📅 ' + escHtml(row.date) + '</span>';
         if (!isValid) meta += '<span class="qi-badge qi-badge-err">' + escHtml(row.error || 'Lỗi') + '</span>';
-
         var cb = isValid ? '<input type="checkbox" class="qi-card-cb super-row-cb" data-index="' + i + '" checked>' : '';
         var skuHtml = isValid ? '<div class="qi-card-sku"><select class="super-sku-select" data-index="' + i + '">' + opts + '</select></div>' : '';
-
-        return '<div class="qi-card' + (isValid ? '' : ' qi-error') + '" data-index="' + i + '">' +
-          cb +
+        return '<div class="qi-card' + (isValid ? '' : ' qi-error') + '" data-index="' + i + '">' + cb +
           '<span class="qi-card-num">' + (row.rowIndex || i + 1) + '</span>' +
-          '<div class="qi-card-info">' +
-            '<span class="qi-card-account" title="' + escAttr(row.account) + '">' + escHtml(row.account) + '</span>' +
-            '<span class="qi-card-meta">' + meta + '</span>' +
-          '</div>' +
-          skuHtml +
-        '</div>';
+          '<div class="qi-card-info"><span class="qi-card-account" title="' + escAttr(row.account) + '">' + escHtml(row.account) + '</span>' +
+          '<span class="qi-card-meta">' + meta + '</span></div>' + skuHtml + '</div>';
       }).join('');
-
       container.innerHTML = html;
-
-      // Bind SKU change
       container.querySelectorAll('.super-sku-select').forEach(function (sel) {
         sel.addEventListener('change', function () {
           var idx = parseInt(sel.dataset.index, 10);
@@ -3852,16 +4374,13 @@
       });
     }
 
-    // Backward compat
     var renderSuperPreviewTable = renderPreviewCards;
 
     function applySkuToAllValid() {
       var sel = document.getElementById('superApplySkuSelect');
       var sku = sel && sel.value ? sel.value.trim() : '';
       if (!sku) return;
-      _superParsedRows.forEach(function (row) {
-        if (row.status === 'valid') row.selected_sku = sku;
-      });
+      _superParsedRows.forEach(function (row) { if (row.status === 'valid') row.selected_sku = sku; });
       renderPreviewCards();
     }
 
@@ -3873,8 +4392,7 @@
         if (row.twofa) noteParts.push('2FA: ' + row.twofa);
         if (row.date) noteParts.push('HSD: ' + row.date);
         if (row.notes) noteParts.push(row.notes);
-        var note = noteParts.join(' | ');
-        return { sku_code: sku, account_info: row.account, secret_key: row.password || '', note: note };
+        return { sku_code: sku, account_info: row.account, secret_key: row.password || '', note: noteParts.join(' | ') };
       }).filter(function (item) { return item.sku_code; });
       if (items.length === 0) {
         var resEl = document.getElementById('superImportResult');
@@ -3884,11 +4402,7 @@
       var resEl = document.getElementById('superImportResult');
       if (resEl) { resEl.style.display = 'block'; resEl.textContent = 'Đang nhập ' + items.length + ' dòng...'; }
       try {
-        var r = await fetch(BASE + '/import-stock', {
-          method: 'POST',
-          headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ items: items })
-        });
+        var r = await fetch(BASE + '/import-stock', { method: 'POST', headers: { 'Authorization': 'Bearer ' + ADMIN_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify({ items: items }) });
         var data = await r.json().catch(function () { return {}; });
         if (r.status === 401) { if (resEl) resEl.innerHTML = 'Token hết hạn - đăng nhập lại.'; return; }
         if (!r.ok) { if (resEl) resEl.innerHTML = 'Lỗi: ' + (data.error || data.message || r.status); return; }
@@ -3896,9 +4410,7 @@
         if (resEl) resEl.innerHTML = 'Đã thêm <strong>' + (data.inserted || 0) + '</strong>, trùng <strong>' + (data.skipped_duplicate || 0) + '</strong>' + (data.errors && data.errors.length ? ', lỗi: ' + data.errors.length : '') + '.';
         showToast('Đã nhập ' + (data.inserted || 0) + ' tài khoản');
         loadInventory();
-      } catch (e) {
-        if (resEl) resEl.innerHTML = 'Lỗi mạng: ' + e.message;
-      }
+      } catch (e) { if (resEl) resEl.innerHTML = 'Lỗi mạng: ' + e.message; }
     }
 
     // ── AUDIT LOGS ──────────────────────────────────────────────
@@ -4132,24 +4644,28 @@
 
             var link = getCouponWebLink(c.code);
 
-            var skuLabel = '';
+            var skuHtml = '';
             if (c.sku_codes) {
               var codes = c.sku_codes.split(',');
-              skuLabel = codes.length <= 3 ? codes.join(', ') : codes.slice(0, 3).join(', ') + ' +' + (codes.length - 3);
+              skuHtml = '<div class="sku-tags-wrap">' + codes.map(function (sc) {
+                var skuName = getSkuName(sc.trim());
+                return '<span class="sku-tag" title="' + escAttr(sc.trim()) + '">' + escHtml(skuName) + '</span>';
+              }).join('') + '</div>';
             } else {
-              skuLabel = '<em>Tất cả</em>';
+              skuHtml = '<span class="sku-tag all">Tất cả sản phẩm</span>';
             }
 
             return '<tr>' +
-              '<td><span class="code-chip">' + escHtml(c.code) + '</span></td>' +
+              '<td><span class="code-chip" data-copy="' + escAttr(c.code) + '" onclick="copyCouponCode(\'' + escAttr(c.code) + '\')" title="Click để copy mã">' + escHtml(c.code) + '</span></td>' +
               '<td>' + pctLabel + '</td>' +
-              '<td class="muted" style="max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="' + escAttr(c.sku_codes || 'Tất cả') + '">' + skuLabel + '</td>' +
+              '<td>' + skuHtml + '</td>' +
               '<td class="muted">' + fmtTime(c.expires_at) + '</td>' +
               '<td>' + statusBadge + '</td>' +
               '<td class="muted">' + escHtml(c.description || '--') + '</td>' +
               '<td class="muted">' + fmtTime(c.created_at) + '</td>' +
-              '<td>' +
-              '<button onclick="copyCouponLink(\'' + escAttr(c.code) + '\')" class="coupon-link-btn" style="margin-right:4px" title="' + escAttr(link) + '">📋 Link</button>' +
+              '<td style="white-space:nowrap">' +
+              '<button onclick="copyCouponCode(\'' + escAttr(c.code) + '\')" class="coupon-copy-btn" style="margin-right:4px" title="Copy mã coupon">📋 Mã</button>' +
+              '<button onclick="copyCouponLink(\'' + escAttr(c.code) + '\')" class="coupon-link-btn" style="margin-right:4px" title="' + escAttr(link) + '">🔗 Link</button>' +
               '<button onclick="toggleCoupon(\'' + c.id + '\')" class="btn-ghost warn" style="margin-right:4px">' + (c.is_active ? 'Tắt' : 'Bật') + '</button>' +
               '<button onclick="deleteCoupon(\'' + c.id + '\',\'' + escAttr(c.code) + '\')" class="btn-ghost danger">Xoá</button>' +
               '</td></tr>';
@@ -4195,13 +4711,27 @@
 
           var resultEl = document.getElementById('couponResult');
           resultEl.className = 'coupon-result show';
-          resultEl.innerHTML = '<strong>✅ ' + escHtml(data.message) + '</strong>' +
+
+          var skuTagsHtml = function (skuStr) {
+            if (!skuStr) return '<span class="sku-tag all">Tất cả sản phẩm</span>';
+            return '<div class="sku-tags-wrap">' + skuStr.split(',').map(function (sc) {
+              var skuName = getSkuName(sc.trim());
+              return '<span class="sku-tag" title="' + escAttr(sc.trim()) + '">' + escHtml(skuName) + '</span>';
+            }).join('') + '</div>';
+          };
+
+          resultEl.innerHTML = '<div class="coupon-result-title">✅ ' + escHtml(data.message) + '</div>' +
             data.coupons.map(function (c) {
-              return '<div class="coupon-code-row">' +
-                '<span class="code-chip">' + escHtml(c.code) + '</span>' +
-                '<span class="muted">Giảm ' + c.discountPercent + '%</span>' +
-                (c.skuCodes ? '<span class="muted" style="font-size:11px">SKU: ' + escHtml(c.skuCodes) + '</span>' : '') +
-                '<button class="coupon-link-btn" onclick="copyCouponLink(\'' + escAttr(c.code) + '\')">📋 Copy link</button>' +
+              return '<div class="coupon-card">' +
+                '<div class="coupon-card-header">' +
+                '<span class="code-chip" data-copy="' + escAttr(c.code) + '" onclick="copyCouponCode(\'' + escAttr(c.code) + '\')" title="Click để copy mã">' + escHtml(c.code) + '</span>' +
+                '<span class="muted" style="font-size:13px">Giảm <strong>' + c.discountPercent + '%</strong></span>' +
+                '<div class="coupon-card-actions">' +
+                '<button class="coupon-copy-btn" onclick="copyCouponCode(\'' + escAttr(c.code) + '\')">📋 Copy mã</button>' +
+                '<button class="coupon-link-btn" onclick="copyCouponLink(\'' + escAttr(c.code) + '\')">🔗 Copy link</button>' +
+                '</div>' +
+                '</div>' +
+                (c.skuCodes ? '<div class="coupon-card-meta">Áp dụng cho:</div>' + skuTagsHtml(c.skuCodes) : '<div class="coupon-card-meta">Áp dụng: ' + skuTagsHtml(null) + '</div>') +
                 '</div>';
             }).join('');
 
@@ -4210,6 +4740,22 @@
           showAdminToast(data.error || 'Lỗi tạo coupon', 'error');
         }
       } catch (e) { showAdminToast('Lỗi: ' + e.message, 'error'); }
+    }
+
+    function copyCouponCode(code) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(code).then(function () {
+          showAdminToast('Đã copy mã: ' + code, 'success');
+        });
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = code;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showAdminToast('Đã copy mã: ' + code, 'success');
+      }
     }
 
     function copyCouponLink(code) {
@@ -4668,6 +5214,7 @@
             document.getElementById('loginOverlay').style.display = 'none';
             document.getElementById('shell').style.display = 'flex';
             startAutoRefresh();
+            resetSessionTimer();
             loadDashboard();
             return;
           }

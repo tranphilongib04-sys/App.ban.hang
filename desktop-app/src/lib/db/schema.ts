@@ -50,7 +50,35 @@ export const subscriptions = sqliteTable('subscriptions', {
     completedAt: text('completed_at'), // Timestamp when order is marked as completed (paid + renewed)
 });
 
-// Inventory items table (TK/MK/Keys)
+// SKUs table (Master product catalog - V3)
+export const skus = sqliteTable('skus', {
+    id: text('id').primaryKey(),
+    skuCode: text('sku_code').notNull().unique(),
+    name: text('name').notNull(),
+    category: text('category').notNull(),
+    price: real('price').default(0),
+    durationDays: integer('duration_days').default(30),
+    deliveryType: text('delivery_type').default('auto'), // 'auto' or 'owner_upgrade'
+    isActive: integer('is_active').default(1),
+    createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+});
+
+// Stock Items table (V3 - Unified inventory)
+export const stockItems = sqliteTable('stock_items', {
+    id: text('id').primaryKey(),
+    skuId: text('sku_id').notNull().references(() => skus.id),
+    accountInfo: text('account_info'), // Username/email/link
+    secretKey: text('secret_key'), // Password/key
+    note: text('note'), // 2FA code or additional info
+    status: text('status', {
+        enum: ['available', 'reserved', 'sold']
+    }).default('available'),
+    orderId: integer('order_id'), // Link to orders table
+    createdAt: text('created_at').default(sql`CURRENT_TIMESTAMP`),
+    soldAt: text('sold_at'),
+});
+
+// Inventory items table (TK/MK/Keys) - DEPRECATED - Use stock_items instead
 export const inventoryItems = sqliteTable('inventory_items', {
     id: integer('id').primaryKey({ autoIncrement: true }),
     service: text('service').notNull(),
@@ -189,6 +217,12 @@ export type NewCustomer = typeof customers.$inferInsert;
 
 export type Subscription = typeof subscriptions.$inferSelect;
 export type NewSubscription = typeof subscriptions.$inferInsert;
+
+export type SKU = typeof skus.$inferSelect;
+export type NewSKU = typeof skus.$inferInsert;
+
+export type StockItem = typeof stockItems.$inferSelect;
+export type NewStockItem = typeof stockItems.$inferInsert;
 
 export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type NewInventoryItem = typeof inventoryItems.$inferInsert;

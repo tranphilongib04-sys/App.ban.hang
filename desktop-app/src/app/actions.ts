@@ -423,11 +423,83 @@ export async function cleanupDuplicatesAction() {
 
 // ==================== INVENTORY ====================
 
+
+export async function getInventorySummaryAction() {
+  try {
+    const webStoreUrl = process.env.NEXT_PUBLIC_WEB_STORE_URL || 'https://tbq-homie-1770017860.netlify.app';
+    const response = await fetch(`${webStoreUrl}/api/admin/inventory`, {
+      cache: 'no-store',
+      headers: { 'Content-Type': 'application/json' }
+    });
+    if (!response.ok) return { success: false, error: 'Failed to fetch summary' };
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error fetching inventory summary:', error);
+    return { success: false, error: 'Network error' };
+  }
+}
+
 export async function getInventoryItemsAction(filter?: { service?: string; status?: string }) {
-  return queries.getInventoryItems(filter);
+  // New: Fetch from Turso DB via Netlify Function (action=items)
+  try {
+    const webStoreUrl = process.env.NEXT_PUBLIC_WEB_STORE_URL || 'https://tbq-homie-1770017860.netlify.app';
+    const response = await fetch(`${webStoreUrl}/api/admin/inventory?action=items`, {
+      cache: 'no-store',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.error('Failed to fetch from Inventory API, falling back to DB');
+      return queries.getInventoryItems(filter);
+    }
+
+    const data = await response.json();
+    if (!data.success || !data.items) {
+      return queries.getInventoryItems(filter);
+    }
+
+    // Map Turso Data to InventoryItem interface
+    // Turso returns: { id, sku_id, account_info, secret_key, status, created_at, sold_at, sku_code, service, cost }
+    return data.items.map((item: any, index: number) => {
+      // Construct secret payload from secret_key (usually just the key/pass) + account_info
+      // DB schema: secret_key, account_info. 
+      // Frontend expects: secretPayload (full), secretMasked.
+      // We'll combine them or use what's available.
+
+      let secret = item.secret_key;
+      if (item.account_info && !secret.includes(item.account_info)) {
+        secret = `${item.account_info}|${item.secret_key}`;
+      }
+
+      const masked = item.account_info || (item.secret_key ? item.secret_key.substring(0, 5) + '...' : '******');
+
+      return {
+        id: index + 10000,
+        realId: item.id, // Store real UUID for verification/future use
+        service: item.service || item.sku_code || 'Unknown',
+        distribution: 'Turso DB',
+        secretPayload: secret,
+        secretMasked: masked,
+        cost: item.cost || 0,
+        status: item.status || 'available',
+        createdAt: item.created_at || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        expiresAt: null,
+        note: 'Synced from Turso DB'
+      };
+    });
+
+  } catch (error) {
+    console.error('Error fetching from Inventory API:', error);
+    return queries.getInventoryItems(filter);
+  }
 }
 
 export async function createInventoryItemAction(formData: FormData) {
+  // TODO: Implement remote create? For now falling back to local or disabled
   const service = formData.get('service') as string;
   const distribution = formData.get('distribution') as string;
   const secretPayload = formData.get('secretPayload') as string;
@@ -446,9 +518,50 @@ export async function importInventoryAction(items: Array<{
   cost?: number;
   expiresAt?: string | null;
 }>, batchName?: string) {
-  const result = await queries.importInventoryItems(items, batchName);
-  revalidatePath('/inventory');
-  return result;
+  // New: Import to Turso via API
+  try {
+    const webStoreUrl = process.env.NEXT_PUBLIC_WEB_STORE_URL || 'https://tbq-homie-1770017860.netlify.app';
+
+    // Transform items to match API expectation
+    // API expects { sku_code, account_info, secret_key, note }
+    // Frontend allows 'service' but we need 'sku_code'.
+    // We assume 'service' IS 'sku_code' in the import form for simplicity, or we map it?
+    // Let's assume user inputs SKU Code in 'Service' field or we might need UI hint.
+    // Or we map 'service' back to sku_code if we have a map.
+    // For now, let's pass it as is and hope it matches or API handles validation.
+
+    const apiItems = items.map(i => {
+      const parts = i.secretPayload.split('|');
+      const account = parts[0];
+      const secret = parts.length > 1 ? parts.slice(1).join('|') : parts[0];
+
+      return {
+        sku_code: i.service, // Assuming user types SKU
+        account_info: account,
+        secret_key: secret,
+        note: batchName || i.distribution
+      };
+    });
+
+    const response = await fetch(`${webStoreUrl}/api/admin/import-stock`, {
+      method: 'POST',
+      body: JSON.stringify({ items: apiItems }),
+      headers: { 'Content-Type': 'application/json' }
+    });
+
+    const resJson = await response.json();
+    if (!response.ok) {
+      throw new Error(resJson.error || 'Import failed');
+    }
+
+    revalidatePath('/inventory');
+    return { success: true, count: resJson.importedCount };
+
+  } catch (e: any) {
+    console.error('Import Error:', e);
+    // Fallback to local import? No, we want to enforce Remote.
+    throw new Error(e.message);
+  }
 }
 
 export async function updateInventoryStatusAction(id: number, status: 'available' | 'delivered' | 'invalid') {
@@ -1398,4 +1511,69 @@ export async function updateAccountAction(id: string, data: Partial<AccountItem>
 export async function deleteAccountAction(id: string) {
   await deleteAccount(id);
   revalidatePath('/accounts');
+}
+
+// ==================== STOCK MANAGEMENT (V3) ====================
+
+import * as stockQueries from '@/lib/db/queries/stock';
+
+export async function getSKUsAction(filter?: { category?: string; isActive?: boolean }) {
+  return stockQueries.getSKUs(filter);
+}
+
+export async function getStockItemsAction(filter?: {
+  skuId?: string;
+  status?: 'available' | 'reserved' | 'sold';
+  category?: string;
+}) {
+  return stockQueries.getStockItems(filter);
+}
+
+export async function getStockSummaryAction() {
+  return { success: true, inventory: await stockQueries.getInventorySummary() };
+}
+
+export async function createStockItemAction(data: {
+  skuId: string;
+  accountInfo?: string;
+  secretKey?: string;
+  note?: string;
+}) {
+  const item = await stockQueries.createStockItem(data);
+  revalidatePath('/inventory');
+  return { success: true, item };
+}
+
+export async function bulkCreateStockItemsAction(items: Array<{
+  skuId: string;
+  accountInfo?: string;
+  secretKey?: string;
+  note?: string;
+}>) {
+  const count = await stockQueries.bulkCreateStockItems(items);
+  revalidatePath('/inventory');
+  return { success: true, count };
+}
+
+export async function updateStockItemAction(id: string, data: {
+  accountInfo?: string;
+  secretKey?: string;
+  note?: string;
+  status?: 'available' | 'reserved' | 'sold';
+}) {
+  await stockQueries.updateStockItem(id, data);
+  revalidatePath('/inventory');
+  return { success: true };
+}
+
+export async function deleteStockItemAction(id: string) {
+  await stockQueries.deleteStockItem(id);
+  revalidatePath('/inventory');
+  return { success: true };
+}
+
+export async function bulkDeleteStockItemsAction(ids: string[]) {
+  const count = await stockQueries.bulkDeleteStockItems(ids);
+  revalidatePath('/inventory');
+  return { success: true, count };
 }

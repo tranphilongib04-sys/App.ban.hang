@@ -157,7 +157,7 @@ exports.handler = async function (event, context) {
     const order = orderResult.rows[0];
     console.log('[Webhook] Order ID:', order.id, '| status:', order.status, '| amount_total:', order.amount_total);
 
-    if (amountIn < order.amount_total * 0.95) {
+    if (amountIn < order.amount_total * 0.99) { // SECURITY: Tightened from 0.95 to 0.99
         console.log('[Webhook] Insufficient amount –', amountIn, 'vs', order.amount_total);
         return { statusCode: 200, body: JSON.stringify({ success: false, message: 'Insufficient amount' }) };
     }

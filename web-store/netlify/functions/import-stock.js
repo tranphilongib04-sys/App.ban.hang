@@ -23,12 +23,18 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
-const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Content-Type': 'application/json'
-};
+// SECURITY: Restrict CORS for admin APIs
+function getAdminHeaders(event) {
+    const allowed = process.env.ALLOWED_ADMIN_ORIGIN || '';
+    const reqOrigin = (event && event.headers) ? (event.headers.origin || event.headers.Origin || '') : '';
+    const origin = (allowed && reqOrigin === allowed) ? allowed : (allowed ? 'null' : '*');
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+}
 
 function requireAuth(event) {
     const token = (event.headers['authorization'] || '').replace('Bearer ', '');
@@ -44,6 +50,7 @@ function requireAuth(event) {
 }
 
 exports.handler = async function (event, context) {
+    const headers = getAdminHeaders(event);
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
@@ -165,8 +172,7 @@ exports.handler = async function (event, context) {
             headers,
             body: JSON.stringify({
                 success: false,
-                error: 'Internal server error',
-                message: error.message
+                error: 'Lỗi hệ thống',
             })
         };
     }

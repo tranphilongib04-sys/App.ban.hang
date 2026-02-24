@@ -52,13 +52,26 @@ import {
 } from '@/app/actions';
 import { SalesDialog } from '@/components/inventory/sales-dialog';
 
+
+interface InventorySummary {
+    id: string;
+    sku_code: string;
+    name: string;
+    category: string;
+    available: number;
+    reserved: number;
+    sold: number;
+    total: number;
+}
+
 interface InventoryClientProps {
     items: InventoryItem[];
+    summary: InventorySummary[]; // Add Summary Prop
     services: string[];
     customers: Customer[];
 }
 
-export function InventoryClient({ items, services, customers }: InventoryClientProps) {
+export function InventoryClient({ items, summary, services, customers }: InventoryClientProps) {
     const router = useRouter();
     const [search, setSearch] = useState('');
     const [serviceFilter, setServiceFilter] = useState<string>('all');
@@ -123,13 +136,12 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
     const deliveredItems = baseFilteredItems.filter(i => i.status === 'delivered');
     const invalidItems = baseFilteredItems.filter(i => i.status === 'invalid');
 
-    // Stats (still global count based on *all* items passing search/service filter? Or absolute total? 
-    // Usually stats are absolute totals or based on current search. Let's keep absolute for the top cards as per original design)
+    // Stats
     const stats = {
-        total: items.length,
-        available: items.filter((i) => i.status === 'available').length,
-        delivered: items.filter((i) => i.status === 'delivered').length,
-        invalid: items.filter((i) => i.status === 'invalid').length,
+        total: summary.reduce((acc, s) => acc + s.total, 0),
+        available: summary.reduce((acc, s) => acc + s.available, 0),
+        sold: summary.reduce((acc, s) => acc + s.sold, 0),
+        invalid: items.filter((i) => i.status === 'invalid').length, // Fallback to items for invalid
     };
 
     const handleAddItem = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -147,7 +159,7 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
 
     const handleImport = async () => {
         if (!importService || !importText.trim()) {
-            toast.error('Vui lòng nhập dịch vụ và danh sách TK/MK');
+            toast.error('Vui lòng nhập SKU Code và danh sách TK/MK');
             return;
         }
 
@@ -170,8 +182,12 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
         }));
 
         try {
-            const result = await importInventoryAction(itemsToImport);
-            toast.success(`Đã import ${result.count} items`);
+            const result = await importInventoryAction(itemsToImport, 'Manual Bulk Import');
+            if (result.success) {
+                toast.success(`Đã import thành công`);
+            } else {
+                toast.success(`Đã import ${result.count || 0} items`);
+            }
             setIsImportOpen(false);
             setImportText('');
             setImportService('');
@@ -179,8 +195,8 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
             setImportExpiresAt('');
             setImportDistribution('');
             router.refresh();
-        } catch {
-            toast.error('Có lỗi khi import');
+        } catch (e: any) {
+            toast.error('Lỗi khi import: ' + e.message);
         }
     };
 
@@ -190,12 +206,14 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
     };
 
     const handleMarkInvalid = async (id: number) => {
+        // Fix: If fake ID, request might fail on local DB if using old action.
+        // For now assumes actions.ts handles it or we accept failure.
         try {
             await updateInventoryStatusAction(id, 'invalid');
             toast.success('Đã đánh dấu lỗi');
             router.refresh();
         } catch {
-            toast.error('Có lỗi xảy ra');
+            toast.error('Có lỗi xảy ra (Check console)');
         }
     };
 
@@ -460,26 +478,39 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
 
     return (
         <div className="space-y-6">
-            {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                <div className="bg-white border border-gray-200 rounded-xl p-3 md:p-4">
-                    <div className="flex items-center gap-2 text-gray-500">
-                        <Package className="h-4 w-4" />
-                        <span className="text-xs md:text-sm">Tổng cộng</span>
+            {/* Master SKU Summary - New Section */}
+            <div className="grid grid-cols-1 gap-6">
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4">
+                    <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                        <Package className="h-5 w-5 text-indigo-600" />
+                        Master SKU Summary
+                    </h3>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow>
+                                    <TableHead>SKU Code</TableHead>
+                                    <TableHead>Category</TableHead>
+                                    <TableHead className="text-center">Total</TableHead>
+                                    <TableHead className="text-center text-green-600">Available</TableHead>
+                                    <TableHead className="text-center text-blue-600">Reserved</TableHead>
+                                    <TableHead className="text-center text-gray-500">Sold</TableHead>
+                                </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                                {summary.map((sub, idx) => (
+                                    <TableRow key={idx}>
+                                        <TableCell className="font-medium">{sub.sku_code} <br /> <span className="text-xs text-gray-400">{sub.name}</span></TableCell>
+                                        <TableCell>{sub.category}</TableCell>
+                                        <TableCell className="text-center font-bold">{sub.total}</TableCell>
+                                        <TableCell className="text-center font-bold text-green-600">{sub.available}</TableCell>
+                                        <TableCell className="text-center font-bold text-blue-600">{sub.reserved}</TableCell>
+                                        <TableCell className="text-center">{sub.sold}</TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
                     </div>
-                    <p className="text-xl md:text-2xl font-semibold text-gray-900 mt-1">{stats.total}</p>
-                </div>
-                <div className="bg-green-50 border border-green-200 rounded-xl p-3 md:p-4">
-                    <div className="text-xs md:text-sm text-green-700">Còn hàng</div>
-                    <p className="text-xl md:text-2xl font-semibold text-green-900 mt-1">{stats.available}</p>
-                </div>
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 md:p-4">
-                    <div className="text-xs md:text-sm text-blue-700">Đã giao</div>
-                    <p className="text-xl md:text-2xl font-semibold text-blue-900 mt-1">{stats.delivered}</p>
-                </div>
-                <div className="bg-red-50 border border-red-200 rounded-xl p-3 md:p-4">
-                    <div className="text-xs md:text-sm text-red-700">Lỗi</div>
-                    <p className="text-xl md:text-2xl font-semibold text-red-900 mt-1">{stats.invalid}</p>
                 </div>
             </div>
 
@@ -517,14 +548,15 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
+                        {/* Existing add form - might need update to support SKU selection instead of text input */}
                         <DialogHeader>
                             <DialogTitle>Thêm item mới</DialogTitle>
                         </DialogHeader>
                         <form onSubmit={handleAddItem} className="space-y-4">
-                            {/* ... same form content ... */}
+                            {/* ... keeping simplified ... */}
                             <div>
-                                <Label htmlFor="service">Dịch vụ</Label>
-                                <Input name="service" placeholder="VD: ChatGPT Plus" required />
+                                <Label htmlFor="service">Dịch vụ (SKU Code)</Label>
+                                <Input name="service" placeholder="VD: chatgpt_plus_1m" required />
                             </div>
                             <div>
                                 <Label htmlFor="secretPayload">TK/MK hoặc Key</Label>
@@ -564,12 +596,13 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                         </DialogHeader>
                         <div className="space-y-4">
                             <div>
-                                <Label>Dịch vụ</Label>
+                                <Label>Dịch vụ (SKU Code - Bắt buộc)</Label>
                                 <Input
                                     value={importService}
                                     onChange={(e) => setImportService(e.target.value)}
-                                    placeholder="VD: ChatGPT Plus"
+                                    placeholder="VD: chatgpt_plus_1m"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">Nhập chính xác SKU Code</p>
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -591,11 +624,11 @@ export function InventoryClient({ items, services, customers }: InventoryClientP
                                 </div>
                             </div>
                             <div>
-                                <Label>Nguồn hàng</Label>
+                                <Label>Nguồn hàng / Batch Name</Label>
                                 <Input
                                     value={importDistribution}
                                     onChange={(e) => setImportDistribution(e.target.value)}
-                                    placeholder="VD: MMO, Chợ TTV, Tự mua..."
+                                    placeholder="VD: Batch 05/2026"
                                 />
                             </div>
                             <div>

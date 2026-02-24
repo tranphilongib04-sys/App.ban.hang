@@ -22,12 +22,38 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
-const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
-    'Content-Type': 'application/json'
-};
+// SECURITY: Restrict CORS for admin APIs
+function getAdminHeaders(event) {
+    const allowed = process.env.ALLOWED_ADMIN_ORIGIN || '';
+    const reqOrigin = event.headers.origin || event.headers.Origin || '';
+    const origin = (allowed && reqOrigin === allowed) ? allowed : (allowed ? 'null' : '*');
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+}
+
+// SECURITY: Brute-force protection for admin login
+const _loginAttempts = new Map();
+function checkBruteForce(ip) {
+    const now = Date.now();
+    const entry = _loginAttempts.get(ip);
+    if (entry && now < entry.lockedUntil) return false; // locked out
+    return true;
+}
+function recordFailedLogin(ip) {
+    const now = Date.now();
+    const entry = _loginAttempts.get(ip) || { count: 0, resetAt: now + 300000, lockedUntil: 0 };
+    if (now > entry.resetAt) { entry.count = 0; entry.resetAt = now + 300000; }
+    entry.count++;
+    if (entry.count >= 5) { entry.lockedUntil = now + 900000; } // lock 15 min after 5 fails
+    _loginAttempts.set(ip, entry);
+    if (_loginAttempts.size > 1000) {
+        for (const [k, v] of _loginAttempts) { if (now > v.resetAt && now > v.lockedUntil) _loginAttempts.delete(k); }
+    }
+}
 
 // Simple auth check
 function checkAuth(event) {
@@ -42,11 +68,18 @@ function checkAuth(event) {
 }
 
 exports.handler = async function (event, context) {
+    const headers = getAdminHeaders(event);
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
 
+    const ip = (event.headers['x-forwarded-for'] || event.headers['client-ip'] || '').split(',')[0].trim();
+    if (!checkBruteForce(ip)) {
+        return { statusCode: 429, headers, body: JSON.stringify({ error: 'Quá nhiều lần thử. Vui lòng đợi 15 phút.' }) };
+    }
+
     if (!checkAuth(event)) {
+        recordFailedLogin(ip);
         return {
             statusCode: 401,
             headers,
@@ -379,11 +412,11 @@ exports.handler = async function (event, context) {
         };
 
     } catch (error) {
-        console.error('Admin orders error:', error);
+        console.error('Admin orders error:', error.message);
         return {
             statusCode: 500,
             headers,
-            body: JSON.stringify({ error: error.message })
+            body: JSON.stringify({ error: 'Lỗi hệ thống' })
         };
     }
 };

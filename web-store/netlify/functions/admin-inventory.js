@@ -24,12 +24,18 @@ function getDbClient() {
     return createClient({ url, authToken });
 }
 
-const headers = {
-    'Access-Control-Allow-Origin': '*',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-    'Content-Type': 'application/json'
-};
+// SECURITY: Restrict CORS for admin APIs
+function getAdminHeaders(event) {
+    const allowed = process.env.ALLOWED_ADMIN_ORIGIN || '';
+    const reqOrigin = (event && event.headers) ? (event.headers.origin || event.headers.Origin || '') : '';
+    const origin = (allowed && reqOrigin === allowed) ? allowed : (allowed ? 'null' : '*');
+    return {
+        'Access-Control-Allow-Origin': origin,
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        'Content-Type': 'application/json'
+    };
+}
 
 function requireAuth(event) {
     const token = (event.headers['authorization'] || '').replace('Bearer ', '');
@@ -45,6 +51,7 @@ function requireAuth(event) {
 }
 
 exports.handler = async function (event, context) {
+    const headers = getAdminHeaders(event);
     if (event.httpMethod === 'OPTIONS') {
         return { statusCode: 200, headers, body: '' };
     }
@@ -105,16 +112,16 @@ exports.handler = async function (event, context) {
                 return { statusCode: 200, headers, body: JSON.stringify({ success: true, skus: result.rows }) };
             }
 
-            // Default: SKU summary
+            // Default: SKU summary (include price for admin table)
             const result = await db.execute(`
-                SELECT s.id, s.sku_code, s.name, s.category, s.delivery_type,
+                SELECT s.id, s.sku_code, s.name, s.category, s.price, s.delivery_type,
                     SUM(CASE WHEN si.status='available' THEN 1 ELSE 0 END) AS available,
                     SUM(CASE WHEN si.status='reserved' THEN 1 ELSE 0 END) AS reserved,
                     SUM(CASE WHEN si.status='sold' THEN 1 ELSE 0 END) AS sold,
                     COUNT(si.id) AS total
                 FROM skus s
                 LEFT JOIN stock_items si ON si.sku_id = s.id
-                GROUP BY s.id, s.sku_code, s.name, s.category, s.delivery_type
+                GROUP BY s.id, s.sku_code, s.name, s.category, s.price, s.delivery_type
                 ORDER BY s.category, s.name;
             `);
 
@@ -229,8 +236,8 @@ exports.handler = async function (event, context) {
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
 
     } catch (error) {
-        console.error('Admin Inventory API Error:', error);
-        return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'Internal server error', message: error.message }) };
+        console.error('Admin Inventory API Error:', error.message);
+        return { statusCode: 500, headers, body: JSON.stringify({ success: false, error: 'Lỗi hệ thống' }) };
     }
 };
 
