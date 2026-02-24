@@ -124,30 +124,29 @@ const products = {
     },
     spotify: {
         id: 'spotify',
-        name: 'Spotify Premium',
+        name: 'Giao sau',
         category: 'Giải trí',
         deliveryType: 'instant',
-        description: 'Nghe nhạc không giới hạn với chất lượng cao, không quảng cáo',
+        description: 'Dịch vụ giao sau tiện lợi, xử lý nhanh trong 5-10 phút',
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
         rating: 4.6,
         reviewCount: 18,
         soldCount: 98,
         variants: [
-            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m' },
-            { name: 'Spotify Premium 4 tháng', price: 100000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m' },
-            { name: 'Spotify Premium 1 năm', price: 300000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y' }
+            { name: 'Giao sau 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m' },
+            { name: 'Giao sau 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m' },
+            { name: 'Giao sau 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y' }
         ],
         tabs: {
             description: `
-                <h3>Về Spotify Premium</h3>
-                <p>Spotify Premium mang đến trải nghiệm nghe nhạc tuyệt vời nhất:</p>
+                <h3>Về gói Giao sau</h3>
+                <p>Dịch vụ giao sau giúp bạn đặt trước và được xử lý nhanh chóng:</p>
                 <ul>
-                    <li>Hơn 100 triệu bài hát và podcast</li>
-                    <li>Chất lượng âm thanh cao (320kbps)</li>
-                    <li>Nghe nhạc offline</li>
-                    <li>Không quảng cáo</li>
-                    <li>Bỏ qua bài hát không giới hạn</li>
+                    <li>Đặt trước, xử lý trong 5-10 phút</li>
+                    <li>Hỗ trợ tư vấn chi tiết theo nhu cầu</li>
+                    <li>Thanh toán linh hoạt, rõ ràng</li>
+                    <li>Ưu tiên hỗ trợ trong suốt thời gian sử dụng</li>
                 </ul>
             `,
             warranty: `
@@ -161,11 +160,11 @@ const products = {
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
                 <ul>
-                    <li>Cung cấp email Spotify của bạn qua Zalo: 0988428496</li>
-                    <li>Admin sẽ nâng cấp lên Premium trong 5-10 phút</li>
-                    <li>Đăng nhập app Spotify và thưởng thức âm nhạc</li>
+                    <li>Nhắn Zalo: 0988428496 để được tư vấn gói giao sau phù hợp</li>
+                    <li>Thanh toán theo hướng dẫn trên trang đặt hàng</li>
+                    <li>Chờ xử lý trong 5-10 phút, sau đó kiểm tra kết quả theo hướng dẫn</li>
                 </ul>
-                <p><strong>Lưu ý:</strong> Không thay đổi email hoặc mật khẩu tài khoản.</p>
+                <p><strong>Lưu ý:</strong> Giữ liên lạc qua Zalo để được hỗ trợ nhanh nhất khi có vấn đề.</p>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>

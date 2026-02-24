@@ -28,10 +28,10 @@ const DEFAULT_TEMPLATES: Template[] = [
     },
     {
         id: '2',
-        service: 'Spotify',
-        title: 'Báo giá Spotify',
+        service: 'Giao sau',
+        title: 'Báo giá Giao sau',
         category: 'sale',
-        content: `Spotify mình đang bán **30k/tháng**, full bảo hành trong thời hạn, thanh toán khi log in thành công.`
+        content: `Gói giao sau mình đang bán **30k/tháng**, full bảo hành trong thời hạn, thanh toán khi xử lý xong thành công.`
     },
     {
         id: '3',

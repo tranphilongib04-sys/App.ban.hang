@@ -51,7 +51,7 @@ Content-Type: application/json
 
 ## 3. Ví dụ theo từng loại sản phẩm
 
-### Giao liền – Tài khoản / mật khẩu (Netflix, Spotify, Grok, ChatGPT Plus…)
+### Giao liền – Tài khoản / mật khẩu (Netflix, Giao sau, Grok, ChatGPT Plus…)
 
 ```json
 {
@@ -134,7 +134,7 @@ console.log(await res.json());
 | sku_code            | Sản phẩm                    |
 |---------------------|-----------------------------|
 | netflix_1m          | Netflix 1 tháng             |
-| spotify_premium_1m  | Spotify Premium 1 tháng    |
+| spotify_premium_1m  | Giao sau 1 tháng           |
 | chatgpt_plus_1m     | ChatGPT Plus (cấp TK)      |
 | grok_7d             | Grok 7 ngày                 |
 | chatgpt_code_1m_vn  | Code ChatGPT 1 tháng IP VN  |

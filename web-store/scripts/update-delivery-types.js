@@ -1,7 +1,7 @@
 /**
  * One-time: Set delivery_type on existing SKUs for two-tier delivery.
  * Pre-order (owner_upgrade): Adobe, Canva, YouTube, Microsoft, Duolingo, Quizlet, CapCut 7d
- * Instant (auto): Netflix, Spotify, ChatGPT, CapCut 14d/1m/6m/1y
+ * Instant (auto): Netflix, Giao sau, ChatGPT, CapCut 14d/1m/6m/1y
  *
  * Run from web-store: node -e "require('./scripts/update-delivery-types').run().then(()=>process.exit(0))"
  * Or with env: TURSO_DATABASE_URL=... TURSO_AUTH_TOKEN=... node scripts/update-delivery-types.js
