@@ -33,7 +33,7 @@ export function TemplatesPageClient({ templates }: TemplatesPageClientProps) {
     // For now we assume generic context or maybe allow user to "Test" with dummy data
     const dummyContext = {
         customerName: 'Anh Tuấn',
-        service: 'Netflix Premium',
+        service: 'Giao sau',
         price: 70000,
         endDate: '25/02/2026'
     };

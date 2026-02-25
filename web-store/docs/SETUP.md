@@ -52,7 +52,7 @@ Tạo products trong database:
 INSERT INTO products (code, name, variant, base_price, is_active)
 VALUES 
   ('chatgpt_plus-1m', 'ChatGPT Plus', 'Cấp TK mới', 70000, 1),
-  ('netflix_extra', 'Netflix Extra', NULL, 70000, 1);
+  ('netflix_extra', 'Giao sau 1 tháng', NULL, 70000, 1);
 ```
 
 ### 5. Import Stock Units

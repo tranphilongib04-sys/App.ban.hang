@@ -2015,6 +2015,7 @@ footer {
     cursor: pointer;
     font-family: inherit;
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    white-space: nowrap;
 }
 
 .add-to-cart-text-btn:hover {

@@ -28,7 +28,7 @@ If you need to manually insert products, use the Database Client or these SQL co
 
 ```sql
 INSERT INTO products (code, name, base_price) VALUES 
-('netflix_1m', 'Netflix Premium 1 Month', 70000),
+('netflix_1m', 'Giao sau 1 Month', 70000),
 ('spotify_1y', 'Giao sau 1 Year', 350000);
 ```
 

@@ -8,7 +8,7 @@ export interface VariableContext {
 
 export const VARIABLES = [
     { key: '{ten_khach}', label: 'Tên khách hàng', example: 'Anh Tuấn' },
-    { key: '{dich_vu}', label: 'Dịch vụ', example: 'Netflix Premium' },
+    { key: '{dich_vu}', label: 'Dịch vụ', example: 'Giao sau' },
     { key: '{gia}', label: 'Giá tiền', example: '70.000 đ' },
     { key: '{ngay_het_han}', label: 'Ngày hết hạn', example: '25/02/2026' },
 ];

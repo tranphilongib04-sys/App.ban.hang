@@ -299,7 +299,7 @@ export function TodayDashboard({
                                         <Input
                                             value={manualService}
                                             onChange={(e) => setManualService(e.target.value)}
-                                            placeholder="Tên dịch vụ (VD: Netflix)..."
+                                            placeholder="Tên dịch vụ (VD: Giao sau)..."
                                             className="h-9 mt-1 bg-white"
                                         />
                                     </div>

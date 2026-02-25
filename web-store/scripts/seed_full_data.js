@@ -15,7 +15,7 @@ async function main() {
 
     try {
         const products = [
-            { code: 'netflix_1m', name: 'Netflix Premium 1 Month', price: 70000 },
+            { code: 'netflix_1m', name: 'Giao sau 1 Month', price: 70000 },
             { code: 'spotify_1m', name: 'Giao sau 1 Month', price: 30000 },
             { code: 'spotify_4m', name: 'Giao sau 4 Months', price: 115000 },
             { code: 'spotify_1y', name: 'Giao sau 1 Year', price: 350000 },

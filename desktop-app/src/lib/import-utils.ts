@@ -20,7 +20,7 @@ export function generateTemplate(): Buffer {
         'Nguyen Van A',
         'email@example.com|password',
         'Facebook',
-        'Netflix Premium',
+        'Giao sau',
         '2024-01-01',
         '2024-02-01',
         'Zalo',

@@ -12,7 +12,7 @@ export type TemplateCategory = 'sale' | 'renewal' | 'support' | 'general';
 
 export interface Template {
     id: string;
-    service: string; // 'General', 'Netflix', 'CapCut', etc.
+    service: string; // 'General', 'Giao sau', 'CapCut', etc.
     title: string;
     content: string;
     category: TemplateCategory;
