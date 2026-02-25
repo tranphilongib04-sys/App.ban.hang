@@ -68,28 +68,27 @@ const products = {
     },
     netflix: {
         id: 'netflix',
-        name: 'Netflix',
+        name: 'Giao sau',
         category: 'Giải trí',
-        deliveryType: 'instant',
-        description: 'Xem phim và chương trình truyền hình không giới hạn với chất lượng HD/4K',
+        deliveryType: 'preorder',
+        description: 'Dịch vụ giao sau tiện lợi, xử lý nhanh trong 5-10 phút',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
         rating: 4.7,
         reviewCount: 29,
         soldCount: 132,
         variants: [
-            { name: 'Netflix Extra', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m' }
+            { name: 'Giao sau 1 tháng', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
-                <h3>Về Netflix</h3>
-                <p>Netflix là dịch vụ streaming giải trí hàng đầu thế giới với hàng nghìn bộ phim, series đình đám:</p>
+                <h3>Về gói Giao sau</h3>
+                <p>Dịch vụ giao sau giúp bạn đặt trước và được xử lý nhanh chóng:</p>
                 <ul>
-                    <li>Thư viện phim khổng lồ với đầy đủ thể loại</li>
-                    <li>Phim và series Netflix Original độc quyền</li>
-                    <li>Chất lượng HD/4K sắc nét</li>
-                    <li>Xem offline trên thiết bị di động</li>
-                    <li>Không quảng cáo</li>
+                    <li>Đặt trước, xử lý trong 5-10 phút</li>
+                    <li>Hỗ trợ tư vấn chi tiết theo nhu cầu</li>
+                    <li>Thanh toán linh hoạt, rõ ràng</li>
+                    <li>Ưu tiên hỗ trợ trong suốt thời gian sử dụng</li>
                 </ul>
             `,
             warranty: `
@@ -97,7 +96,6 @@ const products = {
                 <ul>
                     <li>Bảo hành trong suốt thời gian sử dụng</li>
                     <li>Hỗ trợ đổi tài khoản nếu có vấn đề</li>
-                    <li>Cam kết xem được từ 1-2 thiết bị đồng thời</li>
                     <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
                 </ul>
             `,
@@ -105,20 +103,14 @@ const products = {
                 <h3>Hướng dẫn sử dụng</h3>
                 <ul>
                     <li>Sau khi thanh toán, nhắn Zalo: 0988428496 để nhận tài khoản</li>
-                    <li>Đăng nhập tại netflix.com hoặc app Netflix</li>
-                    <li>Tạo profile riêng của bạn</li>
-                    <li>Bắt đầu xem phim yêu thích</li>
+                    <li>Chờ xử lý trong 5-10 phút, kiểm tra theo hướng dẫn</li>
                 </ul>
-                <p><strong>Lưu ý:</strong> Không thay đổi mật khẩu hoặc thông tin tài khoản.</p>
+                <p><strong>Lưu ý:</strong> Giữ liên lạc qua Zalo để được hỗ trợ nhanh nhất.</p>
             `,
             faq: `
                 <h3>Câu hỏi thường gặp</h3>
-                <p><strong>Q: Có thể xem bao nhiêu thiết bị?</strong></p>
-                <p>A: Gói Extra cho phép xem từ 1-2 thiết bị đồng thời.</p>
-                <p><strong>Q: Có thể download phim không?</strong></p>
-                <p>A: Có, bạn có thể download để xem offline trên app.</p>
                 <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
-                <p>A: Nhắn Zalo sau khi thanh toán, nhận tài khoản trong 5-10 phút.</p>
+                <p>A: Nhắn Zalo sau khi thanh toán, nhận trong 5-10 phút.</p>
             `
         }
     },
@@ -126,7 +118,7 @@ const products = {
         id: 'spotify',
         name: 'Giao sau',
         category: 'Giải trí',
-        deliveryType: 'instant',
+        deliveryType: 'preorder',
         description: 'Dịch vụ giao sau tiện lợi, xử lý nhanh trong 5-10 phút',
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
@@ -134,9 +126,9 @@ const products = {
         reviewCount: 18,
         soldCount: 98,
         variants: [
-            { name: 'Giao sau 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m' },
-            { name: 'Giao sau 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m' },
-            { name: 'Giao sau 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y' }
+            { name: 'Giao sau 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m', deliveryType: 'preorder' },
+            { name: 'Giao sau 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m', deliveryType: 'preorder' },
+            { name: 'Giao sau 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -1614,7 +1606,7 @@ function showProductDetail(productId) {
                     <div class="variant-label">Chọn gói dịch vụ:</div>
                     <div class="variant-options" id="variantOptions">
                         ${product.variants.map((variant, index) => `
-                            <label class="variant-option ${index === 0 ? 'selected' : ''} variant-${(variant.deliveryType || 'instant') === 'instant' ? 'instant' : 'preorder'}">
+                            <label class="variant-option ${index === 0 ? 'selected' : ''} variant-${(variant.deliveryType || product.deliveryType || 'instant') === 'instant' ? 'instant' : 'preorder'}">
                                 <div class="variant-select-circle">
                                     <input type="radio" name="variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})">
                                 </div>
@@ -1625,7 +1617,7 @@ function showProductDetail(productId) {
                                     </div>
                                     <div class="variant-meta-row">
                                         <span class="variant-duration-text duration-badge ${getDurationClass(variant.duration)}">${variant.duration}</span>
-                                        <span class="variant-delivery-badge ${(variant.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">${(variant.deliveryType || 'instant') === 'instant' ? 'GIAO LIỀN' : 'GIAO SAU'}</span>
+                                        <span class="variant-delivery-badge ${(variant.deliveryType || product.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">${(variant.deliveryType || product.deliveryType || 'instant') === 'instant' ? 'GIAO LIỀN' : 'GIAO SAU'}</span>
                                     </div>
                                 </div>
                             </label>
