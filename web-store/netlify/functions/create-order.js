@@ -365,6 +365,59 @@ exports.handler = async function (event, context) {
         await tx.commit();
 
         const hasPreorderItems = finalItems.some(item => item.deliveryType !== 'auto');
+
+        // ── FREE ORDER (100% discount): auto-fulfill immediately ──
+        if (totalAmount === 0) {
+            try {
+                const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
+                await ensurePaymentSchema(db);
+                const tx2 = await db.transaction('write');
+
+                // Synthetic transaction for free order
+                const freeTransaction = {
+                    id: 'FREE-' + orderCode,
+                    reference_number: 'FREE-' + orderCode,
+                    amount: 0
+                };
+
+                const orderForFulfill = {
+                    id: orderId,
+                    order_code: orderCode,
+                    customer_email: customerEmail || '',
+                    customer_name: customerName,
+                    amount_total: 0,
+                    status: 'pending_payment'
+                };
+
+                const result = await finalizeOrder(tx2, orderForFulfill, freeTransaction, 'free-order');
+                await tx2.commit();
+
+                const allPreorder = finalItems.every(item => item.deliveryType !== 'auto');
+
+                return {
+                    statusCode: 200,
+                    headers,
+                    body: JSON.stringify({
+                        success: true,
+                        freeOrder: true,
+                        orderCode,
+                        orderId,
+                        amount: 0,
+                        discountCode: appliedDiscountCode || appliedCouponCode,
+                        discountAmount: discountAmount,
+                        hasPreorderItems,
+                        deliveryToken: allPreorder ? null : result.deliveryToken,
+                        invoiceNumber: result.invoiceNumber,
+                        fulfillmentType: allPreorder ? 'owner_upgrade' : 'auto',
+                        message: 'Đơn hàng miễn phí đã được xử lý thành công!'
+                    })
+                };
+            } catch (freeErr) {
+                console.error('Free order fulfillment error:', freeErr.message);
+                // Fall through to normal response — order is created, just not auto-fulfilled
+            }
+        }
+
         return {
             statusCode: 200,
             headers,

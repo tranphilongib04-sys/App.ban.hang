@@ -1963,6 +1963,21 @@ async function submitBuyNow(productId) {
         detailQuantity = 1;
         detailDiscount = null;
 
+        // ── FREE ORDER: skip payment, show credentials directly ──
+        if (data.freeOrder) {
+            if (pollingInterval) clearInterval(pollingInterval);
+            const isPreorder = data.fulfillmentType === 'owner_upgrade';
+            if (isPreorder) {
+                showPreorderSuccess(orderCode, data.invoiceNumber);
+            } else if (data.deliveryToken) {
+                await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
+            } else {
+                showPreorderSuccess(orderCode, data.invoiceNumber);
+            }
+            window.location.hash = 'confirmation';
+            return;
+        }
+
         // Setup confirmation page
         if (pollingInterval) clearInterval(pollingInterval);
         const pendingState = document.getElementById('pendingPaymentState');
@@ -2461,6 +2476,29 @@ async function placeOrder() {
             total: data.amount || total
         };
 
+        // Clear cart & discount
+        cart = [];
+        appliedDiscount = null;
+        updateCartUI();
+
+        // ── FREE ORDER: skip payment, show credentials directly ──
+        if (data.freeOrder) {
+            if (pollingInterval) clearInterval(pollingInterval);
+            const isPreorder = data.fulfillmentType === 'owner_upgrade';
+            if (isPreorder) {
+                showPreorderSuccess(orderCode, data.invoiceNumber);
+            } else if (data.deliveryToken) {
+                await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
+            } else {
+                showPreorderSuccess(orderCode, data.invoiceNumber);
+            }
+            window.location.hash = 'confirmation';
+            submitBtn.disabled = false;
+            submitBtn.textContent = originalBtnText;
+            submitBtn.style.opacity = '1';
+            return;
+        }
+
         // Reset confirmation page state for new order
         // (fixes bug: 2nd order shows old order's success instead of new QR)
         if (pollingInterval) clearInterval(pollingInterval);
@@ -2485,11 +2523,6 @@ async function placeOrder() {
                  style="max-width: 220px; border-radius: 8px;"
                  onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
         `;
-
-        // Clear cart & discount
-        cart = [];
-        appliedDiscount = null;
-        updateCartUI();
 
         // Navigate to confirmation page
         window.location.hash = 'confirmation';
