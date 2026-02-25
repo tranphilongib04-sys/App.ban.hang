@@ -503,6 +503,8 @@ section {
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
 }
 
 .product-name {
@@ -4379,6 +4381,7 @@ section .section-title::after {
         width: 100%;
         border-radius: var(--btn-radius);
         margin-top: auto;
+        white-space: nowrap;
     }
 
     .hero h1 {
