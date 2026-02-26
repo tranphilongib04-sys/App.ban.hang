@@ -2749,12 +2749,15 @@ function copyText(text) {
 
 function copyAllCreds() {
     if (!window._credentials) return;
-    const text = window._credentials.map((c, i) => {
-        if (c.isLink) return `Code/Link ${i + 1}:\nLink kích hoạt: ${c.username}${c.extraInfo ? '\nHướng dẫn & lưu ý: ' + c.extraInfo : ''}`;
-        return `Tài khoản ${i + 1}:\nTên đăng nhập: ${c.username}\nMật khẩu: ${c.password}${c.extraInfo ? '\nGhi chú: ' + c.extraInfo : ''}`;
-    }).join('\n\n---\n\n');
+    const header = '🔐 TBQ HOMIE — Thông tin đăng nhập\n━━━━━━━━━━━━━━━━━━━━';
+    const body = window._credentials.map((c, i) => {
+        if (c.isLink) return `🔗 Code/Link ${i + 1}:\n   Link kích hoạt: ${c.username}${c.extraInfo ? '\n   📝 Lưu ý: ' + c.extraInfo : ''}`;
+        return `📧 Tài khoản${window._credentials.length > 1 ? ' ' + (i + 1) : ''}: ${c.username}\n🔑 Mật khẩu: ${c.password}${c.extraInfo ? '\n📝 Ghi chú: ' + c.extraInfo : ''}`;
+    }).join('\n\n');
+    const footer = '━━━━━━━━━━━━━━━━━━━━\n⚠️ Không chia sẻ thông tin này cho người khác\n💬 Hỗ trợ: zalo.me/0988428496';
+    const text = `${header}\n\n${body}\n\n${footer}`;
     navigator.clipboard.writeText(text).then(() => {
-        showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
+        showToast('Đã sao chép toàn bộ thông tin!', 'success');
     });
 }
 
