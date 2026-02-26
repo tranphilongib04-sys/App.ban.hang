@@ -258,7 +258,9 @@ exports.handler = async function (event, context) {
                     orderCode: order,
                     invoiceNumber: orderData.invoice_number,
                     credentials: credentials,
-                    hasChatGPTPro: hasChatGPTPro
+                    hasChatGPTPro: hasChatGPTPro,
+                    customerName: orderData.customer_name || '',
+                    customerPhone: orderData.customer_phone || ''
                 })
             };
         }

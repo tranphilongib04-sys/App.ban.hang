@@ -1043,6 +1043,61 @@ const products = {
             `
         }
     },
+    claude: {
+        id: 'claude',
+        name: 'Claude Pro',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'Trợ lý AI từ Anthropic, nổi bật với khả năng phân tích sâu, viết lách tự nhiên và xử lý tác vụ phức tạp',
+        image: 'images/claude-logo.svg',
+        featured: true,
+        rating: 4.8,
+        reviewCount: 8,
+        soldCount: 25,
+        variants: [
+            { name: 'Claude Pro 1 tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'claude_pro_1m', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Claude Pro</h3>
+                <p>Claude là trợ lý AI thế hệ mới từ Anthropic, được đánh giá cao về khả năng phân tích, suy luận và xử lý ngôn ngữ tự nhiên:</p>
+                <ul>
+                    <li>Phân tích văn bản dài, tài liệu phức tạp vượt trội</li>
+                    <li>Viết lách tự nhiên, sáng tạo và chính xác</li>
+                    <li>Hỗ trợ lập trình, debug code hiệu quả</li>
+                    <li>Xử lý đa ngôn ngữ, dịch thuật chất lượng cao</li>
+                    <li>Suy luận logic mạnh mẽ, phù hợp cho nghiên cứu và học tập</li>
+                    <li>Hỗ trợ upload file, phân tích hình ảnh</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời gian sử dụng</li>
+                    <li>Hỗ trợ xử lý mọi vấn đề phát sinh</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, IB Zalo: 0988428496 để nhận hàng</li>
+                    <li>Admin sẽ xử lý và giao tài khoản trong thời gian sớm nhất</li>
+                    <li>Đăng nhập tại claude.ai và bắt đầu sử dụng</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Giữ liên lạc qua Zalo để được hỗ trợ nhanh nhất.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Claude Pro khác gì ChatGPT Plus?</strong></p>
+                <p>A: Claude nổi bật với khả năng phân tích văn bản dài, suy luận logic và viết lách tự nhiên hơn. Phù hợp cho nghiên cứu, viết báo cáo và phân tích tài liệu.</p>
+                <p><strong>Q: Có thể dùng trên điện thoại không?</strong></p>
+                <p>A: Có, Claude có app trên iOS và Android, hoặc dùng trực tiếp trên web claude.ai.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Sau khi thanh toán, IB Zalo để admin xử lý và giao hàng.</p>
+            `
+        }
+    },
 };
 
 // V2: Cart Persistence
@@ -2715,6 +2770,8 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
         `;
 
         window._credentials = credentials;
+        window._customerName = data.customerName || (typeof lastOrder !== 'undefined' && lastOrder && lastOrder.customer ? lastOrder.customer.name : '') || '';
+        window._customerPhone = data.customerPhone || (typeof lastOrder !== 'undefined' && lastOrder && lastOrder.customer ? lastOrder.customer.phone : '') || '';
 
         // Show toast notification
         showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
@@ -2750,12 +2807,15 @@ function copyText(text) {
 function copyAllCreds() {
     if (!window._credentials) return;
     const header = '🔐 TBQ HOMIE — Thông tin đăng nhập\n━━━━━━━━━━━━━━━━━━━━';
+    const customerInfo = (window._customerName || window._customerPhone)
+        ? `\n👤 Khách hàng: ${window._customerName || ''}${window._customerPhone ? '\n📱 SĐT: ' + window._customerPhone : ''}\n`
+        : '';
     const body = window._credentials.map((c, i) => {
         if (c.isLink) return `🔗 Code/Link ${i + 1}:\n   Link kích hoạt: ${c.username}${c.extraInfo ? '\n   📝 Lưu ý: ' + c.extraInfo : ''}`;
         return `📧 Tài khoản${window._credentials.length > 1 ? ' ' + (i + 1) : ''}: ${c.username}\n🔑 Mật khẩu: ${c.password}${c.extraInfo ? '\n📝 Ghi chú: ' + c.extraInfo : ''}`;
     }).join('\n\n');
     const footer = '━━━━━━━━━━━━━━━━━━━━\n⚠️ Không chia sẻ thông tin này cho người khác\n💬 Hỗ trợ: zalo.me/0988428496';
-    const text = `${header}\n\n${body}\n\n${footer}`;
+    const text = `${header}${customerInfo}\n${body}\n\n${footer}`;
     navigator.clipboard.writeText(text).then(() => {
         showToast('Đã sao chép toàn bộ thông tin!', 'success');
     });
@@ -2864,7 +2924,7 @@ function startPaymentPolling(orderCode, amount) {
 
         try {
             // Use check-payment which both checks AND triggers fulfillment
-            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${encodeURIComponent(orderCode)}`);
+            const response = await fetch(`/.netlify/functions/check-payment?orderCode=${encodeURIComponent(orderCode)}&amount=${encodeURIComponent(amount)}`);
 
             // If server returned non-2xx, try to surface the error body.
             if (!response.ok) {

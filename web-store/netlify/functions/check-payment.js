@@ -54,7 +54,7 @@ function generateDeliveryToken(orderId, email) {
 
 // Rate Limiting Config for Check Payment
 const RATE_LIMIT_CHECK_WINDOW_MS = 60 * 1000; // 1 minute
-const RATE_LIMIT_CHECK_MAX_REQUESTS = 30; // SECURITY: Reduced from 300 to 30 per minute per IP
+const RATE_LIMIT_CHECK_MAX_REQUESTS = 60; // 60/min supports 2s polling with headroom
 
 async function checkRateLimit(db, ip) {
     // Ensure table exists (quick check)
@@ -210,7 +210,7 @@ exports.handler = async function (event, context) {
 
                 if (response.ok) {
                     const data = await response.json();
-                    const transactions = data.transactions || [];
+                    const transactions = data.transactions || data.results || [];
                     console.log(`[CheckPayment] SePay returned ${transactions.length} transactions for order ${orderCode}`);
 
                     // Find matching transaction - STRICT validation required
