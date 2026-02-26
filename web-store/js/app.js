@@ -68,27 +68,27 @@ const products = {
     },
     netflix: {
         id: 'netflix',
-        name: 'Giao sau',
+        name: 'Netflix',
         category: 'Giải trí',
         deliveryType: 'preorder',
-        description: 'Dịch vụ giao sau tiện lợi, xử lý nhanh trong 5-10 phút',
+        description: 'Xem phim, series không giới hạn với chất lượng 4K HDR',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/08/Netflix_2015_logo.svg',
         featured: true,
         rating: 4.7,
         reviewCount: 29,
         soldCount: 132,
         variants: [
-            { name: 'Giao sau 1 tháng', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m', deliveryType: 'preorder' }
+            { name: 'Netflix 1 tháng', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
-                <h3>Về gói Giao sau</h3>
-                <p>Dịch vụ giao sau giúp bạn đặt trước và được xử lý nhanh chóng:</p>
+                <h3>Về Netflix</h3>
+                <p>Dịch vụ xem phim trực tuyến hàng đầu thế giới:</p>
                 <ul>
-                    <li>Đặt trước, xử lý trong 5-10 phút</li>
-                    <li>Hỗ trợ tư vấn chi tiết theo nhu cầu</li>
-                    <li>Thanh toán linh hoạt, rõ ràng</li>
-                    <li>Ưu tiên hỗ trợ trong suốt thời gian sử dụng</li>
+                    <li>Xem phim, series không giới hạn</li>
+                    <li>Chất lượng 4K HDR sắc nét</li>
+                    <li>Kho phim đa dạng, cập nhật liên tục</li>
+                    <li>Hỗ trợ nhiều thiết bị</li>
                 </ul>
             `,
             warranty: `
@@ -116,29 +116,29 @@ const products = {
     },
     spotify: {
         id: 'spotify',
-        name: 'Giao sau',
+        name: 'Spotify Premium',
         category: 'Giải trí',
         deliveryType: 'preorder',
-        description: 'Dịch vụ giao sau tiện lợi, xử lý nhanh trong 5-10 phút',
+        description: 'Nghe nhạc không quảng cáo, chất lượng cao với hàng triệu bài hát',
         image: 'https://upload.wikimedia.org/wikipedia/commons/1/19/Spotify_logo_without_text.svg',
         featured: true,
         rating: 4.6,
         reviewCount: 18,
         soldCount: 98,
         variants: [
-            { name: 'Giao sau 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m', deliveryType: 'preorder' },
-            { name: 'Giao sau 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m', deliveryType: 'preorder' },
-            { name: 'Giao sau 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y', deliveryType: 'preorder' }
+            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m', deliveryType: 'preorder' },
+            { name: 'Spotify Premium 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m', deliveryType: 'preorder' },
+            { name: 'Spotify Premium 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
-                <h3>Về gói Giao sau</h3>
-                <p>Dịch vụ giao sau giúp bạn đặt trước và được xử lý nhanh chóng:</p>
+                <h3>Về Spotify Premium</h3>
+                <p>Nền tảng nghe nhạc trực tuyến hàng đầu thế giới:</p>
                 <ul>
-                    <li>Đặt trước, xử lý trong 5-10 phút</li>
-                    <li>Hỗ trợ tư vấn chi tiết theo nhu cầu</li>
-                    <li>Thanh toán linh hoạt, rõ ràng</li>
-                    <li>Ưu tiên hỗ trợ trong suốt thời gian sử dụng</li>
+                    <li>Nghe nhạc không quảng cáo</li>
+                    <li>Chất lượng âm thanh cao</li>
+                    <li>Download nhạc nghe offline</li>
+                    <li>Hàng triệu bài hát và podcast</li>
                 </ul>
             `,
             warranty: `
