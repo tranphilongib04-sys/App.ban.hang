@@ -1098,6 +1098,61 @@ const products = {
             `
         }
     },
+    cursor: {
+        id: 'cursor',
+        name: 'Cursor Pro',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'IDE lập trình tích hợp AI hàng đầu, hỗ trợ viết code, debug và refactor thông minh với sức mạnh AI',
+        image: 'images/cursor-logo.png',
+        featured: true,
+        rating: 4.9,
+        reviewCount: 12,
+        soldCount: 30,
+        variants: [
+            { name: 'Cursor Pro 1 tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'cursor_pro_1m', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Cursor Pro</h3>
+                <p>Cursor là trình soạn thảo code tích hợp AI tiên tiến nhất hiện nay, được xây dựng trên nền VS Code và tích hợp sâu các mô hình AI hàng đầu:</p>
+                <ul>
+                    <li>Gợi ý code thông minh, autocomplete chính xác theo ngữ cảnh</li>
+                    <li>Chat AI trực tiếp trong editor để hỏi đáp, giải thích code</li>
+                    <li>Tự động debug, tìm lỗi và đề xuất sửa code</li>
+                    <li>Refactor code nhanh chóng với AI</li>
+                    <li>Hỗ trợ đa ngôn ngữ: Python, JavaScript, TypeScript, Go, Rust...</li>
+                    <li>Tích hợp GPT-4, Claude và nhiều mô hình AI khác</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời gian sử dụng</li>
+                    <li>Hỗ trợ xử lý mọi vấn đề phát sinh</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, IB Zalo: 0988428496 để nhận hàng</li>
+                    <li>Admin sẽ xử lý và giao tài khoản trong thời gian sớm nhất</li>
+                    <li>Tải Cursor tại cursor.com và đăng nhập để sử dụng</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Giữ liên lạc qua Zalo để được hỗ trợ nhanh nhất.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Cursor Pro khác gì phiên bản miễn phí?</strong></p>
+                <p>A: Cursor Pro cho phép sử dụng không giới hạn các mô hình AI cao cấp (GPT-4, Claude), tốc độ phản hồi nhanh hơn và nhiều tính năng nâng cao.</p>
+                <p><strong>Q: Có thể dùng Cursor thay VS Code không?</strong></p>
+                <p>A: Hoàn toàn được, Cursor được xây dựng trên nền VS Code nên hỗ trợ tất cả extension và cấu hình của VS Code.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Sau khi thanh toán, IB Zalo để admin xử lý và giao hàng.</p>
+            `
+        }
+    },
 };
 
 // V2: Cart Persistence
