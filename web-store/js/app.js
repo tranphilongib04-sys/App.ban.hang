@@ -1200,7 +1200,7 @@ function setCtvMode(enable) {
     const hash = window.location.hash || '#home';
     if (hash.startsWith('#product/')) {
         const productId = hash.split('/')[1];
-        if (productId) showProductDetail(productId);
+        if (productId) showProductDetail(productId, { preserveDiscount: true });
     }
 }
 
@@ -1629,13 +1629,15 @@ function getDurationClass(duration) {
 }
 
 // SHOW PRODUCT DETAIL (Rendering only)
-function showProductDetail(productId) {
+function showProductDetail(productId, { preserveDiscount = false } = {}) {
     const product = products[productId];
     if (!product) return;
 
     // Reset detail order info state
-    detailQuantity = 1;
-    detailDiscount = null;
+    if (!preserveDiscount) {
+        detailQuantity = 1;
+        detailDiscount = null;
+    }
 
     const container = document.getElementById('productDetailContent');
 
@@ -1753,7 +1755,23 @@ function showProductDetail(productId) {
     `;
 
     // Initialize price summary after DOM is ready
-    setTimeout(() => updateDetailPriceSummary(productId), 0);
+    setTimeout(() => {
+        updateDetailPriceSummary(productId);
+        // Restore discount UI if detailDiscount was preserved (e.g. after setCtvMode re-render)
+        if (detailDiscount) {
+            const input = document.getElementById('detailDiscountInput');
+            const feedback = document.getElementById('detailDiscountFeedback');
+            const btn = document.getElementById('detailDiscountApplyBtn');
+            const content = document.getElementById('detailDiscountContent');
+            if (input) { input.value = detailDiscount.code; input.readOnly = true; }
+            if (feedback) { feedback.textContent = 'Đã áp giá CTV'; feedback.className = 'discount-feedback success'; }
+            if (content) content.style.display = 'block';
+            if (btn) {
+                btn.textContent = 'Xoá';
+                btn.onclick = function () { clearDetailDiscount(); };
+            }
+        }
+    }, 0);
 }
 
 // detail-level state
