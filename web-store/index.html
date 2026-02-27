@@ -784,6 +784,72 @@
         </div>
     </nav>
 
+    <!-- FLOATING MUSIC PLAYER -->
+    <div class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc">
+        <div class="music-fab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+            </svg>
+        </div>
+        <div class="music-fab-bars" id="musicFabBars">
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </div>
+
+    <div class="music-player-panel" id="musicPlayerPanel">
+        <div class="music-player-header">
+            <div class="music-player-title">🎵 Nhạc nền</div>
+            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng">×</button>
+        </div>
+        <div class="music-track-info">
+            <div class="music-track-name" id="musicTrackName">Chọn bài để nghe</div>
+        </div>
+        <div class="music-controls">
+            <button class="music-ctrl-btn" onclick="musicPrev()" title="Bài trước">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                </svg>
+            </button>
+            <button class="music-ctrl-btn music-play-btn" id="musicPlayBtn" onclick="musicTogglePlay()"
+                title="Phát / Tạm dừng">
+                <svg viewBox="0 0 24 24" fill="currentColor" id="musicPlayIcon">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+            </button>
+            <button class="music-ctrl-btn" onclick="musicNext()" title="Bài tiếp">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 18h2V6h-2zM6 18l8.5-6L6 6z" />
+                </svg>
+            </button>
+        </div>
+        <div class="music-progress-wrap">
+            <span class="music-time" id="musicCurrentTime">0:00</span>
+            <input type="range" class="music-progress" id="musicProgress" value="0" min="0" max="100" step="0.1"
+                oninput="musicSeek(this.value)">
+            <span class="music-time" id="musicDuration">0:00</span>
+        </div>
+        <div class="music-volume-wrap">
+            <svg class="music-vol-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                onclick="musicToggleMute()">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" id="musicVolWaves" />
+            </svg>
+            <input type="range" class="music-volume" id="musicVolume" value="70" min="0" max="100"
+                oninput="musicSetVolume(this.value)">
+        </div>
+        <div class="music-playlist-toggle" onclick="toggleMusicPlaylist()">
+            <span>📋 Danh sách phát</span>
+            <svg class="music-playlist-arrow" id="musicPlaylistArrow" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </div>
+        <div class="music-playlist" id="musicPlaylist"></div>
+    </div>
+
     <!-- JS -->
     <script src="js/app.js"></script>
 </body>

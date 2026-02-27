@@ -3609,3 +3609,236 @@ function lookupCopy(text, btnEl) {
 function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 function escAttr(s) { return escHtml(s); }
 
+// =============================================
+// 🎵 FLOATING MUSIC PLAYER
+// =============================================
+
+const musicPlaylist = [
+    { title: 'Nhẹ nhàng', src: 'audio/nhe-nhang.mp3' },
+    { title: 'Chất chơi', src: 'audio/chat-choi.mp3' },
+    { title: 'Lofi', src: 'audio/lofi.mp3' }
+];
+
+let musicAudio = new Audio();
+let musicCurrentIndex = -1;
+let musicIsPlaying = false;
+let musicPanelOpen = false;
+let musicPlaylistOpen = false;
+let musicProgressTimer = null;
+
+// Init & auto-play "Nhẹ nhàng" on load
+(function initMusicPlayer() {
+    const savedVol = localStorage.getItem('tbq_music_vol');
+
+    if (savedVol !== null) {
+        musicAudio.volume = parseInt(savedVol) / 100;
+        const volSlider = document.getElementById('musicVolume');
+        if (volSlider) volSlider.value = savedVol;
+    } else {
+        musicAudio.volume = 0.7;
+    }
+
+    // Build playlist UI
+    musicRenderPlaylist();
+
+    // Audio events
+    musicAudio.addEventListener('ended', function () {
+        musicNext();
+    });
+
+    musicAudio.addEventListener('timeupdate', function () {
+        musicUpdateProgress();
+    });
+
+    musicAudio.addEventListener('loadedmetadata', function () {
+        const durEl = document.getElementById('musicDuration');
+        if (durEl) durEl.textContent = musicFormatTime(musicAudio.duration);
+    });
+
+    // Auto-play bài Nhẹ nhàng (index 0)
+    musicCurrentIndex = 0;
+    musicAudio.src = musicPlaylist[0].src;
+    var nameEl = document.getElementById('musicTrackName');
+    if (nameEl) nameEl.textContent = musicPlaylist[0].title;
+    localStorage.setItem('tbq_music_track', 0);
+    musicRenderPlaylist();
+
+    // Auto-play: thử phát bình thường trước
+    var realVolume = musicAudio.volume;
+    var autoplayPromise = musicAudio.play();
+    if (autoplayPromise !== undefined) {
+        autoplayPromise.then(function () {
+            // Autoplay thành công — phát bình thường
+            musicIsPlaying = true;
+            musicUpdateUI();
+        }).catch(function () {
+            // Bị chặn — phát muted trước, unmute khi user tương tác
+            musicAudio.muted = true;
+            musicAudio.play().then(function () {
+                musicIsPlaying = true;
+                musicUpdateUI();
+            }).catch(function () { });
+
+            function unmuteOnInteraction() {
+                musicAudio.muted = false;
+                musicAudio.volume = realVolume;
+                musicUpdateVolIcon();
+                document.removeEventListener('click', unmuteOnInteraction);
+                document.removeEventListener('touchstart', unmuteOnInteraction);
+                document.removeEventListener('scroll', unmuteOnInteraction);
+                document.removeEventListener('keydown', unmuteOnInteraction);
+            }
+            document.addEventListener('click', unmuteOnInteraction);
+            document.addEventListener('touchstart', unmuteOnInteraction);
+            document.addEventListener('scroll', unmuteOnInteraction);
+            document.addEventListener('keydown', unmuteOnInteraction);
+        });
+    }
+})();
+
+function toggleMusicPlayer() {
+    musicPanelOpen = !musicPanelOpen;
+    const panel = document.getElementById('musicPlayerPanel');
+    if (panel) panel.classList.toggle('open', musicPanelOpen);
+}
+
+function musicRenderPlaylist() {
+    const container = document.getElementById('musicPlaylist');
+    if (!container) return;
+    container.innerHTML = musicPlaylist.map(function (track, i) {
+        const isActive = i === musicCurrentIndex;
+        return '<div class="music-playlist-item' + (isActive ? ' active' : '') + '" onclick="musicPlayTrack(' + i + ')">' +
+            '<span class="music-playlist-item-num">' + (isActive ? '♪' : (i + 1)) + '</span>' +
+            '<span class="music-playlist-item-name">' + track.title + '</span>' +
+            '<div class="music-playlist-item-playing"><span></span><span></span><span></span></div>' +
+            '</div>';
+    }).join('');
+}
+
+function musicPlayTrack(index) {
+    if (index < 0 || index >= musicPlaylist.length) index = 0;
+    musicCurrentIndex = index;
+    musicAudio.src = musicPlaylist[index].src;
+    musicAudio.play().then(function () {
+        musicIsPlaying = true;
+        musicUpdateUI();
+    }).catch(function (e) {
+        console.warn('Music autoplay blocked:', e);
+    });
+    localStorage.setItem('tbq_music_track', index);
+}
+
+function musicTogglePlay() {
+    if (musicCurrentIndex < 0) {
+        musicPlayTrack(0);
+        return;
+    }
+    if (musicIsPlaying) {
+        musicAudio.pause();
+        musicIsPlaying = false;
+    } else {
+        musicAudio.play().then(function () {
+            musicIsPlaying = true;
+            musicUpdateUI();
+        }).catch(function () { });
+        return;
+    }
+    musicUpdateUI();
+}
+
+function musicNext() {
+    const next = (musicCurrentIndex + 1) % musicPlaylist.length;
+    musicPlayTrack(next);
+}
+
+function musicPrev() {
+    // If more than 3 seconds into the song, restart; otherwise go prev
+    if (musicAudio.currentTime > 3) {
+        musicAudio.currentTime = 0;
+        return;
+    }
+    const prev = (musicCurrentIndex - 1 + musicPlaylist.length) % musicPlaylist.length;
+    musicPlayTrack(prev);
+}
+
+function musicSeek(val) {
+    if (musicAudio.duration) {
+        musicAudio.currentTime = (val / 100) * musicAudio.duration;
+    }
+}
+
+function musicSetVolume(val) {
+    musicAudio.volume = val / 100;
+    musicAudio.muted = false;
+    localStorage.setItem('tbq_music_vol', val);
+    musicUpdateVolIcon();
+}
+
+function musicToggleMute() {
+    musicAudio.muted = !musicAudio.muted;
+    const volSlider = document.getElementById('musicVolume');
+    if (musicAudio.muted) {
+        if (volSlider) volSlider.value = 0;
+    } else {
+        if (volSlider) volSlider.value = Math.round(musicAudio.volume * 100);
+    }
+    musicUpdateVolIcon();
+}
+
+function musicUpdateVolIcon() {
+    const waves = document.getElementById('musicVolWaves');
+    if (!waves) return;
+    if (musicAudio.muted || musicAudio.volume === 0) {
+        waves.style.opacity = '0.2';
+    } else {
+        waves.style.opacity = '1';
+    }
+}
+
+function toggleMusicPlaylist() {
+    musicPlaylistOpen = !musicPlaylistOpen;
+    const pl = document.getElementById('musicPlaylist');
+    const arrow = document.getElementById('musicPlaylistArrow');
+    if (pl) pl.classList.toggle('open', musicPlaylistOpen);
+    if (arrow) arrow.classList.toggle('rotated', musicPlaylistOpen);
+}
+
+function musicUpdateUI() {
+    const fab = document.getElementById('musicPlayerFab');
+    const playBtn = document.getElementById('musicPlayIcon');
+    const nameEl = document.getElementById('musicTrackName');
+
+    if (fab) {
+        fab.classList.toggle('playing', musicIsPlaying);
+        fab.classList.toggle('paused', !musicIsPlaying && musicCurrentIndex >= 0);
+    }
+
+    if (playBtn) {
+        if (musicIsPlaying) {
+            playBtn.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        } else {
+            playBtn.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        }
+    }
+
+    if (nameEl && musicCurrentIndex >= 0) {
+        nameEl.textContent = musicPlaylist[musicCurrentIndex].title;
+    }
+
+    musicRenderPlaylist();
+}
+
+function musicUpdateProgress() {
+    if (!musicAudio.duration) return;
+    const progress = document.getElementById('musicProgress');
+    const curTime = document.getElementById('musicCurrentTime');
+    if (progress) progress.value = (musicAudio.currentTime / musicAudio.duration) * 100;
+    if (curTime) curTime.textContent = musicFormatTime(musicAudio.currentTime);
+}
+
+function musicFormatTime(sec) {
+    if (!sec || isNaN(sec)) return '0:00';
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return m + ':' + (s < 10 ? '0' : '') + s;
+}
