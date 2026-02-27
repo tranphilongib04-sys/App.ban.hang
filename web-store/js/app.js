@@ -3615,8 +3615,10 @@ function escAttr(s) { return escHtml(s); }
 
 const musicPlaylist = [
     { title: 'Nhẹ nhàng', src: 'audio/nhe-nhang.mp3' },
-    { title: 'Chất chơi', src: 'audio/chat-choi.mp3' },
-    { title: 'Lofi', src: 'audio/lofi.mp3' }
+    { title: 'Lofi', src: 'audio/lofi.mp3' },
+    { title: 'Chill', src: 'audio/chill.mp3' },
+    { title: 'Bolero', src: 'audio/bolero.mp3' },
+    { title: 'Ấn Độ', src: 'audio/an-do.mp3' }
 ];
 
 let musicAudio = new Audio();
@@ -3687,9 +3689,25 @@ let musicProgressTimer = null;
             welcomeOverlay.classList.add('hidden');
             setTimeout(function () { welcomeOverlay.remove(); }, 700);
 
+            // Fade in: bắt đầu volume nhỏ, tăng dần trong 3 giây
+            var targetVolume = musicAudio.volume; // volume đã lưu (mặc định 0.7)
+            musicAudio.volume = 0.05; // bắt đầu rất nhẹ
+
             musicAudio.play().then(function () {
                 musicIsPlaying = true;
                 musicUpdateUI();
+
+                // Tăng dần volume
+                var fadeStep = 0;
+                var totalSteps = 30; // 30 bước x 100ms = 3 giây
+                var fadeInterval = setInterval(function () {
+                    fadeStep++;
+                    musicAudio.volume = Math.min(0.05 + (targetVolume - 0.05) * (fadeStep / totalSteps), targetVolume);
+                    if (fadeStep >= totalSteps) {
+                        clearInterval(fadeInterval);
+                        musicAudio.volume = targetVolume;
+                    }
+                }, 100);
             }).catch(function (e) {
                 console.warn('Music play failed:', e);
             });
