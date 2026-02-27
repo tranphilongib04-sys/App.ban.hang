@@ -20,20 +20,36 @@
 </head>
 
 <body>
-    <!-- WELCOME OVERLAY — click to enter & enable music autoplay -->
+    <!-- WELCOME OVERLAY — Premium Splash -->
     <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-particles" id="welcomeParticles"></div>
         <div class="welcome-card">
-            <img src="images/logo_v2.png" alt="TBQ Homie" class="welcome-logo">
+            <div class="welcome-logo-ring">
+                <img src="images/logo_v2.png" alt="TBQ Homie" class="welcome-logo">
+            </div>
             <h1 class="welcome-title">TBQ Homie</h1>
             <p class="welcome-desc">Dịch vụ số Premium chính hãng</p>
+            <div class="welcome-badges">
+                <div class="welcome-badge">
+                    <span class="welcome-badge-icon">🛡️</span>
+                    <span>Uy tín</span>
+                </div>
+                <div class="welcome-badge">
+                    <span class="welcome-badge-icon">⚡</span>
+                    <span>Giao liền</span>
+                </div>
+                <div class="welcome-badge">
+                    <span class="welcome-badge-icon">💬</span>
+                    <span>Hỗ trợ 24/7</span>
+                </div>
+            </div>
             <button class="welcome-enter-btn" id="welcomeEnterBtn">
-                <span>Vào trang</span>
+                <span>Khám phá ngay</span>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                 </svg>
             </button>
-            <div class="welcome-hint">🎵 Trang web có nhạc nền</div>
         </div>
     </div>
 

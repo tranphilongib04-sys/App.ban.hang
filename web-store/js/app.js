@@ -3663,16 +3663,30 @@ let musicProgressTimer = null;
     localStorage.setItem('tbq_music_track', 0);
     musicRenderPlaylist();
 
-    // Welcome overlay — click "Vào trang" để phát nhạc
+    // Generate floating particles
+    var particleContainer = document.getElementById('welcomeParticles');
+    if (particleContainer) {
+        for (var i = 0; i < 20; i++) {
+            var p = document.createElement('div');
+            p.className = 'welcome-particle';
+            var size = 2 + Math.random() * 4;
+            p.style.width = size + 'px';
+            p.style.height = size + 'px';
+            p.style.left = Math.random() * 100 + '%';
+            p.style.animationDuration = (6 + Math.random() * 8) + 's';
+            p.style.animationDelay = (Math.random() * 6) + 's';
+            particleContainer.appendChild(p);
+        }
+    }
+
+    // Welcome overlay — click "Khám phá ngay" để phát nhạc
     var welcomeBtn = document.getElementById('welcomeEnterBtn');
     var welcomeOverlay = document.getElementById('welcomeOverlay');
     if (welcomeBtn && welcomeOverlay) {
         welcomeBtn.addEventListener('click', function () {
-            // Ẩn overlay
             welcomeOverlay.classList.add('hidden');
-            setTimeout(function () { welcomeOverlay.remove(); }, 600);
+            setTimeout(function () { welcomeOverlay.remove(); }, 700);
 
-            // Phát nhạc — click này là user interaction, browser cho phép
             musicAudio.play().then(function () {
                 musicIsPlaying = true;
                 musicUpdateUI();
