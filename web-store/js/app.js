@@ -3655,7 +3655,7 @@ let musicProgressTimer = null;
         if (durEl) durEl.textContent = musicFormatTime(musicAudio.duration);
     });
 
-    // Auto-play bài Nhẹ nhàng (index 0)
+    // Chuẩn bị bài Nhẹ nhàng (index 0) — chưa phát
     musicCurrentIndex = 0;
     musicAudio.src = musicPlaylist[0].src;
     var nameEl = document.getElementById('musicTrackName');
@@ -3663,35 +3663,22 @@ let musicProgressTimer = null;
     localStorage.setItem('tbq_music_track', 0);
     musicRenderPlaylist();
 
-    // Auto-play: thử phát bình thường trước
-    var realVolume = musicAudio.volume;
-    var autoplayPromise = musicAudio.play();
-    if (autoplayPromise !== undefined) {
-        autoplayPromise.then(function () {
-            // Autoplay thành công — phát bình thường
-            musicIsPlaying = true;
-            musicUpdateUI();
-        }).catch(function () {
-            // Bị chặn — phát muted trước, unmute khi user tương tác
-            musicAudio.muted = true;
+    // Welcome overlay — click "Vào trang" để phát nhạc
+    var welcomeBtn = document.getElementById('welcomeEnterBtn');
+    var welcomeOverlay = document.getElementById('welcomeOverlay');
+    if (welcomeBtn && welcomeOverlay) {
+        welcomeBtn.addEventListener('click', function () {
+            // Ẩn overlay
+            welcomeOverlay.classList.add('hidden');
+            setTimeout(function () { welcomeOverlay.remove(); }, 600);
+
+            // Phát nhạc — click này là user interaction, browser cho phép
             musicAudio.play().then(function () {
                 musicIsPlaying = true;
                 musicUpdateUI();
-            }).catch(function () { });
-
-            function unmuteOnInteraction() {
-                musicAudio.muted = false;
-                musicAudio.volume = realVolume;
-                musicUpdateVolIcon();
-                document.removeEventListener('click', unmuteOnInteraction);
-                document.removeEventListener('touchstart', unmuteOnInteraction);
-                document.removeEventListener('scroll', unmuteOnInteraction);
-                document.removeEventListener('keydown', unmuteOnInteraction);
-            }
-            document.addEventListener('click', unmuteOnInteraction);
-            document.addEventListener('touchstart', unmuteOnInteraction);
-            document.addEventListener('scroll', unmuteOnInteraction);
-            document.addEventListener('keydown', unmuteOnInteraction);
+            }).catch(function (e) {
+                console.warn('Music play failed:', e);
+            });
         });
     }
 })();
