@@ -52,36 +52,30 @@ exports.handler = async function (event) {
         // 1. Lookup discount code
         const codeUpper = code.trim().toUpperCase();
 
-        // ── CTV MODE (CTV2026, CTV01–CTV05 all use ctv_price) ──
+        // ── CTV MODE (CTV2026, CTV01–CTV05 → flat 25% discount) ──
         if (CTV_CODES.has(codeUpper)) {
-            const hasCtv = await hasCtvPriceColumn();
+            const CTV_DISCOUNT_PERCENT = 25;
             let publicTotal = 0;
-            let ctvTotal = 0;
 
             for (const item of items) {
                 const { productCode, quantity } = item;
                 if (!productCode || !quantity) continue;
 
                 const skuResult = await db.execute({
-                    sql: hasCtv
-                        ? `SELECT price, COALESCE(ctv_price, price) as ctv_price FROM skus WHERE sku_code = ? AND is_active = 1`
-                        : `SELECT price, price as ctv_price FROM skus WHERE sku_code = ? AND is_active = 1`,
+                    sql: `SELECT price FROM skus WHERE sku_code = ? AND is_active = 1`,
                     args: [productCode]
                 });
 
                 if (skuResult.rows.length === 0) continue;
-
-                const sku = skuResult.rows[0];
-                publicTotal += (sku.price * quantity);
-                ctvTotal += (sku.ctv_price * quantity);
+                publicTotal += (skuResult.rows[0].price * quantity);
             }
 
             if (publicTotal === 0) {
                 return { statusCode: 200, headers, body: JSON.stringify({ valid: false, error: 'Không tìm thấy sản phẩm hợp lệ' }) };
             }
 
-            const discountAmount = Math.max(0, publicTotal - ctvTotal);
-            const finalTotal = Math.max(0, ctvTotal);
+            const discountAmount = Math.round(publicTotal * CTV_DISCOUNT_PERCENT / 100);
+            const finalTotal = Math.max(0, publicTotal - discountAmount);
 
             return {
                 statusCode: 200,
@@ -90,10 +84,11 @@ exports.handler = async function (event) {
                     valid: true,
                     code: codeUpper,
                     codeType: 'ctv',
+                    discountPercent: CTV_DISCOUNT_PERCENT,
                     discountAmount,
                     totalBeforeDiscount: publicTotal,
                     finalTotal,
-                    message: 'Đã áp giá CTV'
+                    message: `Giảm ${CTV_DISCOUNT_PERCENT}% cho CTV`
                 })
             };
         }

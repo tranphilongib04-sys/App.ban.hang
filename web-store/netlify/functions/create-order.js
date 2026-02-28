@@ -144,11 +144,10 @@ exports.handler = async function (event, context) {
 
         // --- TRANSACTION START ---
         tx = await db.transaction('write');
-        const hasCtv = await hasCtvPriceColumn(tx);
+        const CTV_DISCOUNT_PERCENT = 25;
 
         let totalAmount = 0;
         let publicTotal = 0;
-        let ctvTotal = 0;
         const finalItems = [];
 
         // 1. Validation & Pre-calculation
@@ -157,15 +156,11 @@ exports.handler = async function (event, context) {
 
             // Find SKU
             const skus = await tx.execute({
-                sql: hasCtv
-                    ? `SELECT id, name, price, COALESCE(ctv_price, price) as ctv_price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`
-                    : `SELECT id, name, price, price as ctv_price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`,
+                sql: `SELECT id, name, price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`,
                 args: [productCode]
             });
 
             if (skus.rows.length === 0) {
-                // Fallback: Try old dictionary mapping if sku not found? 
-                // Or assumed user is using new codes.
                 tx.close();
                 return { statusCode: 404, headers, body: JSON.stringify({ error: `Product not found: ${productCode}` }) };
             }
@@ -185,7 +180,7 @@ exports.handler = async function (event, context) {
             }
 
             // SECURITY: Always use DB price. Never trust client-submitted price.
-            const unitPrice = isCtvCode ? sku.ctv_price : sku.price;
+            const unitPrice = sku.price;
             if (!unitPrice || unitPrice <= 0) {
                 tx.close();
                 return { statusCode: 400, headers, body: JSON.stringify({ error: `SKU ${productCode} has no valid price configured` }) };
@@ -202,7 +197,6 @@ exports.handler = async function (event, context) {
                 legacyProductId // Pass it down
             });
             publicTotal += (sku.price * quantity);
-            ctvTotal += (sku.ctv_price * quantity);
             totalAmount += (unitPrice * quantity);
         }
 
@@ -214,8 +208,8 @@ exports.handler = async function (event, context) {
 
         if (isCtvCode) {
             appliedDiscountCode = codeUpper;
-            discountAmount = Math.max(0, publicTotal - ctvTotal);
-            totalAmount = Math.max(0, ctvTotal);
+            discountAmount = Math.round(publicTotal * CTV_DISCOUNT_PERCENT / 100);
+            totalAmount = Math.max(0, publicTotal - discountAmount);
         } else if (discountCode && discountCode.trim()) {
             const codeUpper = discountCode.trim().toUpperCase();
 

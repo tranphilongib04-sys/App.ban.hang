@@ -14,8 +14,9 @@ const products = {
         variants: [
             { name: 'ChatGPT Plus chính chủ - KBH', price: 90000, duration: '1 tháng', note: 'Có thể gia hạn TK cũ hoặc cấp TK mới. Gia hạn TK cũ: giao sau, gửi admin. Cấp TK mới: giao liền, lấy trong kho.', productCode: 'chatgpt_plus_cap_tk' },
             { name: 'ChatGPT Plus chính chủ - FBH', price: 190000, duration: '1 tháng', note: 'Hàng die đền khách. Chỉ gia hạn TK cũ: giao sau, gửi admin.', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
-            { name: 'ChatGPT Pro', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_pro_1m', deliveryType: 'preorder' },
-            { name: 'ChatGPT Go', price: 120000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' }
+            { name: 'ChatGPT acc cấp sẵn FBH', price: 70000, duration: '1 tháng', note: 'Acc cấp sẵn, full bảo hành', productCode: 'chatgpt_acc_cap_san_fbh', deliveryType: 'preorder' },
+            { name: 'ChatGPT Team (có model pro)', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_team_1m', deliveryType: 'preorder' },
+            { name: 'ChatGPT Go', price: 160000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' }
         ],
         tabs: {
             description: `
@@ -35,7 +36,8 @@ const products = {
                 <ul>
                     <li><strong>ChatGPT Plus chính chủ KBH:</strong> Bảo hành đến hết tháng (có thể gia hạn TK cũ hoặc cấp TK mới)</li>
                     <li><strong>ChatGPT Plus chính chủ FBH:</strong> Hàng die đền khách, chỉ gia hạn TK cũ</li>
-                    <li><strong>ChatGPT Pro:</strong> Hỗ trợ bảo hành khi hết credit</li>
+                    <li><strong>ChatGPT acc cấp sẵn FBH:</strong> Acc cấp sẵn, full bảo hành</li>
+                    <li><strong>ChatGPT Team (có model pro):</strong> Hỗ trợ bảo hành khi hết credit</li>
                     <li><strong>ChatGPT Go:</strong> Bảo hành 1 tháng</li>
                 </ul>
                 <p>Nếu có bất kỳ vấn đề gì, vui lòng liên hệ Zalo: 0988428496 để được hỗ trợ ngay lập tức.</p>
@@ -1765,7 +1767,7 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
             const btn = document.getElementById('detailDiscountApplyBtn');
             const content = document.getElementById('detailDiscountContent');
             if (input) { input.value = detailDiscount.code; input.readOnly = true; }
-            if (feedback) { feedback.textContent = 'Đã áp giá CTV'; feedback.className = 'discount-feedback success'; }
+            if (feedback) { feedback.textContent = 'Giảm 25% cho CTV'; feedback.className = 'discount-feedback success'; }
             if (content) content.style.display = 'block';
             if (btn) {
                 btn.textContent = 'Xoá';
@@ -1816,7 +1818,8 @@ function updateDetailPriceSummary(productId) {
     const selected = document.querySelector('input[name="variant"]:checked');
     if (!selected) return;
     const variant = product.variants[selected.value];
-    const unitPrice = getVariantPrice(variant, ctvMode ? 'ctv' : 'public');
+    // Always use public price as subtotal so discounts are visually correct
+    const unitPrice = getVariantPrice(variant, 'public');
     const subtotal = unitPrice * detailQuantity;
 
     const subtotalEl = document.getElementById('detailSubtotal');
@@ -1829,9 +1832,14 @@ function updateDetailPriceSummary(productId) {
 
     let finalTotal = subtotal;
     if (detailDiscount && detailDiscount.discountAmount > 0) {
-        const discountAmt = detailDiscount.percent
-            ? Math.round(subtotal * detailDiscount.percent / 100)
-            : detailDiscount.discountAmount;
+        let discountAmt;
+        if (detailDiscount.percent) {
+            // Percentage-based discount (CTV 25%, coupons, etc.)
+            discountAmt = Math.round(subtotal * detailDiscount.percent / 100);
+        } else {
+            // Fixed-amount discount: cap at subtotal
+            discountAmt = Math.min(detailDiscount.discountAmount, subtotal);
+        }
         finalTotal = Math.max(0, subtotal - discountAmt);
         if (discountRow) discountRow.style.display = 'flex';
         if (discountValueEl) discountValueEl.textContent = '-' + formatPrice(discountAmt);
@@ -1890,7 +1898,8 @@ async function applyDetailDiscount(productId) {
                 discountAmount: data.discountAmount,
                 finalTotal: data.finalTotal,
                 codeType: data.codeType || 'discount',
-                percent: data.discountPercent || 0
+                percent: data.discountPercent || 0,
+                quantity: detailQuantity
             };
 
             feedback.textContent = data.message;
@@ -2344,16 +2353,17 @@ function renderCheckoutSummary(skipDiscountReset = false) {
 
     // Reset discount when cart changes
     if (appliedDiscount && !skipDiscountReset) {
-        if (appliedDiscount.codeType !== 'ctv') {
-            clearDiscount();
-        } else {
+        if (appliedDiscount.percent) {
+            // Percentage-based discount (CTV 25%, coupons, etc.) — recalculate
             const publicTotal = getCartTotal('public');
-            const ctvTotal = getCartTotal('ctv');
-            const discountAmount = Math.max(0, publicTotal - ctvTotal);
+            const discountAmount = Math.round(publicTotal * appliedDiscount.percent / 100);
+            const finalTotal = Math.max(0, publicTotal - discountAmount);
             document.getElementById('discountLine').style.display = 'flex';
             document.getElementById('discountCodeDisplay').textContent = appliedDiscount.code || 'CTV';
             document.getElementById('discountAmountDisplay').textContent = formatPrice(discountAmount);
-            document.getElementById('checkoutTotal').textContent = formatPrice(ctvTotal);
+            document.getElementById('checkoutTotal').textContent = formatPrice(finalTotal);
+        } else {
+            clearDiscount();
         }
     }
 }
@@ -2425,7 +2435,8 @@ async function applyDiscountCode() {
                 code: data.code,
                 discountAmount: data.discountAmount,
                 finalTotal: data.finalTotal,
-                codeType: data.codeType || 'discount'
+                codeType: data.codeType || 'discount',
+                percent: data.discountPercent || 0
             };
 
             feedback.textContent = data.message;
@@ -2440,14 +2451,8 @@ async function applyDiscountCode() {
             document.getElementById('discountCodeDisplay').textContent = data.code;
             document.getElementById('discountAmountDisplay').textContent = formatPrice(data.discountAmount);
 
-            // Update total + CTV mode if applicable
-            if (data.codeType === 'ctv') {
-                setCtvMode(true);
-                document.getElementById('checkoutTotal').textContent = formatPrice(getCartTotal('ctv'));
-            } else {
-                setCtvMode(false);
-                document.getElementById('checkoutTotal').textContent = formatPrice(data.finalTotal);
-            }
+            // Update total
+            document.getElementById('checkoutTotal').textContent = formatPrice(data.finalTotal);
         } else {
             feedback.textContent = data.error || 'Mã giảm giá không hợp lệ';
             feedback.className = 'discount-feedback error';
@@ -3637,7 +3642,8 @@ const musicPlaylist = [
     { title: 'Lofi', src: 'audio/lofi.mp3' },
     { title: 'Chill', src: 'audio/chill.mp3' },
     { title: 'Bolero', src: 'audio/bolero.mp3' },
-    { title: 'Ấn Độ', src: 'audio/an-do.mp3' }
+    { title: 'Ấn Độ', src: 'audio/an-do.mp3' },
+    { title: 'Rap', src: 'audio/rap.mp3' }
 ];
 
 let musicAudio = new Audio();

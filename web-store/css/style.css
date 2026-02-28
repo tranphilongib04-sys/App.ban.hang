@@ -1972,6 +1972,7 @@ footer {
     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
     font-family: inherit;
     letter-spacing: 0.01em;
+    white-space: nowrap;
 }
 
 .buy-now-btn:hover {
