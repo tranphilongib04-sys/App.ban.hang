@@ -78,7 +78,8 @@ const products = {
         reviewCount: 29,
         soldCount: 132,
         variants: [
-            { name: 'Netflix 1 tháng', price: 70000, duration: '1 tháng', note: 'Cấp TK/MK, xem được từ 1-2 thiết bị', productCode: 'netflix_1m', deliveryType: 'preorder' }
+            { name: 'Netflix Slot 1 tháng', price: 70000, duration: '1 tháng', note: 'Share slot, xem được từ 1-2 thiết bị', productCode: 'netflix_slot_1m', deliveryType: 'preorder' },
+            { name: 'Netflix Extra 1 tháng', price: 75000, duration: '1 tháng', note: 'Cấp TK/MK riêng', productCode: 'netflix_extra_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
