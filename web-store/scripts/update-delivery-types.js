@@ -19,21 +19,32 @@ function getDbClient() {
 async function run() {
     const db = getDbClient();
     const updates = [
+        // Giao liền (auto) — có stock_items trong kho
+        { like: 'chatgpt_plus_1m', type: 'auto' },
+        { like: 'chatgpt_plus_kbh%', type: 'auto' },
+        { like: 'chatgpt_go%', type: 'auto' },
+        { like: 'grok_7d', type: 'auto' },
+        { like: 'capcut_6m', type: 'auto' },
+        { like: 'capcut_pro_1y', type: 'auto' },
+        { like: 'capcut_14d', type: 'auto' },
+        { like: 'capcut_1m', type: 'auto' },
+
+        // Giao sau (owner_upgrade) — KHÔNG cần stock, giao tay qua Zalo
+        { like: 'netflix%', type: 'owner_upgrade' },
+        { like: 'spotify%', type: 'owner_upgrade' },
         { like: 'adobe%', type: 'owner_upgrade' },
         { like: 'canva%', type: 'owner_upgrade' },
         { like: 'youtube%', type: 'owner_upgrade' },
         { like: 'microsoft%', type: 'owner_upgrade' },
         { like: 'duolingo%', type: 'owner_upgrade' },
         { like: 'quizlet%', type: 'owner_upgrade' },
-        { like: 'netflix%', type: 'auto' },
-        { like: 'spotify%', type: 'auto' },
-        { like: 'chatgpt%', type: 'auto' },
-        { like: 'grok%', type: 'auto' },
         { like: 'capcut_7d', type: 'owner_upgrade' },
-        { like: 'capcut_6m', type: 'auto' },
-        { like: 'capcut_pro_1y', type: 'auto' },
-        { like: 'capcut_14d', type: 'auto' },
-        { like: 'capcut_1m', type: 'auto' },
+        { like: 'chatgpt_plus_gia_han', type: 'owner_upgrade' },
+        { like: 'chatgpt_pro_1m', type: 'owner_upgrade' },
+        { like: 'super_grok%', type: 'owner_upgrade' },
+        { like: 'gemini_pro%', type: 'owner_upgrade' },
+        { like: 'claude_pro%', type: 'owner_upgrade' },
+        { like: 'cursor_pro%', type: 'owner_upgrade' },
     ];
     for (const u of updates) {
         const r = await db.execute({
