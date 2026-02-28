@@ -1636,6 +1636,13 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
     const product = products[productId];
     if (!product) return;
 
+    // Save selected variant index before re-render
+    let savedVariantIndex = 0;
+    if (preserveDiscount) {
+        const prevSelected = document.querySelector('input[name="variant"]:checked');
+        if (prevSelected) savedVariantIndex = parseInt(prevSelected.value) || 0;
+    }
+
     // Reset detail order info state
     if (!preserveDiscount) {
         detailQuantity = 1;
@@ -1721,9 +1728,9 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
                     <div class="variant-label">Chọn gói dịch vụ:</div>
                     <div class="variant-options" id="variantOptions">
                         ${product.variants.map((variant, index) => `
-                            <label class="variant-option ${index === 0 ? 'selected' : ''} variant-${(variant.deliveryType || product.deliveryType || 'instant') === 'instant' ? 'instant' : 'preorder'}">
+                            <label class="variant-option ${index === savedVariantIndex ? 'selected' : ''} variant-${(variant.deliveryType || product.deliveryType || 'instant') === 'instant' ? 'instant' : 'preorder'}">
                                 <div class="variant-select-circle">
-                                    <input type="radio" name="variant" value="${index}" ${index === 0 ? 'checked' : ''} onchange="selectVariant(${index})">
+                                    <input type="radio" name="variant" value="${index}" ${index === savedVariantIndex ? 'checked' : ''} onchange="selectVariant(${index})">
                                 </div>
                                 <div class="variant-info">
                                     <div class="variant-header">
