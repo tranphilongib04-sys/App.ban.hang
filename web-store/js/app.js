@@ -15,7 +15,7 @@ const products = {
             { name: 'ChatGPT Plus Acc Cấp Sẵn', price: 70000, duration: '1 tháng', note: 'Cấp acc mới, full bảo hành', productCode: 'chatgpt_acc_cap_san_fbh', deliveryType: 'preorder' },
             { name: 'ChatGPT Plus Gia Hạn Acc Cũ', price: 90000, duration: '1 tháng', note: 'Gia hạn TK cũ của bạn, không bảo hành', productCode: 'chatgpt_plus_cap_tk', deliveryType: 'preorder' },
             { name: 'ChatGPT Plus Chính Chủ - FBH', price: 190000, duration: '1 tháng', note: 'Hàng die đền khách, gia hạn TK cũ', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
-            { name: 'ChatGPT Team (có model pro)', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_team_1m', deliveryType: 'preorder' },
+            { name: 'ChatGPT Team (Có Model Pro)', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_team_1m', deliveryType: 'preorder' },
             { name: 'ChatGPT Go', price: 160000, duration: '1 năm', note: 'Bảo hành 1 tháng', productCode: 'chatgpt_go_1y' }
         ],
         tabs: {
@@ -80,8 +80,8 @@ const products = {
         reviewCount: 29,
         soldCount: 132,
         variants: [
-            { name: 'Netflix Slot 1 tháng', price: 70000, duration: '1 tháng', note: 'Share slot, xem được từ 1-2 thiết bị', productCode: 'netflix_slot_1m', deliveryType: 'preorder' },
-            { name: 'Netflix Extra 1 tháng', price: 75000, duration: '1 tháng', note: 'Cấp TK/MK riêng', productCode: 'netflix_extra_1m', deliveryType: 'preorder' }
+            { name: 'Netflix Slot 1 Tháng', price: 70000, duration: '1 tháng', note: 'Share slot, xem được từ 1-2 thiết bị', productCode: 'netflix_slot_1m', deliveryType: 'preorder' },
+            { name: 'Netflix Extra 1 Tháng', price: 75000, duration: '1 tháng', note: 'Cấp TK/MK riêng', productCode: 'netflix_extra_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -129,9 +129,9 @@ const products = {
         reviewCount: 18,
         soldCount: 98,
         variants: [
-            { name: 'Spotify Premium 1 tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m', deliveryType: 'preorder' },
-            { name: 'Spotify Premium 4 tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m', deliveryType: 'preorder' },
-            { name: 'Spotify Premium 1 năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y', deliveryType: 'preorder' }
+            { name: 'Spotify Premium 1 Tháng', price: 30000, duration: '1 tháng', note: '', productCode: 'spotify_premium_1m', deliveryType: 'preorder' },
+            { name: 'Spotify Premium 4 Tháng', price: 115000, duration: '4 tháng', note: '', productCode: 'spotify_premium_4m', deliveryType: 'preorder' },
+            { name: 'Spotify Premium 1 Năm', price: 350000, duration: '1 năm', note: '', productCode: 'spotify_premium_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -184,9 +184,9 @@ const products = {
         reviewCount: 39,
         soldCount: 187,
         variants: [
-            { name: 'Adobe 4 tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành', productCode: 'adobe_4m_kbh' },
-            { name: 'Adobe 1 năm Log Ultraview', price: 400000, duration: '1 năm', note: '', productCode: 'adobe_1y_ultraview' },
-            { name: 'Adobe 1 năm cấp TK/MK', price: 500000, duration: '1 năm', note: '', productCode: 'adobe_1y_tkmk' }
+            { name: 'Adobe 4 Tháng KBH', price: 100000, duration: '4 tháng', note: 'Không bảo hành', productCode: 'adobe_4m_kbh' },
+            { name: 'Adobe 1 Năm Log Ultraview', price: 400000, duration: '1 năm', note: '', productCode: 'adobe_1y_ultraview' },
+            { name: 'Adobe 1 Năm Cấp TK/MK', price: 500000, duration: '1 năm', note: '', productCode: 'adobe_1y_tkmk' }
         ],
         tabs: {
             description: `
@@ -301,7 +301,7 @@ const products = {
         reviewCount: 15,
         soldCount: 45,
         variants: [
-            { name: 'Duolingo Plus 1 năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành', productCode: 'duolingo_plus_1y' }
+            { name: 'Duolingo Plus 1 Năm FBH', price: 210000, duration: '1 năm', note: 'Khách cấp TK Email, Full bảo hành', productCode: 'duolingo_plus_1y' }
         ],
         tabs: {
             description: `
@@ -354,7 +354,7 @@ const products = {
         reviewCount: 21,
         soldCount: 76,
         variants: [
-            { name: 'MS 365 1 năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành', productCode: 'ms365_1y' }
+            { name: 'MS 365 1 Năm FBH', price: 160000, duration: '1 năm', note: 'Khách cấp Email, Full bảo hành', productCode: 'ms365_1y' }
         ],
         tabs: {
             description: `
@@ -407,8 +407,8 @@ const products = {
         reviewCount: 12,
         soldCount: 34,
         variants: [
-            { name: 'Quizlet Plus 1 năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_plus_1y' },
-            { name: 'Quizlet Unlimited 1 năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_unlimited_1y' }
+            { name: 'Quizlet Plus 1 Năm', price: 160000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_plus_1y' },
+            { name: 'Quizlet Unlimited 1 Năm', price: 220000, duration: '1 năm', note: 'Khách cấp TK/MK', productCode: 'quizlet_unlimited_1y' }
         ],
         tabs: {
             description: `
@@ -461,8 +461,8 @@ const products = {
         reviewCount: 16,
         soldCount: 52,
         variants: [
-            { name: 'Canva Edu 1 năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_edu_1y' },
-            { name: 'Canva Pro 1 năm FBH', price: 130000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_pro_1y' }
+            { name: 'Canva Edu 1 Năm FBH', price: 80000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_edu_1y' },
+            { name: 'Canva Pro 1 Năm FBH', price: 130000, duration: '1 năm', note: 'Full bảo hành', productCode: 'canva_pro_1y' }
         ],
         tabs: {
             description: `
@@ -516,11 +516,11 @@ const products = {
         reviewCount: 25,
         soldCount: 112,
         variants: [
-            { name: 'CapCut 7 ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
-            { name: 'CapCut 14 ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
-            { name: 'CapCut Pro 1 tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 6 tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 1 năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
+            { name: 'CapCut 7 Ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
+            { name: 'CapCut 14 Ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
+            { name: 'CapCut Pro 1 Tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 6 Tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 1 Năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
         ],
         tabs: {
             description: `
@@ -578,9 +578,9 @@ const products = {
         reviewCount: 12,
         soldCount: 38,
         variants: [
-            { name: 'Grok 7 ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' },
-            { name: 'Super Grok - Cấp sẵn', price: 270000, duration: '1 tháng', note: 'Cấp TK/MK sẵn', productCode: 'super_grok_cap_san', deliveryType: 'preorder' },
-            { name: 'Super Grok - Nâng chính chủ', price: 350000, duration: '1 tháng', note: 'Khách gửi TK qua Zalo', productCode: 'super_grok_chinh_chu', deliveryType: 'preorder' }
+            { name: 'Grok 7 Ngày', price: 15000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' },
+            { name: 'Super Grok - Cấp Sẵn', price: 270000, duration: '1 tháng', note: 'Cấp TK/MK sẵn', productCode: 'super_grok_cap_san', deliveryType: 'preorder' },
+            { name: 'Super Grok - Nâng Chính Chủ', price: 350000, duration: '1 tháng', note: 'Khách gửi TK qua Zalo', productCode: 'super_grok_chinh_chu', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -635,7 +635,7 @@ const products = {
         reviewCount: 8,
         soldCount: 23,
         variants: [
-            { name: 'AutoCAD nâng cấp mail chính chủ 1 năm', price: 170000, ctvPrice: 150000, duration: '1 năm', note: 'Chỉ cần cung cấp địa chỉ mail', productCode: 'autocad_1y' }
+            { name: 'AutoCAD Nâng Cấp Mail Chính Chủ 1 Năm', price: 170000, ctvPrice: 150000, duration: '1 năm', note: 'Chỉ cần cung cấp địa chỉ mail', productCode: 'autocad_1y' }
         ],
         tabs: {
             description: `
@@ -685,9 +685,9 @@ const products = {
         reviewCount: 10,
         soldCount: 29,
         variants: [
-            { name: 'LinkedIn Business 3 tháng', price: 530000, ctvPrice: 480000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_3m' },
-            { name: 'LinkedIn Business 1 năm', price: 1750000, ctvPrice: 1700000, duration: '1 năm', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_1y' },
-            { name: 'LinkedIn Career 3 tháng', price: 500000, ctvPrice: 450000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_career_3m' }
+            { name: 'LinkedIn Business 3 Tháng', price: 530000, ctvPrice: 480000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_3m' },
+            { name: 'LinkedIn Business 1 Năm', price: 1750000, ctvPrice: 1700000, duration: '1 năm', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_biz_1y' },
+            { name: 'LinkedIn Career 3 Tháng', price: 500000, ctvPrice: 450000, duration: '3 tháng', note: 'Nâng cấp chính chủ, cần TK/MK + OTP', productCode: 'linkedin_career_3m' }
         ],
         tabs: {
             description: `
@@ -737,8 +737,8 @@ const products = {
         reviewCount: 6,
         soldCount: 18,
         variants: [
-            { name: 'Gamma Plus chính chủ 1 tháng', price: 150000, duration: '1 tháng', note: 'Gói 10$, cần tên đăng nhập + mật khẩu', productCode: 'gamma_plus_1m' },
-            { name: 'Gamma Pro hình chủ 1 tháng', price: 220000, duration: '1 tháng', note: 'Cần tên đăng nhập + mật khẩu', productCode: 'gamma_pro_1m' }
+            { name: 'Gamma Plus Chính Chủ 1 Tháng', price: 150000, duration: '1 tháng', note: 'Gói 10$, cần tên đăng nhập + mật khẩu', productCode: 'gamma_plus_1m' },
+            { name: 'Gamma Pro Chính Chủ 1 Tháng', price: 220000, duration: '1 tháng', note: 'Cần tên đăng nhập + mật khẩu', productCode: 'gamma_pro_1m' }
         ],
         tabs: {
             description: `
@@ -788,7 +788,7 @@ const products = {
         reviewCount: 5,
         soldCount: 14,
         variants: [
-            { name: 'SketchUp EDU cấp sẵn 1 năm', price: 350000, duration: '1 năm', note: 'Cấp TK riêng, đăng nhập bằng Gmail', productCode: 'sketchup_edu_1y' }
+            { name: 'SketchUp EDU Cấp Sẵn 1 Năm', price: 350000, duration: '1 năm', note: 'Cấp TK riêng, đăng nhập bằng Gmail', productCode: 'sketchup_edu_1y' }
         ],
         tabs: {
             description: `
@@ -835,8 +835,8 @@ const products = {
         reviewCount: 14,
         soldCount: 41,
         variants: [
-            { name: 'Figma Pro chính chủ 1 tháng', price: 200000, duration: '1 tháng', note: 'Nâng cấp chính chủ, cần tên đăng nhập + mật khẩu', productCode: 'figma_pro_1m' },
-            { name: 'Figma Edu 1 năm (cấp TK)', price: 280000, duration: '1 năm', note: 'Cấp sẵn TK/MK, lấy về nhập và dùng', productCode: 'figma_edu_1y' }
+            { name: 'Figma Pro Chính Chủ 1 Tháng', price: 200000, duration: '1 tháng', note: 'Nâng cấp chính chủ, cần tên đăng nhập + mật khẩu', productCode: 'figma_pro_1m' },
+            { name: 'Figma Edu 1 Năm (Cấp TK)', price: 280000, duration: '1 năm', note: 'Cấp sẵn TK/MK, lấy về nhập và dùng', productCode: 'figma_edu_1y' }
         ],
         tabs: {
             description: `
@@ -889,9 +889,9 @@ const products = {
         reviewCount: 7,
         soldCount: 19,
         variants: [
-            { name: 'Autodesk lẻ 1 app 1 năm', price: 170000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_1app_1y' },
-            { name: 'Autodesk lẻ 2 app 1 năm', price: 250000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_2app_1y' },
-            { name: 'Autodesk chính chủ full app 1 năm', price: 370000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_full_1y' }
+            { name: 'Autodesk Lẻ 1 App 1 Năm', price: 170000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_1app_1y' },
+            { name: 'Autodesk Lẻ 2 App 1 Năm', price: 250000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_2app_1y' },
+            { name: 'Autodesk Chính Chủ Full App 1 Năm', price: 370000, duration: '1 năm', note: 'Chỉ cần cung cấp email', productCode: 'autodesk_full_1y' }
         ],
         tabs: {
             description: `
@@ -942,7 +942,7 @@ const products = {
         reviewCount: 5,
         soldCount: 12,
         variants: [
-            { name: 'Meitu VIP 1 tháng', price: 75000, duration: '1 tháng', note: 'Đăng nhập cố định 1 thiết bị', productCode: 'meitu_vip_1m' }
+            { name: 'Meitu VIP 1 Tháng', price: 75000, duration: '1 tháng', note: 'Đăng nhập cố định 1 thiết bị', productCode: 'meitu_vip_1m' }
         ],
         tabs: {
             description: `
@@ -1002,10 +1002,10 @@ const products = {
         reviewCount: 4,
         soldCount: 10,
         variants: [
-            { name: 'Gemini Pro + 2TB - 1 tháng', price: 25000, duration: '1 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1m', deliveryType: 'preorder' },
-            { name: 'Gemini Pro + 2TB - 3 tháng', price: 70000, duration: '3 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_3m', deliveryType: 'preorder' },
-            { name: 'Gemini Pro + 2TB - 6 tháng', price: 120000, duration: '6 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_6m', deliveryType: 'preorder' },
-            { name: 'Gemini Pro + 2TB - 1 năm', price: 220000, duration: '1 năm', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1y', deliveryType: 'preorder' }
+            { name: 'Gemini Pro + 2TB - 1 Tháng', price: 25000, duration: '1 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 3 Tháng', price: 70000, duration: '3 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_3m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 6 Tháng', price: 120000, duration: '6 tháng', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_6m', deliveryType: 'preorder' },
+            { name: 'Gemini Pro + 2TB - 1 Năm', price: 220000, duration: '1 năm', note: 'IB Zalo để nhận hàng', productCode: 'gemini_pro_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -1058,7 +1058,7 @@ const products = {
         reviewCount: 8,
         soldCount: 25,
         variants: [
-            { name: 'Claude Pro 1 tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'claude_pro_1m', deliveryType: 'preorder' }
+            { name: 'Claude Pro 1 Tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'claude_pro_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -1113,7 +1113,7 @@ const products = {
         reviewCount: 12,
         soldCount: 30,
         variants: [
-            { name: 'Cursor Pro 1 tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'cursor_pro_1m', deliveryType: 'preorder' }
+            { name: 'Cursor Pro 1 Tháng', price: 380000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'cursor_pro_1m', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
