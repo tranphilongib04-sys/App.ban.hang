@@ -2646,7 +2646,7 @@
                 <th>#</th>
                 <th>Mã đơn</th>
                 <th>Khách</th>
-                <th>Email</th>
+                <th>SĐT</th>
                 <th>Sản phẩm</th>
                 <th>Số tiền</th>
                 <th>Trạng thái</th>
@@ -3639,7 +3639,7 @@
           var q = search.toLowerCase();
           list = list.filter(function (o) {
             return (o.order_code || '').toLowerCase().includes(q) ||
-              (o.customer_email || o.customerEmail || '').toLowerCase().includes(q) ||
+              (o.customer_phone || '').toLowerCase().includes(q) ||
               (o.customer_name || o.customerName || '').toLowerCase().includes(q);
           });
         }
@@ -3666,7 +3666,7 @@
             '<td>' + (i + 1) + '</td>' +
             '<td class="col-code">' + escHtml(o.order_code) + '</td>' +
             '<td>' + escHtml(o.customer_name || o.customerName || '--') + '</td>' +
-            '<td style="color:var(--text2)">' + escHtml(o.customer_email || o.customerEmail || '--') + '</td>' +
+            '<td style="color:var(--text2)">' + escHtml(o.customer_phone || '--') + '</td>' +
             '<td style="max-width:160px;overflow:hidden;text-overflow:ellipsis" title="' + escAttr(products) + '">' + escHtml(products) + '</td>' +
             '<td>' + fmtVND(o.amount_total || o.price) + '</td>' +
             '<td><span class="badge ' + badgeClass(o.status) + '">' + badgeLabel(o.status) + '</span></td>' +
