@@ -7156,7 +7156,8 @@ section .section-title::after {
 }
 
 .music-playlist.open {
-    max-height: 200px;
+    max-height: 260px;
+    overflow-y: auto;
 }
 
 .music-playlist-item {
