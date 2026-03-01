@@ -6906,6 +6906,7 @@ section .section-title::after {
     opacity: 1;
     visibility: visible;
     pointer-events: all;
+    z-index: 9999;
 }
 
 .music-player-header {
@@ -6964,6 +6965,7 @@ section .section-title::after {
     justify-content: center;
     gap: 12px;
     padding: 4px 18px 8px;
+    touch-action: manipulation;
 }
 
 .music-ctrl-btn {
@@ -6977,6 +6979,7 @@ section .section-title::after {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
+    position: relative;
     transition: all 0.2s;
     padding: 0;
 }
@@ -6984,6 +6987,7 @@ section .section-title::after {
 .music-ctrl-btn svg {
     width: 20px;
     height: 20px;
+    pointer-events: none;
 }
 
 .music-ctrl-btn:hover {
@@ -7002,6 +7006,7 @@ section .section-title::after {
 .music-play-btn svg {
     width: 22px;
     height: 22px;
+    pointer-events: none;
 }
 
 .music-play-btn:hover {
