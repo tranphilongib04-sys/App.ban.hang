@@ -3714,7 +3714,8 @@ let musicProgressTimer = null;
         }
     }
 
-    // Dừng nhạc khi thoát tab/đóng trang — tránh nhạc chạy nền
+    // Dừng nhạc khi thoát trình duyệt trên mobile — trên PC vẫn cho phép nghe khi chuyển tab
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test((navigator.userAgent || ''));
     function musicStop() {
         if (musicAudio) {
             musicAudio.pause();
@@ -3724,11 +3725,13 @@ let musicProgressTimer = null;
             if (typeof musicUpdateUI === 'function') musicUpdateUI();
         }
     }
-    document.addEventListener('visibilitychange', function () {
-        if (document.hidden) musicStop();
-    });
-    window.addEventListener('pagehide', musicStop);
-    window.addEventListener('beforeunload', musicStop);
+    if (isMobile) {
+        document.addEventListener('visibilitychange', function () {
+            if (document.hidden) musicStop();
+        });
+        window.addEventListener('pagehide', musicStop);
+        window.addEventListener('beforeunload', musicStop);
+    }
 
     // Welcome overlay — click "Khám phá ngay" để phát nhạc
     var welcomeBtn = document.getElementById('welcomeEnterBtn');
