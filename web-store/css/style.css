@@ -7,6 +7,8 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    /* Remove tap highlights everywhere on Android */
 }
 
 :root {
@@ -87,8 +89,17 @@ body {
     animation: gradientBG 20s ease-in-out infinite;
     line-height: 1.6;
     overflow-x: hidden;
+    overscroll-behavior-y: none;
+    /* Prevent rubber-banding and pull-to-refresh on Android */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+/* Hide bulky scrollbars globally on mobile/Android while keeping it functional */
+::-webkit-scrollbar {
+    width: 0px;
+    background: transparent;
+    display: none;
 }
 
 @keyframes gradientBG {
@@ -7248,34 +7259,66 @@ section .section-title::after {
 /* ── Mobile Responsive ── */
 @media (max-width: 768px) {
     .music-player-fab {
-        bottom: 68px;
-        left: 14px;
-        width: 38px;
-        height: 38px;
-        opacity: 0.85;
-        box-shadow: 0 2px 10px rgba(15, 15, 18, 0.2);
+        bottom: 80px;
+        /* Nâng cao hơn chút tránh trùng thanh điều hướng iOS/Android mới */
+        left: 16px;
+        width: 44px;
+        /* Tăng kích thước dễ bấm hơn trên cảm ứng */
+        height: 44px;
+        opacity: 0.9;
+        box-shadow: 0 4px 12px rgba(15, 15, 18, 0.25);
     }
 
     .music-fab-icon {
-        width: 17px;
-        height: 17px;
+        width: 20px;
+        height: 20px;
     }
 
     .music-fab-bars {
-        height: 16px;
-        gap: 2px;
+        height: 18px;
+        gap: 3px;
     }
 
     .music-fab-bars span {
-        width: 2.5px;
+        width: 3px;
     }
 
     .music-player-panel {
-        bottom: 114px;
-        left: 10px;
-        right: 10px;
+        bottom: 135px;
+        /* Nâng panel lên cao hơn tương ứng để không đè lên FAB và menu Bottom */
+        left: 12px;
+        right: 12px;
         width: auto;
-        max-width: 340px;
+        max-width: 360px;
+        /* Tối ưu cho các màn hình Android hiện đại lớn hơn */
+        border-radius: var(--radius-lg);
+    }
+
+    /* Tối ưu vùng chạm (Tap targets) cho khu vực điều khiển nhạc */
+    .music-ctrl-btn {
+        width: 44px;
+        /* Rộng hơn để dễ bấm */
+        height: 44px;
+    }
+
+    .music-play-btn {
+        width: 54px;
+        height: 54px;
+    }
+
+    .music-ctrl-btn svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .music-play-btn svg {
+        width: 26px;
+        height: 26px;
+    }
+
+    .music-playlist-item {
+        padding: 14px 18px;
+        /* Padding to hơn cho list để dễ cuộn/bấm bài hát */
     }
 }
 
