@@ -3719,8 +3719,7 @@ let musicProgressTimer = null;
     function musicStop() {
         if (musicAudio) {
             musicAudio.pause();
-            musicAudio.currentTime = 0;
-            musicAudio.src = '';
+            // Bỏ việc gán src = '' và currentTime = 0 để có thể phát tiếp (Android Resume Fix)
             musicIsPlaying = false;
             if (typeof musicUpdateUI === 'function') musicUpdateUI();
         }
@@ -3745,10 +3744,10 @@ let musicProgressTimer = null;
             var targetVolume = musicAudio.volume; // volume đã lưu (mặc định 0.7)
             musicAudio.volume = 0.05; // bắt đầu rất nhẹ
 
-            musicAudio.play().then(function () {
-                musicIsPlaying = true;
-                musicUpdateUI();
+            musicIsPlaying = true;
+            musicUpdateUI();
 
+            musicAudio.play().then(function () {
                 // Tăng dần volume
                 var fadeStep = 0;
                 var totalSteps = 30; // 30 bước x 100ms = 3 giây
@@ -3762,6 +3761,8 @@ let musicProgressTimer = null;
                 }, 100);
             }).catch(function (e) {
                 console.warn('Music play failed:', e);
+                musicIsPlaying = false;
+                musicUpdateUI();
             });
         });
     }
@@ -3790,11 +3791,15 @@ function musicPlayTrack(index) {
     if (index < 0 || index >= musicPlaylist.length) index = 0;
     musicCurrentIndex = index;
     musicAudio.src = musicPlaylist[index].src;
-    musicAudio.play().then(function () {
-        musicIsPlaying = true;
-        musicUpdateUI();
-    }).catch(function (e) {
+    musicAudio.load(); // Cải thiện tương thích tải file trên Android
+
+    musicIsPlaying = true;
+    musicUpdateUI();
+
+    musicAudio.play().catch(function (e) {
         console.warn('Music autoplay blocked:', e);
+        musicIsPlaying = false;
+        musicUpdateUI();
     });
     localStorage.setItem('tbq_music_track', index);
 }
@@ -3804,17 +3809,27 @@ function musicTogglePlay() {
         musicPlayTrack(0);
         return;
     }
-    if (musicIsPlaying) {
+
+    if (musicIsPlaying || !musicAudio.paused) {
         musicAudio.pause();
         musicIsPlaying = false;
+        musicUpdateUI();
     } else {
-        musicAudio.play().then(function () {
-            musicIsPlaying = true;
+        // Đảm bảo audio source hợp lệ trước khi phát
+        if (!musicAudio.src || musicAudio.src.indexOf(musicPlaylist[musicCurrentIndex].src) === -1) {
+            musicAudio.src = musicPlaylist[musicCurrentIndex].src;
+            musicAudio.load();
+        }
+
+        musicIsPlaying = true;
+        musicUpdateUI();
+
+        musicAudio.play().catch(function (e) {
+            console.warn('Play blocked:', e);
+            musicIsPlaying = false;
             musicUpdateUI();
-        }).catch(function () { });
-        return;
+        });
     }
-    musicUpdateUI();
 }
 
 function musicNext() {
@@ -3886,7 +3901,8 @@ function musicUpdateUI() {
 
     if (playBtn) {
         if (musicIsPlaying) {
-            playBtn.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+            // Dùng path tĩnh giúp SVG render ổn định hơn trên Android cũ thay vì rect
+            playBtn.innerHTML = '<path d="M6 4h4v16H6zm8 0h4v16h-4z"/>';
         } else {
             playBtn.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
         }
