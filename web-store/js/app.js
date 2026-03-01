@@ -3645,6 +3645,7 @@ function escAttr(s) { return escHtml(s); }
 // =============================================
 
 const musicPlaylist = [
+    { title: 'Jazz Blue', src: 'audio/jazz-blue.mp3' },
     { title: 'Nhẹ nhàng', src: 'audio/nhe-nhang.mp3' },
     { title: 'Lofi', src: 'audio/lofi.mp3' },
     { title: 'Chill', src: 'audio/chill.mp3' },
@@ -3689,7 +3690,7 @@ let musicProgressTimer = null;
         if (durEl) durEl.textContent = musicFormatTime(musicAudio.duration);
     });
 
-    // Chuẩn bị bài Nhẹ nhàng (index 0) — chưa phát
+    // Chuẩn bị bài Jazz Blue (index 0) — chưa phát
     musicCurrentIndex = 0;
     musicAudio.src = musicPlaylist[0].src;
     var nameEl = document.getElementById('musicTrackName');
