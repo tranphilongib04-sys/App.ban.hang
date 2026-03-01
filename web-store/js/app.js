@@ -3713,6 +3713,22 @@ let musicProgressTimer = null;
         }
     }
 
+    // Dừng nhạc khi thoát tab/đóng trang — tránh nhạc chạy nền
+    function musicStop() {
+        if (musicAudio) {
+            musicAudio.pause();
+            musicAudio.currentTime = 0;
+            musicAudio.src = '';
+            musicIsPlaying = false;
+            if (typeof musicUpdateUI === 'function') musicUpdateUI();
+        }
+    }
+    document.addEventListener('visibilitychange', function () {
+        if (document.hidden) musicStop();
+    });
+    window.addEventListener('pagehide', musicStop);
+    window.addEventListener('beforeunload', musicStop);
+
     // Welcome overlay — click "Khám phá ngay" để phát nhạc
     var welcomeBtn = document.getElementById('welcomeEnterBtn');
     var welcomeOverlay = document.getElementById('welcomeOverlay');
