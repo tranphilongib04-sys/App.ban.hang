@@ -2194,6 +2194,7 @@ function addToCart(productId) {
             productId: productId,
             productName: product.name,
             variantName: variant.name,
+            productCode: variant.productCode,
             variantIndex: selectedVariantIndex,
             price: unitPrice,
             unitPrice: unitPrice,
@@ -2422,7 +2423,7 @@ async function applyDiscountCode() {
 
     // Build items from cart
     const items = cart.map(item => ({
-        productCode: getProductCode(item.productId, item.variantName),
+        productCode: item.productCode || getProductCode(item.productId, item.variantName),
         quantity: item.quantity || 1
     }));
 
@@ -2545,7 +2546,7 @@ async function placeOrder() {
 
     // Build items payload
     const items = cart.map(item => ({
-        productCode: getProductCode(item.productId, item.variantName),
+        productCode: item.productCode || getProductCode(item.productId, item.variantName),
         quantity: item.quantity || 1,
         price: getItemUnitPrice(item, ctvMode ? 'ctv' : 'public'),
         deliveryType: item.deliveryType || 'instant'
@@ -2681,7 +2682,7 @@ async function placeOrder() {
         submitBtn.style.opacity = '1';
 
         // Start polling for payment status
-        startPaymentPolling(orderCode, data.amount || total);
+        startPaymentPolling(orderCode, data.amount);
 
     } catch (error) {
         console.error('Place order error:', error);
@@ -3004,7 +3005,7 @@ function startPaymentPolling(orderCode, amount) {
                 if (successState) {
                     const zaloSection = `
                         <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
-                            <h3>San pham dat truoc</h3>
+                            <h3>Sản phẩm đặt trước</h3>
                             <p style="margin: 0.5rem 0;">Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút.</p>
                             <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
                         </div>

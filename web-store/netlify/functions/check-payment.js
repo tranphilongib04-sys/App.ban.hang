@@ -157,19 +157,21 @@ exports.handler = async function (event, context) {
 
                 // If already fulfilled or being processed (paid), return immediately
                 if (order && (order.status === 'fulfilled' || order.status === 'paid')) {
-                    // Check if this order has upgrade_request fulfillment type
+                    // Check ALL order lines to detect mixed delivery correctly
                     const lineResult = await db.execute({
-                        sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ? LIMIT 1`,
+                        sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ?`,
                         args: [order.id]
                     });
-                    const fulfillmentType = lineResult.rows[0]?.fulfillment_type || 'auto';
+                    const allPreorder = lineResult.rows.length > 0 && lineResult.rows.every(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
+                    const hasAnyPreorder = lineResult.rows.some(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
+                    const fulfillmentType = allPreorder ? 'owner_upgrade' : 'auto';
+                    const isPreorder = allPreorder;
 
-                    const isPreorder = fulfillmentType === 'owner_upgrade';
                     const response = {
                         status: 'paid',
                         alreadyProcessed: true,
                         fulfillmentType: fulfillmentType,
-                        hasPreorderItems: isPreorder,
+                        hasPreorderItems: hasAnyPreorder,
                         message: isPreorder
                             ? 'Đơn hàng đã thanh toán. Vui lòng gửi bill qua Zalo để nhận tài khoản.'
                             : 'Đơn hàng đã được xử lý.'
