@@ -3755,6 +3755,42 @@ let musicProgressTimer = null;
         window.addEventListener('beforeunload', musicStop);
     }
 
+    // Auto-play music on first user interaction (click, scroll, touch, keydown)
+    var musicAutoStarted = false;
+    function musicAutoStart() {
+        if (musicAutoStarted || !musicAudio) return;
+        musicAutoStarted = true;
+        // Remove all listeners
+        ['click', 'scroll', 'touchstart', 'keydown'].forEach(function (evt) {
+            document.removeEventListener(evt, musicAutoStart, { capture: true });
+        });
+        // Fade in: start quiet, ramp up over 3 seconds
+        var targetVolume = musicAudio.volume || 0.7;
+        musicAudio.volume = 0.05;
+        musicIsPlaying = true;
+        musicUpdateUI();
+        musicAudio.play().then(function () {
+            var fadeStep = 0;
+            var totalSteps = 30; // 30 × 100ms = 3s
+            var fadeInterval = setInterval(function () {
+                fadeStep++;
+                musicAudio.volume = Math.min(0.05 + (targetVolume - 0.05) * (fadeStep / totalSteps), targetVolume);
+                if (fadeStep >= totalSteps) {
+                    clearInterval(fadeInterval);
+                    musicAudio.volume = targetVolume;
+                }
+            }, 100);
+        }).catch(function (e) {
+            console.warn('Music auto-play failed:', e);
+            musicIsPlaying = false;
+            musicAutoStarted = false; // allow retry on next interaction
+            musicUpdateUI();
+        });
+    }
+    ['click', 'scroll', 'touchstart', 'keydown'].forEach(function (evt) {
+        document.addEventListener(evt, musicAutoStart, { capture: true, passive: true });
+    });
+
 })();
 
 function toggleMusicPlayer() {
