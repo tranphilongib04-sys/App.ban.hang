@@ -3014,26 +3014,8 @@ function startPaymentPolling(orderCode, amount) {
         if (isPreorder && !data.deliveryToken) {
             showPreorderSuccess(orderCode, data.invoiceNumber);
         } else if (data.deliveryToken) {
+            // showSuccessWithCredentials already renders preorder section from delivery.js JSON
             await showSuccessWithCredentials(orderCode, data.deliveryToken, data.invoiceNumber);
-            if (hasPreorderItems) {
-                const successState = document.getElementById('successPaymentState');
-                if (successState) {
-                    const preorderItems = data.preorderItems || [];
-                    const itemsList = preorderItems.length > 0
-                        ? `<ul style="list-style:none;padding:0;margin:12px 0;">${preorderItems.map(p => `<li style="padding:8px 12px;background:#f9fafb;border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span>${p.name}</span><span style="color:#6b7280;font-size:13px;">x${p.quantity}</span></li>`).join('')}</ul>`
-                        : '';
-                    const zaloSection = `
-                        <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
-                            <h3 style="display:flex;align-items:center;gap:8px;">🕐 Sản phẩm giao sau (5-10 phút)</h3>
-                            ${itemsList}
-                            <p style="margin: 0.5rem 0; color:#6b7280;">Gửi bill thanh toán qua Zalo để nhận tài khoản.</p>
-                            <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
-                        </div>
-                    `;
-                    const backHome = successState.querySelector('.conf-back-home');
-                    if (backHome) backHome.insertAdjacentHTML('beforebegin', zaloSection);
-                }
-            }
         } else {
             window.location.href = data.redirectUrl || `/.netlify/functions/delivery?order=${orderCode}`;
         }
