@@ -250,6 +250,20 @@ exports.handler = async function (event, context) {
 
         // If JSON format requested, return JSON response
         if (wantsJson) {
+            // Check for preorder items in this order (giao sau qua Zalo)
+            const preorderLines = await db.execute({
+                sql: `SELECT ol.product_name, ol.quantity, s.sku_code 
+                      FROM order_lines ol 
+                      LEFT JOIN skus s ON ol.sku_id = s.id
+                      WHERE ol.order_id = ? AND ol.fulfillment_type = 'owner_upgrade'`,
+                args: [orderData.id]
+            });
+            const preorderItems = preorderLines.rows.map(r => ({
+                name: r.product_name,
+                quantity: r.quantity,
+                skuCode: r.sku_code
+            }));
+
             return {
                 statusCode: 200,
                 headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -259,6 +273,8 @@ exports.handler = async function (event, context) {
                     invoiceNumber: orderData.invoice_number,
                     credentials: credentials,
                     hasChatGPTPro: hasChatGPTPro,
+                    hasPreorderItems: preorderItems.length > 0,
+                    preorderItems: preorderItems,
                     customerName: orderData.customer_name || '',
                     customerPhone: orderData.customer_phone || ''
                 })

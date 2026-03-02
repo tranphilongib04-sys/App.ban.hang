@@ -159,7 +159,7 @@ exports.handler = async function (event, context) {
                 if (order && (order.status === 'fulfilled' || order.status === 'paid')) {
                     // Check ALL order lines to detect mixed delivery correctly
                     const lineResult = await db.execute({
-                        sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ?`,
+                        sql: `SELECT fulfillment_type, product_name, quantity FROM order_lines WHERE order_id = ?`,
                         args: [order.id]
                     });
                     const allPreorder = lineResult.rows.length > 0 && lineResult.rows.every(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
@@ -167,11 +167,17 @@ exports.handler = async function (event, context) {
                     const fulfillmentType = allPreorder ? 'owner_upgrade' : 'auto';
                     const isPreorder = allPreorder;
 
+                    // Collect preorder item names for frontend display
+                    const preorderItems = lineResult.rows
+                        .filter(r => (r.fulfillment_type || 'auto') === 'owner_upgrade')
+                        .map(r => ({ name: r.product_name, quantity: r.quantity }));
+
                     const response = {
                         status: 'paid',
                         alreadyProcessed: true,
                         fulfillmentType: fulfillmentType,
                         hasPreorderItems: hasAnyPreorder,
+                        preorderItems: preorderItems,
                         message: isPreorder
                             ? 'Đơn hàng đã thanh toán. Vui lòng gửi bill qua Zalo để nhận tài khoản.'
                             : 'Đơn hàng đã được xử lý.'
@@ -286,11 +292,16 @@ exports.handler = async function (event, context) {
             const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
             await ensurePaymentSchema(db); // MUST run before BEGIN (DDL auto-commits)
             const linesResult = await db.execute({
-                sql: `SELECT fulfillment_type FROM order_lines WHERE order_id = ?`,
+                sql: `SELECT fulfillment_type, product_name, quantity FROM order_lines WHERE order_id = ?`,
                 args: [order.id]
             });
             const hasAnyPreorder = linesResult.rows.some(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
             const allPreorder = linesResult.rows.length > 0 && linesResult.rows.every(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
+
+            // Collect preorder item names for frontend display
+            const preorderItems = linesResult.rows
+                .filter(r => (r.fulfillment_type || 'auto') === 'owner_upgrade')
+                .map(r => ({ name: r.product_name, quantity: r.quantity }));
 
             const tx = await db.transaction('write');
             try {
@@ -305,6 +316,7 @@ exports.handler = async function (event, context) {
                             status: 'paid',
                             fulfillmentType: 'owner_upgrade',
                             hasPreorderItems: true,
+                            preorderItems: preorderItems,
                             message: 'Thanh toán thành công! Gửi bill qua Zalo để nhận tài khoản.',
                             invoiceNumber: result.invoiceNumber
                         })
@@ -317,6 +329,7 @@ exports.handler = async function (event, context) {
                         status: 'paid',
                         fulfillmentType: 'auto',
                         hasPreorderItems: hasAnyPreorder,
+                        preorderItems: preorderItems,
                         deliveryToken: result.deliveryToken,
                         invoiceNumber: result.invoiceNumber,
                         message: 'Thanh toán thành công!',

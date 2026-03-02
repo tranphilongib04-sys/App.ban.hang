@@ -2719,6 +2719,8 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
 
         const credentials = data.credentials || [];
         const hasChatGPTPro = !!data.hasChatGPTPro;
+        const preorderItems = data.preorderItems || [];
+        const hasPreorderItems = data.hasPreorderItems || preorderItems.length > 0;
 
         // Hide pending, show success
         pendingState.style.display = 'none';
@@ -2852,6 +2854,19 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
                 </a>
                 <span class="conf-hotline">Hotline: 0988 428 496</span>
             </div>
+
+            ${hasPreorderItems ? `
+            <!-- Preorder Items Section -->
+            <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
+                <h3 style="display:flex;align-items:center;gap:8px;">🕐 Sản phẩm giao sau (5-10 phút)</h3>
+                ${preorderItems.length > 0 ? `
+                <ul style="list-style:none;padding:0;margin:12px 0;">
+                    ${preorderItems.map(p => `<li style="padding:8px 12px;background:#f9fafb;border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span>${escapeHtml(p.name)}</span><span style="color:#6b7280;font-size:13px;">x${p.quantity}</span></li>`).join('')}
+                </ul>` : ''}
+                <p style="margin:0.5rem 0;color:#6b7280;">Gửi bill thanh toán qua Zalo để nhận tài khoản.</p>
+                <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
+            </div>
+            ` : ''}
 
             <!-- Back Home -->
             <a href="#home" class="conf-back-home">
@@ -3003,10 +3018,15 @@ function startPaymentPolling(orderCode, amount) {
             if (hasPreorderItems) {
                 const successState = document.getElementById('successPaymentState');
                 if (successState) {
+                    const preorderItems = data.preorderItems || [];
+                    const itemsList = preorderItems.length > 0
+                        ? `<ul style="list-style:none;padding:0;margin:12px 0;">${preorderItems.map(p => `<li style="padding:8px 12px;background:#f9fafb;border-radius:8px;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;"><span>${p.name}</span><span style="color:#6b7280;font-size:13px;">x${p.quantity}</span></li>`).join('')}</ul>`
+                        : '';
                     const zaloSection = `
                         <div class="conf-preorder-instructions" style="margin-top: 1.5rem;">
-                            <h3>Sản phẩm đặt trước</h3>
-                            <p style="margin: 0.5rem 0;">Một số sản phẩm sẽ được giao qua Zalo trong 5-10 phút.</p>
+                            <h3 style="display:flex;align-items:center;gap:8px;">🕐 Sản phẩm giao sau (5-10 phút)</h3>
+                            ${itemsList}
+                            <p style="margin: 0.5rem 0; color:#6b7280;">Gửi bill thanh toán qua Zalo để nhận tài khoản.</p>
                             <a href="https://zalo.me/0988428496" target="_blank" class="conf-zalo-btn conf-zalo-btn-lg">Chat Zalo - 0988 428 496</a>
                         </div>
                     `;
