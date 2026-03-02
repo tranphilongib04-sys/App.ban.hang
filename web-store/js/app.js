@@ -2865,6 +2865,7 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
         window._credentials = credentials;
         window._customerName = data.customerName || (typeof lastOrder !== 'undefined' && lastOrder && lastOrder.customer ? lastOrder.customer.name : '') || '';
         window._customerPhone = data.customerPhone || (typeof lastOrder !== 'undefined' && lastOrder && lastOrder.customer ? lastOrder.customer.phone : '') || '';
+        window._orderItems = (typeof lastOrder !== 'undefined' && lastOrder && lastOrder.items) ? lastOrder.items : [];
 
         // Show toast notification
         showToast('Đã sao chép. Bạn có thể dán vào trang đăng nhập của dịch vụ.', 'success');
@@ -2903,12 +2904,24 @@ function copyAllCreds() {
     const customerInfo = (window._customerName || window._customerPhone)
         ? `\n👤 Khách hàng: ${window._customerName || ''}${window._customerPhone ? '\n📱 SĐT: ' + window._customerPhone : ''}\n`
         : '';
+    // Build product name line from order items
+    let productLine = '';
+    if (window._orderItems && window._orderItems.length > 0) {
+        const productNames = window._orderItems.map(item => {
+            let name = item.productName || '';
+            if (item.variantName) name += ' - ' + item.variantName;
+            return name;
+        }).filter(n => n);
+        if (productNames.length > 0) {
+            productLine = `\n🛒 Sản phẩm: ${productNames.join(', ')}\n`;
+        }
+    }
     const body = window._credentials.map((c, i) => {
         if (c.isLink) return `🔗 Code/Link ${i + 1}:\n   Link kích hoạt: ${c.username}${c.extraInfo ? '\n   📝 Lưu ý: ' + c.extraInfo : ''}`;
         return `📧 Tài khoản${window._credentials.length > 1 ? ' ' + (i + 1) : ''}: ${c.username}\n🔑 Mật khẩu: ${c.password}${c.extraInfo ? '\n📝 Ghi chú: ' + c.extraInfo : ''}`;
     }).join('\n\n');
     const footer = '━━━━━━━━━━━━━━━━━━━━\n⚠️ Không chia sẻ thông tin này cho người khác\n💬 Hỗ trợ: zalo.me/0988428496';
-    const text = `${header}${customerInfo}\n${body}\n\n${footer}`;
+    const text = `${header}${customerInfo}${productLine}\n${body}\n\n${footer}`;
     navigator.clipboard.writeText(text).then(() => {
         showToast('Đã sao chép toàn bộ thông tin!', 'success');
     });
