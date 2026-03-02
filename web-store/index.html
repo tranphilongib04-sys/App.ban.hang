@@ -20,39 +20,6 @@
 </head>
 
 <body>
-    <!-- WELCOME OVERLAY — Premium Splash -->
-    <div class="welcome-overlay" id="welcomeOverlay">
-        <div class="welcome-particles" id="welcomeParticles"></div>
-        <div class="welcome-card">
-            <div class="welcome-logo-ring">
-                <img src="images/logo_v2.png" alt="TBQ Homie" class="welcome-logo">
-            </div>
-            <h1 class="welcome-title">TBQ Homie</h1>
-            <p class="welcome-desc">Dịch vụ số Premium chính hãng</p>
-            <div class="welcome-badges">
-                <div class="welcome-badge">
-                    <span class="welcome-badge-icon">🛡️</span>
-                    <span>Uy tín</span>
-                </div>
-                <div class="welcome-badge">
-                    <span class="welcome-badge-icon">⚡</span>
-                    <span>Giao liền</span>
-                </div>
-                <div class="welcome-badge">
-                    <span class="welcome-badge-icon">💬</span>
-                    <span>Hỗ trợ 24/7</span>
-                </div>
-            </div>
-            <button class="welcome-enter-btn" id="welcomeEnterBtn" aria-label="Vào trang chủ">
-                <span>Khám phá ngay</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
-                    <line x1="5" y1="12" x2="19" y2="12" />
-                    <polyline points="12 5 19 12 12 19" />
-                </svg>
-            </button>
-        </div>
-    </div>
-
     <!-- HEADER -->
     <header>
         <nav>
@@ -212,12 +179,14 @@
                 <button class="hero-dot" onclick="goToSlide(4)"></button>
             </div>
             <button class="hero-slider-arrow hero-arrow-prev" onclick="prevSlide()" aria-label="Slide trước">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    aria-hidden="true">
                     <polyline points="15 18 9 12 15 6" />
                 </svg>
             </button>
             <button class="hero-slider-arrow hero-arrow-next" onclick="nextSlide()" aria-label="Slide tiếp theo">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                 </svg>
             </button>
@@ -447,10 +416,11 @@
         </section>
 
         <!-- Lightbox -->
-        <div class="testi-lightbox" id="testiLightbox" onclick="closeLightbox(event)" role="dialog" aria-label="Xem ảnh phản hồi" aria-modal="true">
-        <button class="testi-lightbox-close" onclick="closeLightbox(event)" aria-label="Đóng ảnh">&times;</button>
-        <img src="" alt="Phản hồi khách hàng" id="lightboxImg">
-    </div>
+        <div class="testi-lightbox" id="testiLightbox" onclick="closeLightbox(event)" role="dialog"
+            aria-label="Xem ảnh phản hồi" aria-modal="true">
+            <button class="testi-lightbox-close" onclick="closeLightbox(event)" aria-label="Đóng ảnh">&times;</button>
+            <img src="" alt="Phản hồi khách hàng" id="lightboxImg">
+        </div>
 
         <!-- CTA -->
         <section>
@@ -780,7 +750,8 @@
     <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
 
     <!-- BACK TO TOP -->
-    <button class="back-to-top" id="backToTop" aria-label="Lên đầu trang" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+    <button class="back-to-top" id="backToTop" aria-label="Lên đầu trang"
+        onclick="window.scrollTo({top:0,behavior:'smooth'})">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <polyline points="18 15 12 9 6 15" />
         </svg>
@@ -798,7 +769,8 @@
     </div>
 
     <!-- FLOATING CONTACT - Zalo icon FAB -->
-    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="contact-fab" title="Chat Zalo" aria-label="Liên hệ qua Zalo">
+    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="contact-fab" title="Chat Zalo"
+        aria-label="Liên hệ qua Zalo">
         <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect width="48" height="48" rx="12" fill="#0068FF" />
             <path
@@ -836,7 +808,8 @@
     </nav>
 
     <!-- FLOATING MUSIC PLAYER -->
-    <button class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc" aria-label="Mở nhạc nền" aria-expanded="false">
+    <button class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc"
+        aria-label="Mở nhạc nền" aria-expanded="false">
         <div class="music-fab-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" aria-hidden="true">
@@ -853,7 +826,8 @@
     <div class="music-player-panel" id="musicPlayerPanel">
         <div class="music-player-header">
             <div class="music-player-title">🎵 Nhạc nền</div>
-            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng" aria-label="Đóng trình phát nhạc">×</button>
+            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng"
+                aria-label="Đóng trình phát nhạc">×</button>
         </div>
         <div class="music-track-info">
             <div class="music-track-name" id="musicTrackName">Chọn bài để nghe</div>

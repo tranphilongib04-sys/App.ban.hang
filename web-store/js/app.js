@@ -3755,40 +3755,6 @@ let musicProgressTimer = null;
         window.addEventListener('beforeunload', musicStop);
     }
 
-    // Welcome overlay — click "Khám phá ngay" để phát nhạc
-    var welcomeBtn = document.getElementById('welcomeEnterBtn');
-    var welcomeOverlay = document.getElementById('welcomeOverlay');
-    if (welcomeBtn && welcomeOverlay) {
-        welcomeBtn.addEventListener('click', function () {
-            welcomeOverlay.classList.add('hidden');
-            setTimeout(function () { welcomeOverlay.remove(); }, 700);
-
-            // Fade in: bắt đầu volume nhỏ, tăng dần trong 3 giây
-            var targetVolume = musicAudio.volume; // volume đã lưu (mặc định 0.7)
-            musicAudio.volume = 0.05; // bắt đầu rất nhẹ
-
-            musicIsPlaying = true;
-            musicUpdateUI();
-
-            musicAudio.play().then(function () {
-                // Tăng dần volume
-                var fadeStep = 0;
-                var totalSteps = 30; // 30 bước x 100ms = 3 giây
-                var fadeInterval = setInterval(function () {
-                    fadeStep++;
-                    musicAudio.volume = Math.min(0.05 + (targetVolume - 0.05) * (fadeStep / totalSteps), targetVolume);
-                    if (fadeStep >= totalSteps) {
-                        clearInterval(fadeInterval);
-                        musicAudio.volume = targetVolume;
-                    }
-                }, 100);
-            }).catch(function (e) {
-                console.warn('Music play failed:', e);
-                musicIsPlaying = false;
-                musicUpdateUI();
-            });
-        });
-    }
 })();
 
 function toggleMusicPlayer() {
