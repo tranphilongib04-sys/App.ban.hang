@@ -348,7 +348,7 @@ const products = {
         category: 'Công cụ',
         deliveryType: 'preorder',
         description: 'Bộ công cụ văn phòng Microsoft Office với Word, Excel, PowerPoint...',
-        image: 'https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Microsoft_logo.svg/2048px-Microsoft_logo.svg.png',
+        image: 'images/microsoft365-logo.jpg',
         featured: false,
         rating: 4.8,
         reviewCount: 21,
