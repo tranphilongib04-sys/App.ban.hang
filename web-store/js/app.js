@@ -3755,21 +3755,25 @@ let musicProgressTimer = null;
         window.addEventListener('beforeunload', musicStop);
     }
 
-    // Auto-play music on first user interaction (click, scroll, touch, keydown)
+    // Auto-play music on first user interaction (click or touch only — scroll is rejected by browsers)
     var musicAutoStarted = false;
+    var musicAutoEvents = ['click', 'touchstart', 'keydown'];
+    function musicAutoStartRemoveListeners() {
+        musicAutoEvents.forEach(function (evt) {
+            document.removeEventListener(evt, musicAutoStart, true);
+        });
+    }
     function musicAutoStart() {
         if (musicAutoStarted || !musicAudio) return;
-        musicAutoStarted = true;
-        // Remove all listeners
-        ['click', 'scroll', 'touchstart', 'keydown'].forEach(function (evt) {
-            document.removeEventListener(evt, musicAutoStart, { capture: true });
-        });
         // Fade in: start quiet, ramp up over 3 seconds
         var targetVolume = musicAudio.volume || 0.7;
         musicAudio.volume = 0.05;
-        musicIsPlaying = true;
-        musicUpdateUI();
         musicAudio.play().then(function () {
+            // SUCCESS — now lock out and remove listeners
+            musicAutoStarted = true;
+            musicAutoStartRemoveListeners();
+            musicIsPlaying = true;
+            musicUpdateUI();
             var fadeStep = 0;
             var totalSteps = 30; // 30 × 100ms = 3s
             var fadeInterval = setInterval(function () {
@@ -3781,13 +3785,14 @@ let musicProgressTimer = null;
                 }
             }, 100);
         }).catch(function (e) {
-            console.warn('Music auto-play failed:', e);
+            // FAILED — restore volume, keep listeners for next attempt
+            console.warn('Music auto-play failed (will retry on next click):', e.message || e);
+            musicAudio.volume = targetVolume;
             musicIsPlaying = false;
-            musicAutoStarted = false; // allow retry on next interaction
             musicUpdateUI();
         });
     }
-    ['click', 'scroll', 'touchstart', 'keydown'].forEach(function (evt) {
+    musicAutoEvents.forEach(function (evt) {
         document.addEventListener(evt, musicAutoStart, { capture: true, passive: true });
     });
 
