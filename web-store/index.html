@@ -43,9 +43,9 @@
                     <span>Hỗ trợ 24/7</span>
                 </div>
             </div>
-            <button class="welcome-enter-btn" id="welcomeEnterBtn">
+            <button class="welcome-enter-btn" id="welcomeEnterBtn" aria-label="Vào trang chủ">
                 <span>Khám phá ngay</span>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                     <line x1="5" y1="12" x2="19" y2="12" />
                     <polyline points="12 5 19 12 12 19" />
                 </svg>
@@ -72,19 +72,19 @@
                     oninput="handleSearch(this.value)">
                 <div class="search-results" id="searchResults"></div>
             </div>
-            <div class="cart-icon" onclick="toggleCart()">
+            <button class="cart-icon" onclick="toggleCart()" aria-label="Giỏ hàng" aria-haspopup="dialog">
                 🛒
-                <span class="cart-count" style="display: none;">0</span>
-            </div>
+                <span class="cart-count" style="display: none;" aria-live="polite">0</span>
+            </button>
         </nav>
     </header>
 
     <!-- CART SIDEBAR -->
-    <div class="cart-overlay" onclick="toggleCart()"></div>
-    <div class="cart-sidebar">
+    <div class="cart-overlay" onclick="toggleCart()" aria-hidden="true"></div>
+    <div class="cart-sidebar" role="dialog" aria-label="Giỏ hàng" aria-modal="true">
         <div class="cart-header">
             <h2>Giỏ hàng</h2>
-            <span class="close-cart" onclick="toggleCart()">×</span>
+            <button class="close-cart" onclick="toggleCart()" aria-label="Đóng giỏ hàng">×</button>
         </div>
         <div class="cart-items" id="cartItems">
             <div class="cart-empty">
@@ -211,13 +211,13 @@
                 <button class="hero-dot" onclick="goToSlide(3)"></button>
                 <button class="hero-dot" onclick="goToSlide(4)"></button>
             </div>
-            <button class="hero-slider-arrow hero-arrow-prev" onclick="prevSlide()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <button class="hero-slider-arrow hero-arrow-prev" onclick="prevSlide()" aria-label="Slide trước">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                     <polyline points="15 18 9 12 15 6" />
                 </svg>
             </button>
-            <button class="hero-slider-arrow hero-arrow-next" onclick="nextSlide()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <button class="hero-slider-arrow hero-arrow-next" onclick="nextSlide()" aria-label="Slide tiếp theo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
                     <polyline points="9 18 15 12 9 6" />
                 </svg>
             </button>
@@ -447,10 +447,10 @@
         </section>
 
         <!-- Lightbox -->
-        <div class="testi-lightbox" id="testiLightbox" onclick="closeLightbox(event)">
-            <button class="testi-lightbox-close" onclick="closeLightbox(event)">&times;</button>
-            <img src="" alt="Phản hồi khách hàng" id="lightboxImg">
-        </div>
+        <div class="testi-lightbox" id="testiLightbox" onclick="closeLightbox(event)" role="dialog" aria-label="Xem ảnh phản hồi" aria-modal="true">
+        <button class="testi-lightbox-close" onclick="closeLightbox(event)" aria-label="Đóng ảnh">&times;</button>
+        <img src="" alt="Phản hồi khách hàng" id="lightboxImg">
+    </div>
 
         <!-- CTA -->
         <section>
@@ -764,8 +764,8 @@
             <a href="#home">Trang chủ</a>
             <a href="#products">Sản phẩm</a>
             <a href="#lookup">Tra cứu đơn hàng</a>
-            <a href="#" onclick="alert('Chính sách đang cập nhật')">Chính sách bảo hành</a>
-            <a href="#" onclick="alert('Điều khoản đang cập nhật')">Điều khoản dịch vụ</a>
+            <a href="javascript:void(0)" onclick="showPolicyModal('warranty')">Chính sách bảo hành</a>
+            <a href="javascript:void(0)" onclick="showPolicyModal('terms')">Điều khoản dịch vụ</a>
         </div>
         <div class="footer-contact">
             Liên hệ:
@@ -777,11 +777,29 @@
     </footer>
 
     <!-- TOAST CONTAINER -->
-    <div id="toast-container"></div>
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- BACK TO TOP -->
+    <button class="back-to-top" id="backToTop" aria-label="Lên đầu trang" onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15" />
+        </svg>
+    </button>
+
+    <!-- POLICY MODAL -->
+    <div class="policy-modal-overlay" id="policyModalOverlay" onclick="closePolicyModal(event)">
+        <div class="policy-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+            <div class="policy-modal-header">
+                <h2 id="policyModalTitle"></h2>
+                <button class="policy-modal-close" onclick="closePolicyModal()" aria-label="Đóng">×</button>
+            </div>
+            <div class="policy-modal-body" id="policyModalBody"></div>
+        </div>
+    </div>
 
     <!-- FLOATING CONTACT - Zalo icon FAB -->
-    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="contact-fab" title="Chat Zalo">
-        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="contact-fab" title="Chat Zalo" aria-label="Liên hệ qua Zalo">
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
             <rect width="48" height="48" rx="12" fill="#0068FF" />
             <path
                 d="M35.8 30.4c.6-1.5.9-3.2.9-5 0-7.5-6.5-13.6-14.5-13.6S7.7 17.9 7.7 25.4c0 7.5 6.5 13.6 14.5 13.6 1.7 0 3.4-.3 4.9-.7l5.1 1.4-1.4-4.3c1.9-1.4 3.5-3.2 4.4-5.2l.6.2Z"
@@ -818,24 +836,24 @@
     </nav>
 
     <!-- FLOATING MUSIC PLAYER -->
-    <div class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc">
+    <button class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc" aria-label="Mở nhạc nền" aria-expanded="false">
         <div class="music-fab-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                stroke-linejoin="round">
+                stroke-linejoin="round" aria-hidden="true">
                 <path d="M9 18V5l12-2v13" />
                 <circle cx="6" cy="18" r="3" />
                 <circle cx="18" cy="16" r="3" />
             </svg>
         </div>
-        <div class="music-fab-bars" id="musicFabBars">
+        <div class="music-fab-bars" id="musicFabBars" aria-hidden="true">
             <span></span><span></span><span></span><span></span>
         </div>
-    </div>
+    </button>
 
     <div class="music-player-panel" id="musicPlayerPanel">
         <div class="music-player-header">
             <div class="music-player-title">🎵 Nhạc nền</div>
-            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng">×</button>
+            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng" aria-label="Đóng trình phát nhạc">×</button>
         </div>
         <div class="music-track-info">
             <div class="music-track-name" id="musicTrackName">Chọn bài để nghe</div>

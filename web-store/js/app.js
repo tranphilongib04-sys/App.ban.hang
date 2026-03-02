@@ -2243,6 +2243,13 @@ function updateCartUI() {
     const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 1), 0);
     cartCount.textContent = totalItems;
 
+    // Cart bounce animation
+    if (totalItems > 0) {
+        cartCount.classList.remove('bounce');
+        void cartCount.offsetWidth;
+        cartCount.classList.add('bounce');
+    }
+
     if (cart.length === 0) {
         cartItems.innerHTML = '<div class="cart-empty"><p>Giỏ hàng trống</p></div>';
         cartFooter.style.display = 'none';
@@ -3928,4 +3935,159 @@ function musicFormatTime(sec) {
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
     return m + ':' + (s < 10 ? '0' : '') + s;
+}
+
+// =============================================
+// 📜 POLICY MODAL
+// =============================================
+const policyContent = {
+    warranty: {
+        title: 'Chính sách bảo hành',
+        body: `
+            <h3>1. Phạm vi bảo hành</h3>
+            <ul>
+                <li>Tất cả sản phẩm mua tại TBQ Homie đều được bảo hành theo thời hạn ghi trên từng gói</li>
+                <li>Bảo hành bao gồm: lỗi đăng nhập, mất quyền truy cập do lỗi hệ thống</li>
+                <li>Không bảo hành nếu khách hàng tự ý thay đổi mật khẩu, email liên kết</li>
+            </ul>
+            <h3>2. Quy trình bảo hành</h3>
+            <ul>
+                <li>Liên hệ qua Zalo: 0988 428 496</li>
+                <li>Cung cấp mã đơn hàng hoặc thông tin tài khoản</li>
+                <li>Xử lý trong vòng 5–30 phút (giờ hành chính)</li>
+            </ul>
+            <h3>3. Thời gian bảo hành</h3>
+            <ul>
+                <li>Gói KBH (Không bảo hành): Không áp dụng bảo hành</li>
+                <li>Gói có bảo hành: Theo thời hạn ghi trên gói (1 tháng, 3 tháng, 1 năm...)</li>
+            </ul>
+            <h3>4. Chính sách đổi/trả</h3>
+            <ul>
+                <li>Hoàn tiền 100% nếu chưa giao sản phẩm</li>
+                <li>Đổi sản phẩm cùng giá trị nếu sản phẩm lỗi trong 24h đầu</li>
+            </ul>
+        `
+    },
+    terms: {
+        title: 'Điều khoản dịch vụ',
+        body: `
+            <h3>1. Điều khoản chung</h3>
+            <ul>
+                <li>Khi sử dụng dịch vụ TBQ Homie, bạn đồng ý tuân thủ các điều khoản dưới đây</li>
+                <li>TBQ Homie cung cấp các dịch vụ số (tài khoản premium, phần mềm bản quyền)</li>
+            </ul>
+            <h3>2. Quyền và trách nhiệm</h3>
+            <ul>
+                <li>Khách hàng có quyền sử dụng sản phẩm theo đúng mô tả</li>
+                <li>Không chia sẻ, bán lại tài khoản cho bên thứ ba</li>
+                <li>Không sử dụng sản phẩm cho mục đích vi phạm pháp luật</li>
+            </ul>
+            <h3>3. Thanh toán</h3>
+            <ul>
+                <li>Thanh toán qua chuyển khoản ngân hàng (Sepay tự động xác nhận)</li>
+                <li>Giao hàng tự động ngay sau khi thanh toán thành công</li>
+                <li>Hóa đơn điện tử được cung cấp sau khi giao dịch hoàn tất</li>
+            </ul>
+            <h3>4. Bảo mật thông tin</h3>
+            <ul>
+                <li>Thông tin cá nhân được bảo mật tuyệt đối</li>
+                <li>Không chia sẻ dữ liệu với bên thứ ba</li>
+                <li>Sử dụng kết nối bảo mật (HTTPS) cho mọi giao dịch</li>
+            </ul>
+            <h3>5. Liên hệ</h3>
+            <ul>
+                <li>Zalo: 0988 428 496</li>
+                <li>Email: tranphilongib04@gmail.com</li>
+            </ul>
+        `
+    }
+};
+
+function showPolicyModal(type) {
+    const data = policyContent[type];
+    if (!data) return;
+    document.getElementById('policyModalTitle').textContent = data.title;
+    document.getElementById('policyModalBody').innerHTML = data.body;
+    document.getElementById('policyModalOverlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+}
+
+function closePolicyModal(e) {
+    if (e && e.target && !e.target.classList.contains('policy-modal-overlay')) return;
+    document.getElementById('policyModalOverlay').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+// Close policy modal on Escape
+document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') {
+        const overlay = document.getElementById('policyModalOverlay');
+        if (overlay && overlay.classList.contains('open')) closePolicyModal();
+    }
+});
+
+// =============================================
+// ⬆️ BACK TO TOP BUTTON
+// =============================================
+window.addEventListener('scroll', function () {
+    const btn = document.getElementById('backToTop');
+    if (!btn) return;
+    if (window.scrollY > 500) {
+        btn.classList.add('visible');
+    } else {
+        btn.classList.remove('visible');
+    }
+}, { passive: true });
+
+// =============================================
+// 👆 HERO SLIDER — SWIPE GESTURES (MOBILE)
+// =============================================
+(function initHeroSwipe() {
+    const slider = document.querySelector('.hero-slider');
+    if (!slider) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    slider.addEventListener('touchstart', function (e) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+    slider.addEventListener('touchend', function (e) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchStartX - touchEndX;
+        const diffY = touchStartY - touchEndY;
+
+        // Only trigger if horizontal swipe > 50px and more horizontal than vertical
+        if (Math.abs(diffX) > 50 && Math.abs(diffX) > Math.abs(diffY)) {
+            if (diffX > 0) {
+                nextSlide();
+            } else {
+                prevSlide();
+            }
+        }
+    }, { passive: true });
+})();
+
+// =============================================
+// 📊 COUNTER ANIMATION (Stats / Features)
+// =============================================
+function animateCounter(el, target, suffix) {
+    suffix = suffix || '';
+    let current = 0;
+    const duration = 1500; // ms
+    const stepTime = 16;
+    const totalSteps = duration / stepTime;
+    const step = target / totalSteps;
+
+    const timer = setInterval(function () {
+        current += step;
+        if (current >= target) {
+            current = target;
+            clearInterval(timer);
+        }
+        el.textContent = Math.floor(current).toLocaleString('vi-VN') + suffix;
+    }, stepTime);
 }
