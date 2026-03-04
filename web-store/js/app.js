@@ -2469,10 +2469,23 @@ async function applyDiscountCode() {
             // Show discount line
             document.getElementById('discountLine').style.display = 'flex';
             document.getElementById('discountCodeDisplay').textContent = data.code;
-            document.getElementById('discountAmountDisplay').textContent = formatPrice(data.discountAmount);
 
-            // Update total
-            document.getElementById('checkoutTotal').textContent = formatPrice(data.finalTotal);
+            // For percentage-based discounts, recalculate from frontend prices
+            // to avoid mismatch between displayed item prices and discount total
+            if (data.discountPercent) {
+                const frontendTotal = getCartTotal('public');
+                const frontendDiscount = Math.round(frontendTotal * data.discountPercent / 100);
+                const frontendFinal = Math.max(0, frontendTotal - frontendDiscount);
+                document.getElementById('discountAmountDisplay').textContent = formatPrice(frontendDiscount);
+                document.getElementById('checkoutTotal').textContent = formatPrice(frontendFinal);
+                // Update stored discount with frontend values
+                appliedDiscount.discountAmount = frontendDiscount;
+                appliedDiscount.finalTotal = frontendFinal;
+            } else {
+                document.getElementById('discountAmountDisplay').textContent = formatPrice(data.discountAmount);
+                // Update total
+                document.getElementById('checkoutTotal').textContent = formatPrice(data.finalTotal);
+            }
         } else {
             feedback.textContent = data.error || 'Mã giảm giá không hợp lệ';
             feedback.className = 'discount-feedback error';
@@ -2720,6 +2733,12 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
 
         if (!data.success) {
             window.location.href = `/.netlify/functions/delivery?token=${deliveryToken}&order=${orderCode}`;
+            return;
+        }
+
+        // Guard: if delivery API reports this is a preorder order, show Zalo page
+        if (data.fulfillmentType === 'owner_upgrade') {
+            showPreorderSuccess(orderCode, invoiceNumber);
             return;
         }
 
@@ -3384,30 +3403,34 @@ renderAllProducts = function (filter) {
     _origRenderAll(filter);
     triggerStagger(document.getElementById('allProducts'));
 };
-// HEADER SCROLL LOGIC (Mobile)
+// UNIFIED SCROLL HANDLER — header hide/show + back-to-top in one listener
 let lastScrollTop = 0;
 window.addEventListener('scroll', function () {
-    // Only active on mobile
-    if (window.innerWidth > 768) return;
+    const scrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
 
-    const header = document.querySelector('header');
-    let scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-
-    if (scrollTop < 0) scrollTop = 0; // iOS bounce fix
-
-    // Threshold
-    if (Math.abs(scrollTop - lastScrollTop) <= 5) return;
-
-    if (scrollTop > lastScrollTop && scrollTop > 60) {
-        // Scroll Down
-        header.classList.add('header-hidden');
-    } else {
-        // Scroll Up
-        header.classList.remove('header-hidden');
+    // ── Header hide/show (mobile only) ──
+    if (window.innerWidth <= 768) {
+        const header = document.querySelector('header');
+        if (Math.abs(scrollTop - lastScrollTop) > 5) {
+            if (scrollTop > lastScrollTop && scrollTop > 60) {
+                header.classList.add('header-hidden');
+            } else {
+                header.classList.remove('header-hidden');
+            }
+            lastScrollTop = scrollTop;
+        }
     }
 
-    lastScrollTop = scrollTop;
-});
+    // ── Back to top button ──
+    const btn = document.getElementById('backToTop');
+    if (btn) {
+        if (scrollTop > 500) {
+            btn.classList.add('visible');
+        } else {
+            btn.classList.remove('visible');
+        }
+    }
+}, { passive: true });
 
 /* =============================================
    TESTIMONIALS CAROUSEL + LIGHTBOX
@@ -3459,9 +3482,13 @@ function initTestiCarousel() {
 
     buildDots();
     track.addEventListener('scroll', updateDots, { passive: true });
+    let _resizeTimer;
     window.addEventListener('resize', () => {
-        buildDots();
-        updateDots();
+        clearTimeout(_resizeTimer);
+        _resizeTimer = setTimeout(() => {
+            buildDots();
+            updateDots();
+        }, 200);
     });
 }
 
@@ -3728,10 +3755,12 @@ let musicProgressTimer = null;
     localStorage.setItem('tbq_music_track', 0);
     musicRenderPlaylist();
 
-    // Generate floating particles
+    // Generate floating particles (fewer on mobile for performance)
     var particleContainer = document.getElementById('welcomeParticles');
     if (particleContainer) {
-        for (var i = 0; i < 20; i++) {
+        var isMobileDevice = window.innerWidth <= 768;
+        var particleCount = isMobileDevice ? 10 : 20;
+        for (var i = 0; i < particleCount; i++) {
             var p = document.createElement('div');
             p.className = 'welcome-particle';
             var size = 2 + Math.random() * 4;
@@ -3781,16 +3810,20 @@ let musicProgressTimer = null;
             musicAutoStartRemoveListeners();
             musicIsPlaying = true;
             musicUpdateUI();
-            var fadeStep = 0;
-            var totalSteps = 30; // 30 × 100ms = 3s
-            var fadeInterval = setInterval(function () {
-                fadeStep++;
-                musicAudio.volume = Math.min(0.05 + (targetVolume - 0.05) * (fadeStep / totalSteps), targetVolume);
-                if (fadeStep >= totalSteps) {
-                    clearInterval(fadeInterval);
+            // Smooth fade-in using requestAnimationFrame (syncs with display refresh)
+            var fadeStart = null;
+            var fadeDuration = 3000; // 3 seconds
+            function fadeInStep(timestamp) {
+                if (!fadeStart) fadeStart = timestamp;
+                var progress = Math.min((timestamp - fadeStart) / fadeDuration, 1);
+                musicAudio.volume = 0.05 + (targetVolume - 0.05) * progress;
+                if (progress < 1) {
+                    requestAnimationFrame(fadeInStep);
+                } else {
                     musicAudio.volume = targetVolume;
                 }
-            }, 100);
+            }
+            requestAnimationFrame(fadeInStep);
         }).catch(function (e) {
             // FAILED — restore volume, keep listeners for next attempt
             console.warn('Music auto-play failed (will retry on next click):', e.message || e);
@@ -4056,18 +4089,9 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
-// =============================================
-// ⬆️ BACK TO TOP BUTTON
-// =============================================
-window.addEventListener('scroll', function () {
-    const btn = document.getElementById('backToTop');
-    if (!btn) return;
-    if (window.scrollY > 500) {
-        btn.classList.add('visible');
-    } else {
-        btn.classList.remove('visible');
-    }
-}, { passive: true });
+
+// (Back-to-top logic merged into unified scroll handler above)
+
 
 // =============================================
 // 👆 HERO SLIDER — SWIPE GESTURES (MOBILE)
@@ -4106,18 +4130,19 @@ window.addEventListener('scroll', function () {
 // =============================================
 function animateCounter(el, target, suffix) {
     suffix = suffix || '';
-    let current = 0;
     const duration = 1500; // ms
-    const stepTime = 16;
-    const totalSteps = duration / stepTime;
-    const step = target / totalSteps;
+    let startTime = null;
 
-    const timer = setInterval(function () {
-        current += step;
-        if (current >= target) {
-            current = target;
-            clearInterval(timer);
+    function step(timestamp) {
+        if (!startTime) startTime = timestamp;
+        const progress = Math.min((timestamp - startTime) / duration, 1);
+        const current = Math.floor(target * progress);
+        el.textContent = current.toLocaleString('vi-VN') + suffix;
+        if (progress < 1) {
+            requestAnimationFrame(step);
+        } else {
+            el.textContent = target.toLocaleString('vi-VN') + suffix;
         }
-        el.textContent = Math.floor(current).toLocaleString('vi-VN') + suffix;
-    }, stepTime);
+    }
+    requestAnimationFrame(step);
 }

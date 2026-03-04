@@ -58,6 +58,31 @@ function generateDeliveryToken(orderId, email) {
 }
 
 // ---------------------------------------------------------------------------
+// Telegram notification – fire-and-forget (never blocks fulfillment)
+// ---------------------------------------------------------------------------
+async function sendTelegramNotification(message) {
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+    if (!botToken || !chatId) return;
+
+    try {
+        const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: 'HTML' })
+        });
+        if (!res.ok) console.error('[fulfillment] Telegram API error:', await res.text());
+    } catch (err) {
+        console.error('[fulfillment] Telegram send error:', err.message);
+    }
+}
+
+function formatVND(amount) {
+    return Number(amount || 0).toLocaleString('vi-VN') + 'đ';
+}
+
+
+// ---------------------------------------------------------------------------
 // finalizeOrder(db, order, transaction, source)
 //
 // THE single entry-point for "payment confirmed → deliver".
@@ -156,7 +181,9 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     const stockResult = await db.execute({
         sql: `SELECT si.id, si.account_info, si.secret_key, si.note
               FROM stock_items si
+              JOIN skus s ON si.sku_id = s.id
               WHERE si.order_id = ? AND si.status = 'reserved'
+                AND s.delivery_type != 'owner_upgrade'
               ORDER BY si.id ASC`,
         args: [fresh.id]
     });
@@ -259,6 +286,33 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     });
 
     console.log(`[finalizeOrder] order ${fresh.id} fulfilled via ${source} | ${stockResult.rows.length} items delivered`);
+
+    // ── 10. Telegram notification (fire-and-forget) ──────────────────
+    try {
+        const productLines = await db.execute({
+            sql: `SELECT product_name, quantity FROM order_lines WHERE order_id = ?`,
+            args: [fresh.id]
+        });
+        const productNames = productLines.rows
+            .map(r => `${r.product_name} x${r.quantity}`)
+            .join(', ');
+
+        const telegramMsg = `<b>✅ ĐƠN HÀNG MỚI: ${productNames || 'N/A'}</b>
+
+<b>Tên:</b> ${fresh.customer_name || 'N/A'}
+<b>SĐT:</b> ${fresh.customer_phone || 'N/A'}
+<b>Email:</b> ${fresh.customer_email || 'N/A'}
+<b>Tổng:</b> ${formatVND(fresh.amount_total)}
+<b>Mã đơn:</b> ${fresh.order_code}
+<b>Hóa đơn:</b> ${finalInvoiceNumber}`;
+
+        // Await notification — fire-and-forget doesn't work in serverless
+        // (Lambda may terminate before the HTTP request completes)
+        await sendTelegramNotification(telegramMsg);
+    } catch (tgErr) {
+        console.warn('[finalizeOrder] Telegram prep error (non-fatal):', tgErr.message);
+    }
+
     return { alreadyFulfilled: false, deliveryToken, invoiceNumber: finalInvoiceNumber, credentials };
 }
 
