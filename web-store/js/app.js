@@ -1983,6 +1983,11 @@ function buyNow(productId) {
                 <input type="tel" id="buyNowPhone" required>
                 <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📱 Dùng SĐT này để tra cứu đơn hàng</div>
             </div>
+            <div class="buy-now-modal-field">
+                <label>Email (Tùy chọn)</label>
+                <input type="email" id="buyNowEmail" placeholder="example@gmail.com" value="${email}">
+                <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📧 Nhận thông tin đơn hàng và nhắc hạn qua email</div>
+            </div>
             <div class="buy-now-modal-summary">
                 <span>${variant.name} × ${detailQuantity}</span>
                 <span class="buy-now-modal-total">${document.getElementById('detailTotal')?.textContent || '0₫'}</span>
@@ -2011,7 +2016,7 @@ async function submitBuyNow(productId) {
     const variant = product.variants[selected.value];
     const name = document.getElementById('buyNowName')?.value.trim();
     const phone = document.getElementById('buyNowPhone')?.value.trim();
-    const email = document.getElementById('detailEmail')?.value.trim() || '';
+    const email = document.getElementById('buyNowEmail')?.value.trim() || document.getElementById('detailEmail')?.value.trim() || '';
 
     if (!name || !phone) {
         showToast('Vui lòng điền đầy đủ họ tên và SĐT!', 'error');
