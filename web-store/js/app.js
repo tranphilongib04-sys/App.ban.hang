@@ -2670,12 +2670,18 @@ async function placeOrder() {
         // Reset confirmation page state for new order
         // (fixes bug: 2nd order shows old order's success instead of new QR)
         if (pollingInterval) clearInterval(pollingInterval);
+        if (typeof countdownInterval !== 'undefined' && countdownInterval) clearInterval(countdownInterval);
         const pendingState = document.getElementById('pendingPaymentState');
         const successState = document.getElementById('successPaymentState');
+        const countdownEl = document.getElementById('paymentCountdown');
         if (pendingState) pendingState.style.display = 'block';
         if (successState) {
             successState.style.display = 'none';
             successState.innerHTML = '';
+        }
+        if (countdownEl) {
+            countdownEl.style.display = 'none';
+            countdownEl.classList.remove('conf-countdown-urgent', 'conf-countdown-expired');
         }
 
         // Update UI elements
@@ -2700,8 +2706,9 @@ async function placeOrder() {
         submitBtn.textContent = originalBtnText;
         submitBtn.style.opacity = '1';
 
-        // Start polling for payment status
+        // Start polling for payment status + countdown timer
         startPaymentPolling(orderCode, data.amount);
+        startPaymentCountdown();
 
     } catch (error) {
         console.error('Place order error:', error);
@@ -3024,6 +3031,63 @@ function showPreorderSuccess(orderCode, invoiceNumber) {
 // order-status just reads the current state so the UI stays in sync even if
 // the webhook already fulfilled the order while the tab was open.
 let pollingInterval;
+let countdownInterval;
+
+function startPaymentCountdown() {
+    // Clear any existing countdown
+    if (countdownInterval) clearInterval(countdownInterval);
+
+    const countdownEl = document.getElementById('paymentCountdown');
+    const timerEl = document.getElementById('countdownTimer');
+    if (!countdownEl || !timerEl) return;
+
+    // Fixed 10-minute countdown to create urgency
+    const expiresAt = Date.now() + 10 * 60 * 1000;
+    countdownEl.style.display = 'flex';
+
+    function updateTimer() {
+        const now = Date.now();
+        const remaining = Math.max(0, expiresAt - now);
+        const totalSeconds = Math.floor(remaining / 1000);
+        const minutes = Math.floor(totalSeconds / 60);
+        const seconds = totalSeconds % 60;
+
+        timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+
+        // Urgent styling when < 5 minutes
+        if (totalSeconds <= 300) {
+            countdownEl.classList.add('conf-countdown-urgent');
+        } else {
+            countdownEl.classList.remove('conf-countdown-urgent');
+        }
+
+        if (remaining <= 0) {
+            clearInterval(countdownInterval);
+            timerEl.textContent = '00:00';
+            countdownEl.innerHTML = `
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+                <span>Đơn hàng đã hết hạn. Vui lòng tạo đơn mới.</span>
+            `;
+            countdownEl.classList.add('conf-countdown-expired');
+            // Stop polling too
+            if (pollingInterval) clearInterval(pollingInterval);
+        }
+    }
+
+    updateTimer();
+    countdownInterval = setInterval(updateTimer, 1000);
+}
+
+function stopPaymentCountdown() {
+    if (countdownInterval) clearInterval(countdownInterval);
+    const countdownEl = document.getElementById('paymentCountdown');
+    if (countdownEl) countdownEl.style.display = 'none';
+}
+
 function startPaymentPolling(orderCode, amount) {
     if (pollingInterval) clearInterval(pollingInterval);
 
@@ -3033,6 +3097,7 @@ function startPaymentPolling(orderCode, amount) {
 
     const handlePaid = async (data) => {
         clearInterval(pollingInterval);
+        stopPaymentCountdown();
 
         const isPreorder = data.fulfillmentType === 'owner_upgrade' || data.fulfillmentType === 'preorder';
         const hasPreorderItems = data.hasPreorderItems === true;
@@ -3053,6 +3118,7 @@ function startPaymentPolling(orderCode, amount) {
         attempts++;
         if (attempts > maxAttempts) {
             clearInterval(pollingInterval);
+            stopPaymentCountdown();
             isChecking = false;
             return;
         }

@@ -2963,6 +2963,59 @@ body:has(.confirmation-page-standalone.active) .contact-fab {
     }
 }
 
+/* Payment Countdown Timer */
+.conf-countdown {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    background: var(--accent-bg);
+    border: 1px solid rgba(0, 102, 204, 0.2);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--space-5);
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--accent);
+}
+
+.conf-countdown strong {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+.conf-countdown-urgent {
+    background: #fef2f2;
+    border-color: #fca5a5;
+    color: #dc2626;
+    animation: conf-countdown-pulse 1.5s ease-in-out infinite;
+}
+
+.conf-countdown-urgent strong {
+    color: #dc2626;
+}
+
+.conf-countdown-expired {
+    background: #fef2f2;
+    border-color: #f87171;
+    color: #b91c1c;
+    animation: none;
+}
+
+@keyframes conf-countdown-pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
 /* Bank Info Section */
 .conf-bank-info {
     background: var(--bg-gray);
