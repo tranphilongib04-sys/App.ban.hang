@@ -12,7 +12,7 @@ const products = {
         reviewCount: 34,
         soldCount: 156,
         variants: [
-            { name: 'ChatGPT Plus Acc Cấp (không dùng riêng)', price: 70000, duration: '1 tháng', note: 'Cấp acc mới, full bảo hành', productCode: 'chatgpt_acc_cap_san_fbh', deliveryType: 'preorder' },
+            { name: 'ChatGPT Plus Acc Cấp (không dùng chung)', price: 70000, duration: '1 tháng', note: 'Cấp acc mới, full bảo hành', productCode: 'chatgpt_acc_cap_san_fbh', deliveryType: 'preorder' },
             { name: 'ChatGPT Plus Gia Hạn Acc Cũ', price: 90000, duration: '1 tháng', note: 'Gia hạn TK cũ của bạn, không bảo hành', productCode: 'chatgpt_plus_cap_tk', deliveryType: 'preorder' },
             { name: 'ChatGPT Plus Chính Chủ - FBH', price: 190000, duration: '1 tháng', note: 'Hàng die đền khách, gia hạn TK cũ', productCode: 'chatgpt_plus_gia_han', deliveryType: 'preorder' },
             { name: 'ChatGPT Team (Có Model Pro)', price: 100000, duration: '1 tháng', note: 'Hỗ trợ bảo hành khi hết credit', productCode: 'chatgpt_team_1m', deliveryType: 'preorder' },
@@ -34,7 +34,7 @@ const products = {
             warranty: `
                 <h3>Chính sách bảo hành</h3>
                 <ul>
-                    <li><strong>ChatGPT Plus Acc Cấp (không dùng riêng):</strong> Cấp acc mới, full bảo hành</li>
+                    <li><strong>ChatGPT Plus Acc Cấp (không dùng chung):</strong> Cấp acc mới, full bảo hành</li>
                     <li><strong>ChatGPT Plus Gia Hạn Acc Cũ:</strong> Gia hạn TK cũ, không bảo hành</li>
                     <li><strong>ChatGPT Plus Chính Chủ FBH:</strong> Hàng die đền khách, gia hạn TK cũ</li>
                     <li><strong>ChatGPT Team (có model pro):</strong> Hỗ trợ bảo hành khi hết credit</li>
