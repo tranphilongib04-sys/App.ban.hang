@@ -1501,9 +1501,17 @@ function doRoute(page, parts, showPage) {
         // re-trigger stagger on product grid
         triggerStagger(document.getElementById('allProducts'));
     } else if (page === 'confirmation') {
-        // Only show confirmation if there's an active order, otherwise redirect home
+        const urlOrderCode = parts[1] || '';
+        // Try to find pending order for this specific order code
+        const pending = urlOrderCode ? JSON.parse(sessionStorage.getItem('pendingOrder_' + urlOrderCode) || 'null') : null;
         const orderCodeEl = document.getElementById('orderCode');
-        if (!orderCodeEl || !orderCodeEl.textContent || orderCodeEl.textContent === '') {
+        const hasCurrent = orderCodeEl && orderCodeEl.textContent === urlOrderCode;
+
+        if (!hasCurrent && pending) {
+            // Restore pending order from sessionStorage (page was reloaded)
+            restorePendingOrder(pending);
+        } else if (!hasCurrent && !pending) {
+            // No order code in URL or no saved data → redirect home
             showPage(document.getElementById('homePage'));
             startObserver();
             return;
@@ -1988,6 +1996,10 @@ function buyNow(productId) {
                 <input type="email" id="buyNowEmail" placeholder="example@gmail.com" value="${email}">
                 <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📧 Nhận thông tin đơn hàng và nhắc hạn qua email</div>
             </div>
+            <div class="buy-now-modal-field">
+                <label>Ghi chú (Tùy chọn)</label>
+                <textarea id="buyNowNote" rows="2" placeholder="VD: Gửi tài khoản qua Zalo cho gói gia hạn" style="width:100%;resize:vertical;font-family:inherit;font-size:14px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-white);"></textarea>
+            </div>
             <div class="buy-now-modal-summary">
                 <span>${variant.name} × ${detailQuantity}</span>
                 <span class="buy-now-modal-total">${document.getElementById('detailTotal')?.textContent || '0₫'}</span>
@@ -2046,7 +2058,7 @@ async function submitBuyNow(productId) {
         deliveryType: variant.deliveryType || product.deliveryType || 'instant'
     }];
 
-    const note = '';
+    const note = document.getElementById('buyNowNote')?.value.trim() || '';
 
     try {
         const response = await fetch('/.netlify/functions/create-order', {
@@ -2124,7 +2136,7 @@ async function submitBuyNow(productId) {
             } else {
                 showPreorderSuccess(orderCode, data.invoiceNumber);
             }
-            window.location.hash = 'confirmation';
+            window.location.hash = 'confirmation/' + orderCode;
             return;
         }
 
@@ -2143,8 +2155,14 @@ async function submitBuyNow(productId) {
         const qrContainer = document.getElementById('qrCodeContainer');
         qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;
 
-        window.location.hash = 'confirmation';
+        // Save pending order for reload persistence (keyed by order code)
+        sessionStorage.setItem('pendingOrder_' + orderCode, JSON.stringify({
+            orderCode, amount: total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        }));
+
+        window.location.hash = 'confirmation/' + orderCode;
         startPaymentPolling(orderCode, total);
+        startPaymentCountdown(orderCode, data.expiresAt);
 
     } catch (error) {
         console.error('Buy now error:', error);
@@ -2660,7 +2678,7 @@ async function placeOrder() {
             } else {
                 showPreorderSuccess(orderCode, data.invoiceNumber);
             }
-            window.location.hash = 'confirmation';
+            window.location.hash = 'confirmation/' + orderCode;
             submitBtn.disabled = false;
             submitBtn.textContent = originalBtnText;
             submitBtn.style.opacity = '1';
@@ -2699,16 +2717,21 @@ async function placeOrder() {
         `;
 
         // Navigate to confirmation page
-        window.location.hash = 'confirmation';
+        window.location.hash = 'confirmation/' + orderCode;
 
         // Re-enable button (though we navigated away)
         submitBtn.disabled = false;
         submitBtn.textContent = originalBtnText;
         submitBtn.style.opacity = '1';
 
+        // Save pending order for reload persistence (keyed by order code)
+        sessionStorage.setItem('pendingOrder_' + orderCode, JSON.stringify({
+            orderCode, amount: data.amount || total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString()
+        }));
+
         // Start polling for payment status + countdown timer
         startPaymentPolling(orderCode, data.amount);
-        startPaymentCountdown();
+        startPaymentCountdown(orderCode, data.expiresAt);
 
     } catch (error) {
         console.error('Place order error:', error);
@@ -3033,17 +3056,47 @@ function showPreorderSuccess(orderCode, invoiceNumber) {
 let pollingInterval;
 let countdownInterval;
 
-function startPaymentCountdown() {
+function startPaymentCountdown(orderCode, expiresAtISO) {
     // Clear any existing countdown
     if (countdownInterval) clearInterval(countdownInterval);
 
     const countdownEl = document.getElementById('paymentCountdown');
-    const timerEl = document.getElementById('countdownTimer');
-    if (!countdownEl || !timerEl) return;
+    if (!countdownEl) return;
 
-    // Fixed 10-minute countdown to create urgency
-    const expiresAt = Date.now() + 10 * 60 * 1000;
+    // Parse server expiry or default to 30 min from now
+    const expiresAt = expiresAtISO ? new Date(expiresAtISO).getTime() : (Date.now() + 30 * 60 * 1000);
+    const displayCode = orderCode ? `#${orderCode}` : '';
+
+    // If already expired, show expired state immediately
+    if (Date.now() >= expiresAt) {
+        countdownEl.style.display = 'flex';
+        countdownEl.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>Đơn hàng ${displayCode} đã hết hạn. Vui lòng tạo đơn mới.</span>
+        `;
+        countdownEl.classList.add('conf-countdown-expired');
+        if (pollingInterval) clearInterval(pollingInterval);
+        // Clean up this order's sessionStorage
+        if (orderCode) sessionStorage.removeItem('pendingOrder_' + orderCode);
+        return;
+    }
+
+    // Set initial HTML with order code
+    countdownEl.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        <span>Đơn ${displayCode} hết hạn sau: <strong id="countdownTimer">--:--</strong></span>
+    `;
     countdownEl.style.display = 'flex';
+    countdownEl.classList.remove('conf-countdown-urgent', 'conf-countdown-expired');
+
+    const timerEl = document.getElementById('countdownTimer');
 
     function updateTimer() {
         const now = Date.now();
@@ -3052,7 +3105,7 @@ function startPaymentCountdown() {
         const minutes = Math.floor(totalSeconds / 60);
         const seconds = totalSeconds % 60;
 
-        timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        if (timerEl) timerEl.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
 
         // Urgent styling when < 5 minutes
         if (totalSeconds <= 300) {
@@ -3063,18 +3116,19 @@ function startPaymentCountdown() {
 
         if (remaining <= 0) {
             clearInterval(countdownInterval);
-            timerEl.textContent = '00:00';
             countdownEl.innerHTML = `
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="15" y1="9" x2="9" y2="15"></line>
                     <line x1="9" y1="9" x2="15" y2="15"></line>
                 </svg>
-                <span>Đơn hàng đã hết hạn. Vui lòng tạo đơn mới.</span>
+                <span>Đơn hàng ${displayCode} đã hết hạn. Vui lòng tạo đơn mới.</span>
             `;
             countdownEl.classList.add('conf-countdown-expired');
             // Stop polling too
             if (pollingInterval) clearInterval(pollingInterval);
+            // Clean up this order's sessionStorage
+            if (orderCode) sessionStorage.removeItem('pendingOrder_' + orderCode);
         }
     }
 
@@ -3086,6 +3140,44 @@ function stopPaymentCountdown() {
     if (countdownInterval) clearInterval(countdownInterval);
     const countdownEl = document.getElementById('paymentCountdown');
     if (countdownEl) countdownEl.style.display = 'none';
+    // Clean up sessionStorage for the current order
+    const orderCodeEl = document.getElementById('orderCode');
+    if (orderCodeEl && orderCodeEl.textContent) {
+        sessionStorage.removeItem('pendingOrder_' + orderCodeEl.textContent);
+    }
+}
+
+// Restore pending order UI after page reload
+function restorePendingOrder(pending) {
+    const { orderCode, amount, expiresAt } = pending;
+
+    // Populate UI elements
+    const orderCodeEl = document.getElementById('orderCode');
+    const transferContent = document.getElementById('transferContent');
+    const transferAmount = document.getElementById('transferAmount');
+    const pendingState = document.getElementById('pendingPaymentState');
+    const successState = document.getElementById('successPaymentState');
+
+    if (orderCodeEl) orderCodeEl.textContent = orderCode;
+    if (transferContent) transferContent.textContent = orderCode;
+    if (transferAmount) transferAmount.textContent = formatPrice(amount);
+    if (pendingState) pendingState.style.display = 'block';
+    if (successState) { successState.style.display = 'none'; successState.innerHTML = ''; }
+
+    // Regenerate QR code
+    const qrCodeUrl = generateTPBankQR(orderCode, amount);
+    const qrContainer = document.getElementById('qrCodeContainer');
+    if (qrContainer) {
+        qrContainer.innerHTML = `
+            <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
+                 style="max-width: 220px; border-radius: 8px;"
+                 onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
+        `;
+    }
+
+    // Restart countdown with server expiry time
+    startPaymentCountdown(orderCode, expiresAt);
+    startPaymentPolling(orderCode, amount);
 }
 
 function startPaymentPolling(orderCode, amount) {
@@ -3181,7 +3273,7 @@ function generateTPBankQR(orderCode, amount) {
 
 // FORMAT PRICE
 function formatPrice(price) {
-    return price.toLocaleString('vi-VN') + '₫';
+    return (Number(price) || 0).toLocaleString('vi-VN') + '₫';
 }
 
 /* V2 FUNCTIONS */
