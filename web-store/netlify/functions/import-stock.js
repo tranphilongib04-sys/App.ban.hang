@@ -79,6 +79,11 @@ exports.handler = async function (event, context) {
             } catch (e2) { console.log('Notice: Unique index creation skipped', e2.message); }
         }
 
+        // Ensure stock_items.expires_at column exists
+        try {
+            await db.execute(`ALTER TABLE stock_items ADD COLUMN expires_at TEXT`);
+        } catch (e) { /* already exists */ }
+
         const body = JSON.parse(event.body);
         const { items } = body;
 
@@ -107,7 +112,7 @@ exports.handler = async function (event, context) {
 
         try {
             for (const item of items) {
-                const { sku_code, account_info, secret_key, note } = item;
+                const { sku_code, account_info, secret_key, note, expires_at } = item;
 
                 // Validate SKU
                 const skuId = skuMap.get(sku_code);
@@ -122,11 +127,6 @@ exports.handler = async function (event, context) {
                 }
 
                 // Check duplicate (sku + account)
-                // Note: This check inside the loop in a transaction is safe for consistency but can be slow if list is huge.
-                // Optimally we'd pre-check or use INSERT OR IGNORE with unique constraint.
-                // But we don't have a unique constraint on (sku_id, account_info) yet (and maybe shouldn't if we want to allow same account re-sold later? NO, unique usually preferred for inventory).
-                // Let's assume we want to avoid duplicate available items.
-
                 const duplicateCheck = await tx.execute({
                     sql: `SELECT id FROM stock_items WHERE sku_id = ? AND account_info = ? AND status = 'available'`,
                     args: [skuId, account_info]
@@ -141,8 +141,8 @@ exports.handler = async function (event, context) {
                 // Use a random UUID for ID
                 const id = crypto.randomUUID();
                 await tx.execute({
-                    sql: `INSERT INTO stock_items (id, sku_id, account_info, secret_key, note, status) VALUES (?, ?, ?, ?, ?, 'available')`,
-                    args: [id, skuId, account_info, secret_key || '', note || '']
+                    sql: `INSERT INTO stock_items (id, sku_id, account_info, secret_key, note, status, expires_at) VALUES (?, ?, ?, ?, ?, 'available', ?)`,
+                    args: [id, skuId, account_info, secret_key || '', note || '', expires_at || null]
                 });
                 insertedCount++;
             }

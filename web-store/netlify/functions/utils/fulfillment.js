@@ -8,11 +8,11 @@ const crypto = require('crypto');
 // ---------------------------------------------------------------------------
 const VALID_TRANSITIONS = {
     pending_payment: ['paid', 'failed', 'refunded'],
-    expired:         ['paid'],     // allow recovery when payment arrives after TTL
-    paid:            ['fulfilled', 'refunded'],
-    fulfilled:       [],           // terminal – idempotent return only
-    failed:          [],
-    refunded:        []
+    expired: ['paid'],     // allow recovery when payment arrives after TTL
+    paid: ['fulfilled', 'refunded'],
+    fulfilled: [],           // terminal – idempotent return only
+    failed: [],
+    refunded: []
 };
 
 // ---------------------------------------------------------------------------
@@ -188,6 +188,46 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
               WHERE id = ? AND status = 'paid'`,
         args: [now, fresh.id]
     });
+
+    // ── 6b. Calculate expiration dates ────────────────────────────────
+    //    For each order line, set expires_at = NOW + duration_days from SKU
+    try {
+        const linesForExpiry = await db.execute({
+            sql: `SELECT ol.id as line_id, ol.sku_id, s.duration_days
+                  FROM order_lines ol
+                  LEFT JOIN skus s ON ol.sku_id = s.id
+                  WHERE ol.order_id = ?`,
+            args: [fresh.id]
+        });
+
+        let maxExpiresAt = null;
+        for (const line of linesForExpiry.rows) {
+            const durationDays = line.duration_days || 30; // default 30 days
+            const expiresAt = new Date();
+            expiresAt.setDate(expiresAt.getDate() + durationDays);
+            const expiresAtStr = expiresAt.toISOString().split('T')[0]; // YYYY-MM-DD
+
+            await db.execute({
+                sql: `UPDATE order_lines SET expires_at = ? WHERE id = ?`,
+                args: [expiresAtStr, line.line_id]
+            });
+
+            if (!maxExpiresAt || expiresAt > maxExpiresAt) {
+                maxExpiresAt = expiresAt;
+            }
+        }
+
+        // Set order-level expiration (latest across all lines)
+        if (maxExpiresAt) {
+            const orderExpiresAt = maxExpiresAt.toISOString().split('T')[0];
+            await db.execute({
+                sql: `UPDATE orders SET expires_at = ? WHERE id = ?`,
+                args: [orderExpiresAt, fresh.id]
+            });
+        }
+    } catch (expiryErr) {
+        console.warn('[finalizeOrder] Expiry date calculation failed (non-fatal):', expiryErr.message);
+    }
 
     // ── 7. Delivery token ──────────────────────────────────────────────
     const deliveryToken = generateDeliveryToken(fresh.id, fresh.customer_email);

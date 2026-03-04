@@ -100,6 +100,17 @@ exports.handler = async function (event, context) {
         await db.execute(`ALTER TABLE order_lines ADD COLUMN sku_id TEXT`);
     } catch (e) { console.log('Notice: sku_id column add skipped', e.message); }
 
+    // Expiration tracking columns
+    try {
+        await db.execute(`ALTER TABLE order_lines ADD COLUMN expires_at TEXT`);
+    } catch (e) { /* already exists */ }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN expires_at TEXT`);
+    } catch (e) { /* already exists */ }
+    try {
+        await db.execute(`ALTER TABLE orders ADD COLUMN expiry_reminded INTEGER DEFAULT 0`);
+    } catch (e) { /* already exists */ }
+
     try {
         const body = JSON.parse(event.body);
         let { customerName, customerEmail, customerPhone, customerNote, items, discountCode } = body;

@@ -2523,6 +2523,7 @@ async function placeOrder() {
 
     const name = document.getElementById('customerName').value;
     const phone = document.getElementById('customerPhone').value;
+    const email = document.getElementById('customerEmail')?.value?.trim() || '';
     const note = document.getElementById('customerNote')?.value || '';
 
     if (!name || !phone) {
@@ -2564,7 +2565,7 @@ async function placeOrder() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 customerName: name,
-                customerEmail: '',
+                customerEmail: email,
                 customerPhone: phone,
                 customerNote: note,
                 items: items,
@@ -2739,6 +2740,7 @@ async function showSuccessWithCredentials(orderCode, deliveryToken, invoiceNumbe
                 <p class="conf-success-subtitle">
                     Cảm ơn bạn đã mua hàng tại TBQ Homie.<br>
                     Mã đơn hàng: <strong>${orderCode}</strong>
+                    ${data.expiresAt ? `<br><span style="color: #f59e0b;">📅 Hạn sử dụng: <strong>${(() => { try { const d = new Date(data.expiresAt); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); } catch { return data.expiresAt; } })()}</strong></span>` : ''}
                     <span class="conf-order-note">Vui lòng lưu lại mã đơn để được hỗ trợ nhanh hơn khi cần.</span>
                 </p>
             </div>

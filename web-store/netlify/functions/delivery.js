@@ -248,6 +248,21 @@ exports.handler = async function (event, context) {
             }
         }
 
+        // Get expiration info for this order
+        let expiresAt = orderData.expires_at || null;
+        if (!expiresAt) {
+            // Try from order_lines
+            try {
+                const expiryResult = await db.execute({
+                    sql: `SELECT MAX(expires_at) as max_expires FROM order_lines WHERE order_id = ? AND expires_at IS NOT NULL`,
+                    args: [orderData.id]
+                });
+                if (expiryResult.rows[0]?.max_expires) {
+                    expiresAt = expiryResult.rows[0].max_expires;
+                }
+            } catch { /* ok */ }
+        }
+
         // If JSON format requested, return JSON response
         if (wantsJson) {
             // Check for preorder items in this order (giao sau qua Zalo)
@@ -276,7 +291,8 @@ exports.handler = async function (event, context) {
                     hasPreorderItems: preorderItems.length > 0,
                     preorderItems: preorderItems,
                     customerName: orderData.customer_name || '',
-                    customerPhone: orderData.customer_phone || ''
+                    customerPhone: orderData.customer_phone || '',
+                    expiresAt: expiresAt
                 })
             };
         }
@@ -436,7 +452,8 @@ exports.handler = async function (event, context) {
         <h1>Đơn hàng của bạn đã sẵn sàng!</h1>
         <div class="order-info">
             Mã đơn: <strong>${order}</strong><br>
-            ${orderData.invoice_number ? `Hóa đơn: <strong>${orderData.invoice_number}</strong>` : ''}
+            ${orderData.invoice_number ? `Hóa đơn: <strong>${orderData.invoice_number}</strong><br>` : ''}
+            ${expiresAt ? `<span style="color: #f59e0b;">📅 Hạn sử dụng: <strong>${(() => { try { const d = new Date(expiresAt); return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear(); } catch { return expiresAt; } })()}</strong></span>` : ''}
         </div>
 
         ${credentials.map((cred, idx) => {

@@ -35,3 +35,7 @@
 # Runs every 5 minutes: */5 * * * * (minute hour day month weekday)
 [functions."reconcile-payments"]
   schedule = "*/5 * * * *"
+
+# Expiration reminder: runs daily at 01:00 UTC (08:00 UTC+7)
+[functions."check-expirations"]
+  schedule = "0 1 * * *"
