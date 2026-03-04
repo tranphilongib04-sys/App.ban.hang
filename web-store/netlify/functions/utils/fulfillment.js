@@ -304,7 +304,7 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
 <b>Email:</b> ${fresh.customer_email || 'N/A'}
 <b>Tổng:</b> ${formatVND(fresh.amount_total)}
 <b>Mã đơn:</b> ${fresh.order_code}
-<b>Hóa đơn:</b> ${finalInvoiceNumber}`;
+<b>Ghi chú:</b> ${fresh.customer_note || 'Không có'}`;
 
         // Await notification — fire-and-forget doesn't work in serverless
         // (Lambda may terminate before the HTTP request completes)
