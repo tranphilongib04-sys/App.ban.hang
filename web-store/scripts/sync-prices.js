@@ -79,6 +79,45 @@ const FRONTEND_PRICES = {
     'grok_7d': 15000,
     'super_grok_cap_san': 270000,
     'super_grok_chinh_chu': 350000,
+
+    // AutoCAD
+    'autocad_1y': 170000,
+
+    // LinkedIn
+    'linkedin_biz_3m': 530000,
+    'linkedin_biz_1y': 1750000,
+    'linkedin_career_3m': 500000,
+
+    // Gamma
+    'gamma_plus_1m': 150000,
+    'gamma_pro_1m': 220000,
+
+    // SketchUp
+    'sketchup_edu_1y': 350000,
+
+    // Figma
+    'figma_pro_1m': 200000,
+    'figma_edu_1y': 280000,
+
+    // Autodesk
+    'autodesk_1app_1y': 170000,
+    'autodesk_2app_1y': 250000,
+    'autodesk_full_1y': 370000,
+
+    // Meitu
+    'meitu_vip_1m': 75000,
+
+    // Gemini
+    'gemini_pro_1m': 25000,
+    'gemini_pro_3m': 70000,
+    'gemini_pro_6m': 120000,
+    'gemini_pro_1y': 220000,
+
+    // Claude
+    'claude_pro_1m': 380000,
+
+    // Cursor
+    'cursor_pro_1m': 380000,
 };
 
 async function syncPrices() {
@@ -121,18 +160,46 @@ async function syncPrices() {
         }
     }
 
+    // Auto-insert missing SKUs into DB
+    const CATEGORY_MAP = {
+        chatgpt: 'AI', claude: 'AI', cursor: 'AI', grok: 'AI', gemini: 'AI', super_grok: 'AI',
+        netflix: 'Giải trí', spotify: 'Giải trí', youtube: 'Giải trí',
+        adobe: 'Thiết kế', canva: 'Thiết kế', capcut: 'Thiết kế', figma: 'Thiết kế', meitu: 'Thiết kế', gamma: 'Thiết kế', sketchup: 'Thiết kế',
+        autocad: 'Kỹ thuật', autodesk: 'Kỹ thuật',
+        ms365: 'Công cụ', duolingo: 'Học tập', quizlet: 'Học tập',
+        linkedin: 'Công cụ',
+    };
+
+    function getCategory(skuCode) {
+        // Try longest prefix first (e.g. super_grok before grok)
+        const prefixes = Object.keys(CATEGORY_MAP).sort((a, b) => b.length - a.length);
+        for (const prefix of prefixes) {
+            if (skuCode.startsWith(prefix)) return CATEGORY_MAP[prefix];
+        }
+        return 'Khác';
+    }
+
+    let inserted = 0;
     if (notInDb.size > 0) {
-        console.log('\n⚠️  Frontend SKUs not found in DB:');
+        console.log('\n🆕 Inserting missing SKUs into DB:');
         for (const code of notInDb) {
-            console.log(`  - ${code}: ${FRONTEND_PRICES[code].toLocaleString()}₫`);
+            const price = FRONTEND_PRICES[code];
+            const name = code.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+            const category = getCategory(code);
+            await db.execute({
+                sql: `INSERT INTO skus (sku_code, name, price, category, is_active) VALUES (?, ?, ?, ?, 1)`,
+                args: [code, name, price, category]
+            });
+            console.log(`  ✅ Inserted: ${code} (${category}) = ${price.toLocaleString()}₫`);
+            inserted++;
         }
     }
 
     console.log(`\n📊 Summary:`);
     console.log(`  ✅ Matched: ${matched}`);
     console.log(`  🔄 Updated: ${updated}`);
+    console.log(`  🆕 Inserted: ${inserted}`);
     console.log(`  ⚠️  DB-only: ${notInFrontend}`);
-    console.log(`  ⚠️  Frontend-only: ${notInDb.size}`);
     console.log('\nDone!');
 }
 
