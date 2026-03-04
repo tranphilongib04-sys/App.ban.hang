@@ -105,7 +105,7 @@ body {
         100% 100%,
         100% 100%,
         300% 300%;
-    animation: gradientBG 35s ease-in-out infinite;
+    /* Removed gradientBG animation — background-position cannot be GPU-composited, causes full-page repaint */
     line-height: 1.6;
     overflow-x: hidden;
     overscroll-behavior-y: none;
@@ -121,14 +121,14 @@ body::before {
     position: fixed;
     top: -60px;
     left: -40px;
-    width: 700px;
-    height: 700px;
+    width: 500px;
+    height: 500px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(201, 169, 110, 0.25) 0%, rgba(201, 169, 110, 0.10) 40%, transparent 70%);
-    filter: blur(40px);
+    /* Softer gradient = no need for filter:blur (saves full GPU layer) */
+    background: radial-gradient(circle, rgba(201, 169, 110, 0.15) 0%, rgba(201, 169, 110, 0.05) 35%, transparent 60%);
     pointer-events: none;
     z-index: 0;
-    animation: floatBlob1 18s ease-in-out infinite;
+    animation: floatBlob1 25s ease-in-out infinite;
     will-change: transform;
     contain: strict;
     transform: translateZ(0);
@@ -140,14 +140,14 @@ body::after {
     position: fixed;
     bottom: -40px;
     right: -40px;
-    width: 600px;
-    height: 600px;
+    width: 450px;
+    height: 450px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(30, 58, 95, 0.18) 0%, rgba(30, 58, 95, 0.06) 40%, transparent 70%);
-    filter: blur(35px);
+    /* Softer gradient = no filter:blur needed */
+    background: radial-gradient(circle, rgba(30, 58, 95, 0.12) 0%, rgba(30, 58, 95, 0.04) 35%, transparent 60%);
     pointer-events: none;
     z-index: 0;
-    animation: floatBlob2 22s ease-in-out infinite;
+    animation: floatBlob2 28s ease-in-out infinite;
     will-change: transform;
     contain: strict;
     transform: translateZ(0);
@@ -249,9 +249,8 @@ header {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(250, 248, 245, 0.82);
-    backdrop-filter: saturate(180%) blur(12px);
-    -webkit-backdrop-filter: saturate(180%) blur(12px);
+    background: rgba(245, 243, 239, 0.95);
+    /* Removed backdrop-filter — #1 cause of 30fps on scroll */
     z-index: 1000;
     border-bottom: 1px solid rgba(232, 228, 220, 0.6);
     transition: transform 0.3s ease;
@@ -471,9 +470,8 @@ nav {
     margin-top: 100px;
     padding: 60px 40px;
     text-align: center;
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.88);
+    /* Removed backdrop-filter — use opaque bg instead */
     border-radius: 32px;
     border: 1px solid var(--border);
     box-shadow: var(--shadow-premium);
@@ -575,9 +573,10 @@ section {
     background: rgba(255, 255, 255, 0.88);
     border-radius: var(--radius-xl);
     overflow: hidden;
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     border: 1px solid var(--border);
+    contain: content;
 }
 
 .product-card:hover {
@@ -612,7 +611,7 @@ section {
     max-width: 85%;
     max-height: 85%;
     object-fit: contain;
-    filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.15));
+    /* Removed filter:drop-shadow — use box-shadow on wrapper instead */
     position: relative;
     z-index: 1;
 }
@@ -873,11 +872,11 @@ section {
     text-align: center;
     padding: 36px 28px;
     border-radius: var(--radius-xl);
-    background: rgba(255, 255, 255, 0.5);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(255, 255, 255, 0.92);
+    /* Removed backdrop-filter — use opaque bg instead (saves GPU composite layer) */
     border: 1px solid var(--border);
-    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1), color 0.4s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    contain: content;
 }
 
 .feature-card:hover {
@@ -890,7 +889,7 @@ section {
 .feature-icon {
     font-size: 44px;
     margin-bottom: 16px;
-    filter: drop-shadow(0 2px 8px rgba(201, 169, 110, 0.2));
+    /* Removed filter:drop-shadow — emoji icons don't need it */
 }
 
 .feature-title {
@@ -1480,10 +1479,10 @@ footer::before {
     left: 0;
     width: 100%;
     height: 100vh;
-    background: rgba(0, 0, 0, 0.5);
+    background: rgba(0, 0, 0, 0.6);
     z-index: 10000;
     display: none;
-    backdrop-filter: blur(4px);
+    /* Removed backdrop-filter — darkened overlay compensates */
 }
 
 .cart-overlay.active {
@@ -1751,11 +1750,10 @@ footer::before {
     border-radius: var(--radius-lg);
     cursor: pointer;
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), background 0.35s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.35s cubic-bezier(0.4, 0, 0.2, 1), color 0.35s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.94);
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    /* Removed backdrop-filter — opaque bg compensates */
 }
 
 /* Visual left border indicator by delivery type */
@@ -1891,9 +1889,8 @@ footer::before {
 
 /* ====== ORDER INFO SECTION ====== */
 .order-info-section {
-    background: rgba(255, 255, 255, 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    background: rgba(255, 255, 255, 0.94);
+    /* Removed backdrop-filter — opaque bg compensates */
     border-radius: var(--radius-lg);
     padding: 18px;
     margin-top: 10px;
@@ -2190,8 +2187,8 @@ footer::before {
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.6);
+    /* Removed backdrop-filter — darkened overlay compensates */
     z-index: 10002;
     display: flex;
     align-items: center;
@@ -3851,16 +3848,18 @@ body:has(.confirmation-page-standalone.active) .contact-fab {
     }
 }
 
-/* Pulse glow (CTA button) */
+/* Pulse glow (CTA button) — uses transform+opacity instead of box-shadow for GPU compositing */
 @keyframes pulseGlow {
 
     0%,
     100% {
-        box-shadow: 0 0 0 0 rgba(0, 102, 204, 0.45);
+        transform: scale(1);
+        opacity: 0.45;
     }
 
     50% {
-        box-shadow: 0 0 0 18px rgba(0, 102, 204, 0);
+        transform: scale(1.35);
+        opacity: 0;
     }
 }
 
@@ -4005,37 +4004,37 @@ body:has(.confirmation-page-standalone.active) .contact-fab {
     border-radius: 50%;
     pointer-events: none;
     z-index: 0;
-    filter: blur(50px);
+    /* Removed filter:blur — use softer gradient stops instead (saves 3 GPU layers) */
     will-change: transform;
     contain: strict;
     transform: translateZ(0);
 }
 
 .orb--1 {
-    width: 380px;
-    height: 380px;
-    background: radial-gradient(circle, rgba(99, 102, 241, 0.22) 0%, transparent 70%);
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(99, 102, 241, 0.12) 0%, rgba(99, 102, 241, 0.04) 40%, transparent 65%);
     top: -80px;
     left: -100px;
-    animation: floatOrb1 14s ease-in-out infinite;
+    animation: floatOrb1 20s ease-in-out infinite;
 }
 
 .orb--2 {
-    width: 300px;
-    height: 300px;
-    background: radial-gradient(circle, rgba(168, 85, 247, 0.18) 0%, transparent 70%);
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(168, 85, 247, 0.10) 0%, rgba(168, 85, 247, 0.03) 40%, transparent 65%);
     bottom: -60px;
     right: -80px;
-    animation: floatOrb2 18s ease-in-out infinite;
+    animation: floatOrb2 24s ease-in-out infinite;
 }
 
 .orb--3 {
-    width: 220px;
-    height: 220px;
-    background: radial-gradient(circle, rgba(59, 130, 246, 0.15) 0%, transparent 70%);
+    width: 200px;
+    height: 200px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.02) 40%, transparent 65%);
     top: 50%;
     left: 60%;
-    animation: floatOrb3 12s ease-in-out infinite;
+    animation: floatOrb3 18s ease-in-out infinite;
 }
 
 /* Orb container wrapper – attach to hero & CTA */
@@ -5175,15 +5174,18 @@ section .section-title::after {
     }
 }
 
+/* fabPulse — uses transform+opacity instead of box-shadow for GPU compositing */
 @keyframes fabPulse {
 
     0%,
     100% {
-        box-shadow: 0 2px 12px rgba(0, 104, 255, 0.3);
+        transform: scale(1);
+        opacity: 0.3;
     }
 
     50% {
-        box-shadow: 0 2px 20px rgba(0, 104, 255, 0.55);
+        transform: scale(1.15);
+        opacity: 0.55;
     }
 }
 
@@ -5465,8 +5467,8 @@ section .section-title::after {
     align-items: center;
     gap: 6px;
     padding: 6px 16px;
-    background: rgba(255, 255, 255, 0.8);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    /* Removed backdrop-filter */
     border: 1px solid var(--border-gold);
     border-radius: 980px;
     font-size: 13px;
@@ -5509,8 +5511,8 @@ section .section-title::after {
     display: flex;
     flex-direction: column;
     gap: 10px;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.97);
+    /* Removed backdrop-filter */
     border-radius: 18px;
     padding: 12px;
     box-shadow: 0 4px 24px rgba(30, 58, 95, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04);
@@ -6192,9 +6194,8 @@ section .section-title::after {
     bottom: 0;
     left: 0;
     right: 0;
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.97);
+    /* Removed backdrop-filter — use opaque bg (always visible during scroll) */
     border-top: 1px solid rgba(0, 0, 0, 0.06);
     z-index: 9999;
     padding: 6px 0 env(safe-area-inset-bottom, 6px);
@@ -6446,7 +6447,7 @@ section .section-title::after {
     max-height: 100%;
     object-fit: contain;
     border-radius: 50%;
-    filter: drop-shadow(0 10px 40px rgba(201, 169, 110, 0.3));
+    /* Removed filter:drop-shadow for GPU performance */
 }
 
 /* Floating icons */
@@ -6463,7 +6464,7 @@ section .section-title::after {
     top: var(--y, 0);
     animation: heroFloat 4s ease-in-out infinite;
     animation-delay: var(--delay, 0s);
-    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.3));
+    text-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
 .float-icon.big {
@@ -6516,8 +6517,8 @@ section .section-title::after {
     height: 40px;
     border-radius: 50%;
     border: none;
-    background: rgba(255, 255, 255, 0.12);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.25);
+    /* Removed backdrop-filter */
     color: white;
     cursor: pointer;
     display: flex;
@@ -6590,7 +6591,7 @@ section .section-title::after {
 .cat-banner-emoji {
     font-size: 32px;
     margin-bottom: 8px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    /* Removed filter:drop-shadow for performance */
 }
 
 .cat-banner-name {
@@ -6859,13 +6860,12 @@ section .section-title::after {
     border-radius: 980px;
     font-size: 14px;
     font-weight: 500;
-    cursor: pointer;
-    background: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.92);
     border: 1px solid var(--border);
     color: var(--text-primary);
     transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease, color 0.25s ease, border-color 0.25s ease;
     white-space: nowrap;
-    backdrop-filter: blur(8px);
+    /* Removed backdrop-filter */
 }
 
 .filter-chips li:hover {
@@ -6945,19 +6945,33 @@ section .section-title::after {
 }
 
 .music-player-fab.playing {
-    box-shadow: 0 4px 20px rgba(15, 15, 18, 0.3), 0 0 0 4px rgba(201, 169, 110, 0.25);
+    box-shadow: 0 4px 20px rgba(15, 15, 18, 0.3);
+    /* Pulse animation moved to ::after pseudo-element for GPU compositing */
+}
+
+.music-player-fab.playing::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: inherit;
+    background: rgba(201, 169, 110, 0.25);
     animation: musicFabPulse 2s ease-in-out infinite;
+    z-index: -1;
+    will-change: transform, opacity;
+    pointer-events: none;
 }
 
 @keyframes musicFabPulse {
 
     0%,
     100% {
-        box-shadow: 0 4px 20px rgba(15, 15, 18, 0.3), 0 0 0 4px rgba(201, 169, 110, 0.2);
+        transform: scale(1);
+        opacity: 0.25;
     }
 
     50% {
-        box-shadow: 0 4px 20px rgba(15, 15, 18, 0.3), 0 0 0 8px rgba(201, 169, 110, 0.1);
+        transform: scale(1.4);
+        opacity: 0;
     }
 }
 
@@ -7043,9 +7057,8 @@ section .section-title::after {
     bottom: 84px;
     left: 24px;
     width: 320px;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
+    background: rgba(250, 248, 245, 0.97);
+    /* Removed backdrop-filter — use solid bg for music panel */
     border-radius: var(--radius-xl);
     border: 1px solid rgba(0, 0, 0, 0.08);
     box-shadow: 0 12px 48px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
@@ -7619,9 +7632,8 @@ section .section-title::after {
     align-items: center;
     gap: 6px;
     padding: 8px 16px;
-    background: rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.12);
+    /* Removed backdrop-filter */
     border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 980px;
     font-size: 13px;
@@ -7777,9 +7789,8 @@ html {
     width: 44px;
     height: 44px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(255, 255, 255, 0.95);
+    /* Removed backdrop-filter */
     border: 1px solid var(--border);
     box-shadow: var(--shadow-md);
     cursor: pointer;
@@ -7826,9 +7837,8 @@ html {
     position: fixed;
     inset: 0;
     z-index: 99998;
-    background: rgba(0, 0, 0, 0.6);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
+    background: rgba(0, 0, 0, 0.65);
+    /* Removed backdrop-filter — darkened overlay compensates */
     display: none;
     align-items: center;
     justify-content: center;
@@ -8061,54 +8071,34 @@ button.music-player-fab {
 
 /* =============================================
    🚀 PERFORMANCE — Mobile GPU Optimizations
-   Reduce blur/GPU load on weaker mobile GPUs
-   while keeping ALL animations intact.
    ============================================= */
 @media (max-width: 768px) {
 
-    /* Smaller blobs = less GPU paint area */
+    /* Smaller blobs on mobile */
     body::before {
-        width: 400px;
-        height: 400px;
-        filter: blur(25px);
+        width: 300px;
+        height: 300px;
     }
 
     body::after {
-        width: 350px;
-        height: 350px;
-        filter: blur(20px);
-    }
-
-    /* Lighter header blur on mobile */
-    header {
-        backdrop-filter: saturate(180%) blur(16px);
-        -webkit-backdrop-filter: saturate(180%) blur(16px);
+        width: 250px;
+        height: 250px;
     }
 
     /* Smaller orbs on mobile */
-    .orb {
-        filter: blur(40px);
-    }
-
     .orb--1 {
-        width: 200px;
-        height: 200px;
+        width: 180px;
+        height: 180px;
     }
 
     .orb--2 {
-        width: 160px;
-        height: 160px;
+        width: 140px;
+        height: 140px;
     }
 
     .orb--3 {
-        width: 120px;
-        height: 120px;
-    }
-
-    /* Lighter hero blur */
-    .hero {
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        width: 100px;
+        height: 100px;
     }
 
     /* Reduce bgNoiseOverlay complexity on mobile */

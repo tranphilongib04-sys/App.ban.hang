@@ -3365,7 +3365,7 @@ document.addEventListener('click', function (e) {
 /* ---------- 5. CONFETTI ---------- */
 function launchConfetti() {
     const colors = ['#0066cc', '#a855f7', '#34c759', '#ff9500', '#ff3b30', '#5ac8fa', '#ffcc00'];
-    const count = 60;
+    const count = 30; // Reduced from 60 for better paint performance
     for (let i = 0; i < count; i++) {
         const piece = document.createElement('div');
         piece.classList.add('confetti-piece');
@@ -3405,31 +3405,37 @@ renderAllProducts = function (filter) {
 };
 // UNIFIED SCROLL HANDLER — header hide/show + back-to-top in one listener
 let lastScrollTop = 0;
+let scrollTicking = false;
 window.addEventListener('scroll', function () {
-    const scrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
+    if (scrollTicking) return;
+    scrollTicking = true;
+    requestAnimationFrame(() => {
+        const scrollTop = Math.max(0, window.pageYOffset || document.documentElement.scrollTop);
 
-    // ── Header hide/show (mobile only) ──
-    if (window.innerWidth <= 768) {
-        const header = document.querySelector('header');
-        if (Math.abs(scrollTop - lastScrollTop) > 5) {
-            if (scrollTop > lastScrollTop && scrollTop > 60) {
-                header.classList.add('header-hidden');
-            } else {
-                header.classList.remove('header-hidden');
+        // ── Header hide/show (mobile only) ──
+        if (window.innerWidth <= 768) {
+            const header = document.querySelector('header');
+            if (Math.abs(scrollTop - lastScrollTop) > 5) {
+                if (scrollTop > lastScrollTop && scrollTop > 60) {
+                    header.classList.add('header-hidden');
+                } else {
+                    header.classList.remove('header-hidden');
+                }
+                lastScrollTop = scrollTop;
             }
-            lastScrollTop = scrollTop;
         }
-    }
 
-    // ── Back to top button ──
-    const btn = document.getElementById('backToTop');
-    if (btn) {
-        if (scrollTop > 500) {
-            btn.classList.add('visible');
-        } else {
-            btn.classList.remove('visible');
+        // ── Back to top button ──
+        const btn = document.getElementById('backToTop');
+        if (btn) {
+            if (scrollTop > 500) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
         }
-    }
+        scrollTicking = false;
+    });
 }, { passive: true });
 
 /* =============================================
