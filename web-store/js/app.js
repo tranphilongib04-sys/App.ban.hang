@@ -517,8 +517,8 @@ const products = {
         soldCount: 112,
         variants: [
             { name: 'CapCut 7 Ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
-            { name: 'CapCut 14 Ngày', price: 15000, duration: '14 ngày', note: 'Giao liền', productCode: 'capcut_14d', deliveryType: 'instant' },
             { name: 'CapCut Pro 1 Tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
+            { name: 'CapCut Pro 4 Tháng', price: 105000, duration: '4 tháng', note: 'Giao liền', productCode: 'capcut_4m', deliveryType: 'instant' },
             { name: 'CapCut Pro 6 Tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
             { name: 'CapCut Pro 1 Năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
         ],
