@@ -2511,6 +2511,11 @@
       <h2>TBQ Admin</h2>
       <p>Nhập Admin Token để đăng nhập</p>
       <input type="password" id="tokenInput" placeholder="Admin token..." onkeydown="if(event.key==='Enter')doLogin()">
+      <label class="remember-me"
+        style="display:flex;align-items:center;gap:8px;margin:12px 0 4px;cursor:pointer;font-size:13px;color:#6b7280;">
+        <input type="checkbox" id="rememberMe" style="width:16px;height:16px;accent-color:#b8860b;cursor:pointer;">
+        Nhớ mật khẩu
+      </label>
       <button onclick="doLogin()">Đăng nhập</button>
       <div class="login-err" id="loginErr"></div>
     </div>
@@ -3429,7 +3434,13 @@
         // Đảm bảo response parse được
         var data = await r.json();
         ADMIN_TOKEN = t;
-        sessionStorage.setItem('tbq_admin_token', t);
+        if (document.getElementById('rememberMe').checked) {
+          localStorage.setItem('tbq_admin_token', t);
+          sessionStorage.removeItem('tbq_admin_token');
+        } else {
+          sessionStorage.setItem('tbq_admin_token', t);
+          localStorage.removeItem('tbq_admin_token');
+        }
         errEl.textContent = '';
         document.getElementById('loginOverlay').style.display = 'none';
         document.getElementById('shell').style.display = 'flex';
@@ -3447,8 +3458,17 @@
 
     // Auto-restore session (chỉ gán token, validate ở window.onload)
     (function () {
-      var saved = sessionStorage.getItem('tbq_admin_token');
-      if (saved) ADMIN_TOKEN = saved;
+      var saved = localStorage.getItem('tbq_admin_token') || sessionStorage.getItem('tbq_admin_token');
+      if (saved) {
+        ADMIN_TOKEN = saved;
+        // Pre-fill and check remember if from localStorage
+        if (localStorage.getItem('tbq_admin_token')) {
+          var inp = document.getElementById('tokenInput');
+          var rem = document.getElementById('rememberMe');
+          if (inp) inp.value = saved;
+          if (rem) rem.checked = true;
+        }
+      }
     })();
 
     // SECURITY: Session timeout — auto-logout after 30 min inactivity
@@ -5197,6 +5217,7 @@
 
     // ── UNAUTH handler ──────────────────────────────────────────
     function handleUnauth() {
+      localStorage.removeItem('tbq_admin_token');
       sessionStorage.removeItem('tbq_admin_token');
       ADMIN_TOKEN = '';
       document.getElementById('loginOverlay').style.display = 'flex';
@@ -5222,6 +5243,7 @@
           console.error('Session restore failed:', e);
         }
         // Token cũ không hợp lệ → xoá và hiện login
+        localStorage.removeItem('tbq_admin_token');
         sessionStorage.removeItem('tbq_admin_token');
         ADMIN_TOKEN = '';
         document.getElementById('loginOverlay').style.display = 'flex';
