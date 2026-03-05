@@ -2154,9 +2154,13 @@ async function submitBuyNow(productId) {
         const qrContainer = document.getElementById('qrCodeContainer');
         qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;
 
+        // Populate customer info on confirmation page
+        populateConfCustomerInfo(name, phone, email, note);
+
         // Save pending order for reload persistence (keyed by order code)
         sessionStorage.setItem('pendingOrder_' + orderCode, JSON.stringify({
-            orderCode, amount: total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString()
+            orderCode, amount: total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+            customerName: name, customerPhone: phone, customerEmail: email, customerNote: note
         }));
 
         window.location.hash = 'confirmation/' + orderCode;
@@ -2570,7 +2574,7 @@ function populateConfCustomerInfo(name, phone, email, note) {
         if (note) { noteEl.textContent = note; noteWrap.style.display = ''; }
         else noteWrap.style.display = 'none';
     }
-    wrap.style.display = '';
+    wrap.style.display = 'block';
 }
 
 async function placeOrder() {
