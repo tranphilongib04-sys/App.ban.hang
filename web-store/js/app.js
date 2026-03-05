@@ -518,7 +518,6 @@ const products = {
         variants: [
             { name: 'CapCut 7 Ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
             { name: 'CapCut Pro 1 Tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 4 Tháng', price: 105000, duration: '4 tháng', note: 'Giao liền', productCode: 'capcut_4m', deliveryType: 'instant' },
             { name: 'CapCut Pro 6 Tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
             { name: 'CapCut Pro 1 Năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
         ],
@@ -2551,6 +2550,29 @@ function clearDiscount() {
 }
 
 // PLACE ORDER (V2 - calls new API with quantity support)
+// Populate customer info on confirmation page
+function populateConfCustomerInfo(name, phone, email, note) {
+    const wrap = document.getElementById('confCustomerInfo');
+    if (!wrap) return;
+    const nameEl = document.getElementById('confCustomerName');
+    const phoneEl = document.getElementById('confCustomerPhone');
+    const emailEl = document.getElementById('confCustomerEmail');
+    const noteEl = document.getElementById('confCustomerNote');
+    const emailWrap = document.getElementById('confEmailWrap');
+    const noteWrap = document.getElementById('confNoteWrap');
+    if (nameEl) nameEl.textContent = name || '—';
+    if (phoneEl) phoneEl.textContent = phone || '—';
+    if (emailEl && emailWrap) {
+        if (email) { emailEl.textContent = email; emailWrap.style.display = ''; }
+        else emailWrap.style.display = 'none';
+    }
+    if (noteEl && noteWrap) {
+        if (note) { noteEl.textContent = note; noteWrap.style.display = ''; }
+        else noteWrap.style.display = 'none';
+    }
+    wrap.style.display = '';
+}
+
 async function placeOrder() {
     if (cart.length === 0) {
         alert('Giỏ hàng trống!');
@@ -2707,6 +2729,9 @@ async function placeOrder() {
         document.getElementById('transferContent').textContent = orderCode;
         document.getElementById('transferAmount').textContent = formatPrice(data.amount || total);
 
+        // Populate customer info on confirmation page
+        populateConfCustomerInfo(name, phone, email, note);
+
         // Generate and display QR Code
         const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
@@ -2726,7 +2751,8 @@ async function placeOrder() {
 
         // Save pending order for reload persistence (keyed by order code)
         sessionStorage.setItem('pendingOrder_' + orderCode, JSON.stringify({
-            orderCode, amount: data.amount || total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString()
+            orderCode, amount: data.amount || total, expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+            customerName: name, customerPhone: phone, customerEmail: email, customerNote: note
         }));
 
         // Start polling for payment status + countdown timer
@@ -3149,7 +3175,7 @@ function stopPaymentCountdown() {
 
 // Restore pending order UI after page reload
 function restorePendingOrder(pending) {
-    const { orderCode, amount, expiresAt } = pending;
+    const { orderCode, amount, expiresAt, customerName, customerPhone, customerEmail, customerNote } = pending;
 
     // Populate UI elements
     const orderCodeEl = document.getElementById('orderCode');
@@ -3176,6 +3202,11 @@ function restorePendingOrder(pending) {
     }
 
     // Restart countdown with server expiry time
+    // Restore customer info on confirmation page
+    if (customerName || customerPhone) {
+        populateConfCustomerInfo(customerName, customerPhone, customerEmail, customerNote);
+    }
+
     startPaymentCountdown(orderCode, expiresAt);
     startPaymentPolling(orderCode, amount);
 }
