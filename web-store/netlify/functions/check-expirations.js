@@ -1,10 +1,10 @@
 /**
  * CHECK EXPIRATIONS - Netlify Scheduled Function
  *
- * Runs daily at 01:00 UTC (08:00 UTC+7) to check for orders expiring tomorrow.
+ * Runs daily at 01:30 UTC (08:30 UTC+7) to check for orders expiring tomorrow.
  * Sends Telegram reminder 1 day before expiration.
  *
- * Schedule: "0 1 * * *"
+ * Schedule: "30 1 * * *"
  */
 
 const { createClient } = require('@libsql/client/web');
