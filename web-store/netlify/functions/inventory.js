@@ -54,7 +54,7 @@ exports.handler = async function (event, context) {
             const result = await db.execute(sql);
             // Giao sau 5-10' (owner_upgrade) không cần tồn kho → luôn coi là còn hàng.
             const inventory = result.rows.map(row => {
-                const isPreorder = (row.delivery_type || 'auto') === 'owner_upgrade';
+                const isPreorder = ['owner_upgrade', 'preorder'].includes(row.delivery_type || 'auto');
                 return {
                     sku: row.sku_code,
                     product_code: row.sku_code,
