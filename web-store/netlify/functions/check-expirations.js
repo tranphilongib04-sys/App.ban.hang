@@ -170,6 +170,21 @@ exports.handler = async function (event, context) {
             }
         }
 
+        // ── Always send a daily summary message ──
+        const totalExpiring = expiringOrders.rows.length + expiredToday.rows.length;
+        let summaryMsg = `<b>📋 Kiểm tra hạn sử dụng — ${formatDateVN(utc7Now)}</b>\n`;
+
+        if (totalExpiring === 0) {
+            summaryMsg += `\n✅ Không có đơn nào cần nhắc hạn hôm nay.`;
+        } else {
+            summaryMsg += `\n📨 Đã gửi <b>${sentCount}</b> nhắc hạn`;
+            if (failedCount > 0) {
+                summaryMsg += ` (${failedCount} thất bại)`;
+            }
+        }
+
+        await sendTelegramNotification(summaryMsg);
+
         const resultMsg = `Expiration check complete: ${sentCount} reminders sent, ${failedCount} failed`;
         console.log(`[CheckExpirations] ${resultMsg}`);
 
