@@ -22,6 +22,76 @@
 <body>
     <!-- Background Noise Texture Overlay -->
     <div id="bgNoiseOverlay"></div>
+
+    <!-- WELCOME POPUP / DISCLAIMER -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-popup">
+            <div class="welcome-popup-glow"></div>
+            <div class="welcome-popup-content">
+                <div class="welcome-popup-logo">
+                    <img src="images/logo_v2.png" alt="TBQ Homie" class="welcome-logo-img">
+                </div>
+                <h2 class="welcome-popup-title">Chào mừng đến với<br><span class="welcome-brand">Tiệm Bản Quyền</span>
+                </h2>
+                <p class="welcome-popup-subtitle">Dịch vụ số Premium — Uy tín · Nhanh chóng · Tận tâm</p>
+
+                <div class="welcome-popup-notice">
+                    <div class="welcome-notice-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        <span>Lời nhắn nhỏ từ TBQ</span>
+                    </div>
+                    <div class="welcome-notice-body">
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">1</span>
+                            <span>Tất cả sản phẩm tại <strong>TBQ Homie</strong> đều là <strong>hàng chính hãng,
+                                    mua sỉ với số lượng lớn</strong> để mang đến cho bạn mức giá tốt nhất có thể.
+                                Bạn cứ yên tâm mua sắm nhé! 😊</span>
+                        </div>
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">2</span>
+                            <span>Sau khi nhận hàng, <strong>bạn hoàn toàn tự do sử dụng</strong> theo nhu cầu cá nhân.
+                                Chỉ mong bạn <strong>dùng đúng mục đích</strong> để trải nghiệm thật trọn vẹn nha!
+                                💛</span>
+                        </div>
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">3</span>
+                            <span>Nếu gặp bất kỳ vấn đề gì, <strong>cứ nhắn cho mình</strong> — đội ngũ TBQ Homie
+                                luôn sẵn sàng hỗ trợ bạn hết mình! 🤝</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="welcome-popup-actions">
+                    <button class="welcome-popup-btn" id="welcomeCloseBtn" onclick="closeWelcomePopup()">
+                        <span>Đã hiểu, vào cửa hàng</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                    </button>
+                    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="welcome-zalo-btn">
+                        <svg viewBox="0 0 48 48" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="48" height="48" rx="12" fill="#0068FF" />
+                            <path
+                                d="M35.8 30.4c.6-1.5.9-3.2.9-5 0-7.5-6.5-13.6-14.5-13.6S7.7 17.9 7.7 25.4c0 7.5 6.5 13.6 14.5 13.6 1.7 0 3.4-.3 4.9-.7l5.1 1.4-1.4-4.3c1.9-1.4 3.5-3.2 4.4-5.2l.6.2Z"
+                                fill="#fff" opacity=".95" />
+                            <text x="17" y="30" font-family="Arial,sans-serif" font-weight="800" font-size="16"
+                                fill="#0068FF">Z</text>
+                        </svg>
+                        <span>Liên hệ Zalo tư vấn</span>
+                    </a>
+                </div>
+
+                <p class="welcome-popup-note">🎵 Nhạc nền sẽ được phát khi bạn vào cửa hàng</p>
+            </div>
+        </div>
+    </div>
+
     <!-- HEADER -->
     <header>
         <nav>

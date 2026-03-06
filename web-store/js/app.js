@@ -3990,28 +3990,33 @@ let musicProgressTimer = null;
         window.addEventListener('beforeunload', musicStop);
     }
 
-    // Auto-play music on first user interaction (click or touch only — scroll is rejected by browsers)
-    var musicAutoStarted = false;
-    var musicAutoEvents = ['click', 'touchstart', 'keydown'];
-    function musicAutoStartRemoveListeners() {
-        musicAutoEvents.forEach(function (evt) {
-            document.removeEventListener(evt, musicAutoStart, true);
-        });
-    }
-    function musicAutoStart() {
-        if (musicAutoStarted || !musicAudio) return;
-        // Fade in: start quiet, ramp up over 3 seconds
+    // === Welcome Popup → Music auto-play ===
+    // Music will start when the user closes the welcome popup
+    // (replaces the old click/touch auto-start approach)
+
+})();
+
+// =============================================
+// WELCOME POPUP — close & start music
+// =============================================
+function closeWelcomePopup() {
+    var overlay = document.getElementById('welcomeOverlay');
+    if (!overlay) return;
+
+    // Animate out
+    overlay.classList.add('closing');
+    document.body.style.overflow = '';
+
+    // Start music with fade-in after popup closes
+    if (musicAudio && !musicIsPlaying) {
         var targetVolume = musicAudio.volume || 0.7;
         musicAudio.volume = 0.05;
         musicAudio.play().then(function () {
-            // SUCCESS — now lock out and remove listeners
-            musicAutoStarted = true;
-            musicAutoStartRemoveListeners();
             musicIsPlaying = true;
             musicUpdateUI();
-            // Smooth fade-in using requestAnimationFrame (syncs with display refresh)
+            // Smooth fade-in over 3 seconds
             var fadeStart = null;
-            var fadeDuration = 3000; // 3 seconds
+            var fadeDuration = 3000;
             function fadeInStep(timestamp) {
                 if (!fadeStart) fadeStart = timestamp;
                 var progress = Math.min((timestamp - fadeStart) / fadeDuration, 1);
@@ -4024,17 +4029,25 @@ let musicProgressTimer = null;
             }
             requestAnimationFrame(fadeInStep);
         }).catch(function (e) {
-            // FAILED — restore volume, keep listeners for next attempt
-            console.warn('Music auto-play failed (will retry on next click):', e.message || e);
+            console.warn('Music auto-play after popup failed:', e.message || e);
             musicAudio.volume = targetVolume;
             musicIsPlaying = false;
             musicUpdateUI();
         });
     }
-    musicAutoEvents.forEach(function (evt) {
-        document.addEventListener(evt, musicAutoStart, { capture: true, passive: true });
-    });
 
+    // Remove from DOM after animation
+    setTimeout(function () {
+        overlay.classList.add('hidden');
+    }, 500);
+}
+
+// Lock scroll when popup is showing
+(function () {
+    var overlay = document.getElementById('welcomeOverlay');
+    if (overlay && !overlay.classList.contains('hidden')) {
+        document.body.style.overflow = 'hidden';
+    }
 })();
 
 function toggleMusicPlayer() {
