@@ -8,7 +8,6 @@
  */
 
 const { createClient } = require('@libsql/client/web');
-const ALLOWED_CODES = new Set(['CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05']);
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -59,6 +58,8 @@ exports.handler = async function (event) {
                         dc.id,
                         dc.code,
                         dc.discount_amount,
+                        dc.discount_percent,
+                        dc.code_type,
                         dc.description,
                         dc.owner_name,
                         dc.owner_contact,
@@ -69,7 +70,7 @@ exports.handler = async function (event) {
                         MAX(o.created_at) as last_used_at
                     FROM discount_codes dc
                     LEFT JOIN orders o ON o.discount_code = dc.code
-                    GROUP BY dc.id, dc.code, dc.discount_amount, dc.description, dc.owner_name, dc.owner_contact, dc.is_active, dc.created_at
+                    GROUP BY dc.id, dc.code, dc.discount_amount, dc.discount_percent, dc.code_type, dc.description, dc.owner_name, dc.owner_contact, dc.is_active, dc.created_at
                     ORDER BY dc.created_at DESC
                 `);
 
@@ -88,29 +89,28 @@ exports.handler = async function (event) {
             const { action } = body;
 
             if (action === 'create') {
-                const { code, discountAmount, description, ownerName, ownerContact } = body;
+                const { code, discountAmount, discountPercent, description, ownerName, ownerContact } = body;
                 if (!code) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing code' }) };
 
                 const crypto = require('crypto');
                 const id = crypto.randomUUID();
-                const amount = discountAmount || 10000;
+                const amount = discountAmount || 0;
+                const percent = discountPercent || 15;
                 const codeUpper = code.trim().toUpperCase();
-                if (!ALLOWED_CODES.has(codeUpper)) {
-                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Chỉ hỗ trợ CTV01–CTV05' }) };
-                }
 
                 await db.execute({
                     sql: `
-                        INSERT INTO discount_codes (id, code, discount_amount, description, owner_name, owner_contact)
-                        VALUES (?, ?, ?, ?, ?, ?)
+                        INSERT INTO discount_codes (id, code, discount_amount, discount_percent, code_type, description, owner_name, owner_contact)
+                        VALUES (?, ?, ?, ?, 'ctv', ?, ?, ?)
                         ON CONFLICT(code) DO UPDATE SET
                           discount_amount = excluded.discount_amount,
+                          discount_percent = excluded.discount_percent,
                           description = excluded.description,
                           owner_name = excluded.owner_name,
                           owner_contact = excluded.owner_contact,
                           updated_at = CURRENT_TIMESTAMP
                     `,
-                    args: [id, codeUpper, amount, description || '', ownerName || '', ownerContact || '']
+                    args: [id, codeUpper, amount, percent, description || '', ownerName || '', ownerContact || '']
                 });
 
                 return {

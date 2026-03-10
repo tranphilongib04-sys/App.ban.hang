@@ -16,7 +16,7 @@
 
 const { createClient } = require('@libsql/client/web');
 const crypto = require('crypto');
-const CTV_CODES = new Set(['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05']);
+const CTV_PRICE_FLOOR = 20000; // Products below this price are not discounted by CTV
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -115,7 +115,6 @@ exports.handler = async function (event, context) {
         const body = JSON.parse(event.body);
         let { customerName, customerEmail, customerPhone, customerNote, items, discountCode } = body;
         const codeUpper = (discountCode || '').trim().toUpperCase();
-        const isCtvCode = CTV_CODES.has(codeUpper);
 
         // Backward compatibility
         if (!items && body.productCode) {
@@ -155,7 +154,6 @@ exports.handler = async function (event, context) {
 
         // --- TRANSACTION START ---
         tx = await db.transaction('write');
-        const CTV_DISCOUNT_PERCENT = 25;
 
         let totalAmount = 0;
         let publicTotal = 0;
@@ -167,7 +165,7 @@ exports.handler = async function (event, context) {
 
             // Find SKU
             const skus = await tx.execute({
-                sql: `SELECT id, name, price, delivery_type, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`,
+                sql: `SELECT id, name, price, delivery_type, duration_days, ctv_excluded FROM skus WHERE sku_code = ? AND is_active = 1`,
                 args: [productCode]
             });
 
@@ -202,6 +200,7 @@ exports.handler = async function (event, context) {
                 skuName: sku.name,
                 deliveryType: sku.delivery_type,
                 durationDays: sku.duration_days || 30,
+                ctvExcluded: !!sku.ctv_excluded,
                 quantity,
                 unitPrice,
                 subtotal: unitPrice * quantity,
@@ -217,91 +216,83 @@ exports.handler = async function (event, context) {
         let appliedCouponCode = null;
         let appliedCouponPercent = 0;
 
-        if (isCtvCode) {
-            appliedDiscountCode = codeUpper;
-            discountAmount = Math.round(publicTotal * CTV_DISCOUNT_PERCENT / 100);
-            totalAmount = Math.max(0, publicTotal - discountAmount);
-        } else if (discountCode && discountCode.trim()) {
-            const codeUpper = discountCode.trim().toUpperCase();
-
-            // ── Check coupons table first (percentage-based) ──
-            const couponResult = await tx.execute({
-                sql: `SELECT id, code, discount_percent, expires_at, max_uses, used_count, sku_codes FROM coupons WHERE code = ? AND is_active = 1`,
+        if (discountCode && discountCode.trim()) {
+            // ── Check CTV codes (DB-driven, per-code discount_percent) ──
+            const ctvResult = await tx.execute({
+                sql: `SELECT id, code, discount_percent FROM discount_codes WHERE code = ? AND code_type = 'ctv' AND is_active = 1`,
                 args: [codeUpper]
             });
 
-            if (couponResult.rows.length > 0) {
-                const coupon = couponResult.rows[0];
+            if (ctvResult.rows.length > 0) {
+                const ctvCode = ctvResult.rows[0];
+                const CTV_DISCOUNT_PERCENT = ctvCode.discount_percent || 15;
 
-                // Validate expiry
-                if (new Date(coupon.expires_at) < new Date()) {
-                    tx.close();
-                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết hạn' }) };
-                }
-
-                // Validate usage
-                if (coupon.used_count >= coupon.max_uses) {
-                    tx.close();
-                    return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết lượt sử dụng' }) };
-                }
-
-                // Parse SKU restrictions
-                const allowedSkus = coupon.sku_codes ? coupon.sku_codes.split(',').map(s => s.trim()) : null;
-
-                // Calculate discount only on matching SKUs
+                // Calculate discountable total (exclude ctv_excluded + price < 20k)
                 let discountableTotal = 0;
                 for (const item of finalItems) {
-                    // Find sku_code for this item
-                    const skuCodeResult = await tx.execute({
-                        sql: `SELECT sku_code FROM skus WHERE id = ?`,
-                        args: [item.skuId]
-                    });
-                    const skuCode = skuCodeResult.rows.length > 0 ? skuCodeResult.rows[0].sku_code : null;
-
-                    if (!allowedSkus || (skuCode && allowedSkus.includes(skuCode))) {
+                    if (!item.ctvExcluded && item.unitPrice >= CTV_PRICE_FLOOR) {
                         discountableTotal += item.subtotal;
                     }
                 }
 
-                discountAmount = Math.round(discountableTotal * coupon.discount_percent / 100);
-                totalAmount = Math.max(0, totalAmount - discountAmount);
-                appliedCouponCode = codeUpper;
-                appliedCouponPercent = coupon.discount_percent;
+                discountAmount = Math.round(discountableTotal * CTV_DISCOUNT_PERCENT / 100);
+                totalAmount = Math.max(0, publicTotal - discountAmount);
+                appliedDiscountCode = codeUpper;
 
-                // Mark coupon as used (increment counter)
-                await tx.execute({
-                    sql: `UPDATE coupons SET used_count = used_count + 1 WHERE id = ?`,
-                    args: [coupon.id]
-                });
             } else {
-                // ── Fall back to discount_codes (CTV fixed-amount) ──
-                const codeResult = await tx.execute({
-                    sql: `SELECT id, code, discount_amount FROM discount_codes WHERE code = ? AND is_active = 1`,
+                // ── Check coupons table (percentage-based, single-use) ──
+                const couponResult = await tx.execute({
+                    sql: `SELECT id, code, discount_percent, expires_at, max_uses, used_count, sku_codes FROM coupons WHERE code = ? AND is_active = 1`,
                     args: [codeUpper]
                 });
 
-                if (codeResult.rows.length === 0) {
+                if (couponResult.rows.length > 0) {
+                    const coupon = couponResult.rows[0];
+
+                    // Validate expiry
+                    if (new Date(coupon.expires_at) < new Date()) {
+                        tx.close();
+                        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết hạn' }) };
+                    }
+
+                    // Validate usage
+                    if (coupon.used_count >= coupon.max_uses) {
+                        tx.close();
+                        return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã coupon đã hết lượt sử dụng' }) };
+                    }
+
+                    // Parse SKU restrictions
+                    const allowedSkus = coupon.sku_codes ? coupon.sku_codes.split(',').map(s => s.trim()) : null;
+
+                    // Calculate discount only on matching SKUs
+                    let discountableTotal = 0;
+                    for (const item of finalItems) {
+                        const skuCodeResult = await tx.execute({
+                            sql: `SELECT sku_code FROM skus WHERE id = ?`,
+                            args: [item.skuId]
+                        });
+                        const skuCode = skuCodeResult.rows.length > 0 ? skuCodeResult.rows[0].sku_code : null;
+
+                        if (!allowedSkus || (skuCode && allowedSkus.includes(skuCode))) {
+                            discountableTotal += item.subtotal;
+                        }
+                    }
+
+                    discountAmount = Math.round(discountableTotal * coupon.discount_percent / 100);
+                    totalAmount = Math.max(0, totalAmount - discountAmount);
+                    appliedCouponCode = codeUpper;
+                    appliedCouponPercent = coupon.discount_percent;
+
+                    // Mark coupon as used
+                    await tx.execute({
+                        sql: `UPDATE coupons SET used_count = used_count + 1 WHERE id = ?`,
+                        args: [coupon.id]
+                    });
+                } else {
+                    // No valid discount code found
                     tx.close();
                     return { statusCode: 400, headers, body: JSON.stringify({ error: 'Mã giảm giá không hợp lệ' }) };
                 }
-
-                const discountRow = codeResult.rows[0];
-                const fullDiscount = discountRow.discount_amount;
-                const halfDiscount = Math.floor(fullDiscount / 2);
-
-                let hasLongTerm = false;
-                for (const item of finalItems) {
-                    if (item.durationDays >= 30) { hasLongTerm = true; break; }
-                }
-
-                if (hasLongTerm) {
-                    discountAmount = Math.min(fullDiscount, totalAmount);
-                } else {
-                    discountAmount = Math.min(halfDiscount, totalAmount);
-                }
-
-                appliedDiscountCode = codeUpper;
-                totalAmount = Math.max(0, totalAmount - discountAmount);
             }
         }
 

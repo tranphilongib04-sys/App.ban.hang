@@ -2,14 +2,16 @@
  * VALIDATE DISCOUNT CODE API
  *
  * POST /validate-discount
- * Body: { code: "CTV01", items: [{ productCode: "chatgpt_plus_cap_tk", quantity: 1 }] }
+ * Body: { code: "MYCTV", items: [{ productCode: "chatgpt_plus_cap_tk", quantity: 1 }] }
  *
  * Returns discount eligibility and final total preview.
- * >= 30 days: full discount (e.g. 10k). < 30 days: half discount (e.g. 5k).
+ * CTV codes: per-code discount_percent from DB (e.g. 15%, 20%)
+ * Coupons: percentage-based, single-use
+ * Exclusions: ctv_excluded SKUs and products < 20k are not discounted by CTV
  */
 
 const { createClient } = require('@libsql/client/web');
-const CTV_CODES = new Set(['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05']);
+const CTV_PRICE_FLOOR = 20000; // Products below this price are not discounted by CTV
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -52,29 +54,43 @@ exports.handler = async function (event) {
         // 1. Lookup discount code
         const codeUpper = code.trim().toUpperCase();
 
-        // ── CTV MODE (CTV2026, CTV01–CTV05 → flat 25% discount) ──
-        if (CTV_CODES.has(codeUpper)) {
-            const CTV_DISCOUNT_PERCENT = 25;
+        // ── CTV MODE (DB-driven, per-code discount_percent) ──
+        const ctvResult = await db.execute({
+            sql: `SELECT id, code, discount_percent FROM discount_codes WHERE code = ? AND code_type = 'ctv' AND is_active = 1`,
+            args: [codeUpper]
+        });
+
+        if (ctvResult.rows.length > 0) {
+            const ctvCode = ctvResult.rows[0];
+            const CTV_DISCOUNT_PERCENT = ctvCode.discount_percent || 15;
             let publicTotal = 0;
+            let discountableTotal = 0;
 
             for (const item of items) {
                 const { productCode, quantity } = item;
                 if (!productCode || !quantity) continue;
 
                 const skuResult = await db.execute({
-                    sql: `SELECT price FROM skus WHERE sku_code = ? AND is_active = 1`,
+                    sql: `SELECT price, ctv_excluded FROM skus WHERE sku_code = ? AND is_active = 1`,
                     args: [productCode]
                 });
 
                 if (skuResult.rows.length === 0) continue;
-                publicTotal += (skuResult.rows[0].price * quantity);
+                const sku = skuResult.rows[0];
+                const itemTotal = sku.price * quantity;
+                publicTotal += itemTotal;
+
+                // Skip excluded SKUs and products under price floor
+                if (!sku.ctv_excluded && sku.price >= CTV_PRICE_FLOOR) {
+                    discountableTotal += itemTotal;
+                }
             }
 
             if (publicTotal === 0) {
                 return { statusCode: 200, headers, body: JSON.stringify({ valid: false, error: 'Không tìm thấy sản phẩm hợp lệ' }) };
             }
 
-            const discountAmount = Math.round(publicTotal * CTV_DISCOUNT_PERCENT / 100);
+            const discountAmount = Math.round(discountableTotal * CTV_DISCOUNT_PERCENT / 100);
             const finalTotal = Math.max(0, publicTotal - discountAmount);
 
             return {
@@ -164,86 +180,8 @@ exports.handler = async function (event) {
             };
         }
 
-        const codeResult = await db.execute({
-            sql: `SELECT id, code, discount_amount FROM discount_codes WHERE code = ? AND is_active = 1`,
-            args: [codeUpper]
-        });
-
-        if (codeResult.rows.length === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ valid: false, error: 'Mã giảm giá không hợp lệ' }) };
-        }
-
-        const discountRow = codeResult.rows[0];
-        const fullDiscount = discountRow.discount_amount;    // e.g. 10000
-        const halfDiscount = Math.floor(fullDiscount / 2);   // e.g. 5000
-
-        // 2. Categorize items: >= 30 days (full discount) vs < 30 days (half discount)
-        let longTermSubtotal = 0;   // >= 30 days
-        let shortTermSubtotal = 0;  // < 30 days
-        let totalSubtotal = 0;
-        let hasLongTerm = false;
-        let hasShortTerm = false;
-
-        for (const item of items) {
-            const { productCode, quantity } = item;
-            if (!productCode || !quantity) continue;
-
-            const skuResult = await db.execute({
-                sql: `SELECT price, duration_days FROM skus WHERE sku_code = ? AND is_active = 1`,
-                args: [productCode]
-            });
-
-            if (skuResult.rows.length === 0) continue;
-
-            const sku = skuResult.rows[0];
-            const itemTotal = sku.price * quantity;
-            totalSubtotal += itemTotal;
-
-            if ((sku.duration_days || 30) >= 30) {
-                longTermSubtotal += itemTotal;
-                hasLongTerm = true;
-            } else {
-                shortTermSubtotal += itemTotal;
-                hasShortTerm = true;
-            }
-        }
-
-        if (totalSubtotal === 0) {
-            return { statusCode: 200, headers, body: JSON.stringify({ valid: false, error: 'Không tìm thấy sản phẩm hợp lệ' }) };
-        }
-
-        // 3. Calculate discount:
-        //    - >= 30 days: full discount (e.g. 10k), capped at longTermSubtotal
-        //    - < 30 days only: half discount (e.g. 5k), capped at shortTermSubtotal
-        //    - Mixed cart: full discount applies (best for customer)
-        let discountApplied = 0;
-        let message = '';
-
-        if (hasLongTerm) {
-            // Cart has items >= 30 days → full discount
-            discountApplied = Math.min(fullDiscount, totalSubtotal);
-            message = `Giảm ${discountApplied.toLocaleString('vi-VN')}₫ cho đơn hàng`;
-        } else {
-            // Cart only has items < 30 days → half discount
-            discountApplied = Math.min(halfDiscount, shortTermSubtotal);
-            message = `Giảm ${discountApplied.toLocaleString('vi-VN')}₫ (SP dưới 1 tháng giảm ${halfDiscount.toLocaleString('vi-VN')}₫)`;
-        }
-
-        const finalTotal = Math.max(0, totalSubtotal - discountApplied);
-
-        return {
-            statusCode: 200, headers,
-            body: JSON.stringify({
-                valid: true,
-                code: discountRow.code,
-                discountAmount: discountApplied,
-                longTermSubtotal,
-                shortTermSubtotal,
-                totalBeforeDiscount: totalSubtotal,
-                finalTotal,
-                message
-            })
-        };
+        // No valid code found
+        return { statusCode: 200, headers, body: JSON.stringify({ valid: false, error: 'Mã giảm giá không hợp lệ' }) };
 
     } catch (error) {
         console.error('Validate Discount Error:', error);

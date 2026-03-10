@@ -1182,7 +1182,8 @@ let cart = [];
 let appliedDiscount = null; // { code, discountAmount, finalTotal }
 
 // CTV MODE
-const CTV_CODES = ['CTV2026', 'CTV01', 'CTV02', 'CTV03', 'CTV04', 'CTV05'];
+// CTV codes are now DB-driven — no hardcoded list needed
+// ctvMode is activated when validate-discount API returns codeType === 'ctv'
 let ctvMode = localStorage.getItem('tbq_ctv_mode') === '1';
 
 function setCtvMode(enable) {
@@ -1781,7 +1782,7 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
             const btn = document.getElementById('detailDiscountApplyBtn');
             const content = document.getElementById('detailDiscountContent');
             if (input) { input.value = detailDiscount.code; input.readOnly = true; }
-            if (feedback) { feedback.textContent = 'Giảm 25% cho CTV'; feedback.className = 'discount-feedback success'; }
+            if (feedback) { feedback.textContent = `Giảm ${detailDiscount.percent || 15}% cho CTV`; feedback.className = 'discount-feedback success'; }
             if (content) content.style.display = 'block';
             if (btn) {
                 btn.textContent = 'Xoá';

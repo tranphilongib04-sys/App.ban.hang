@@ -3136,14 +3136,14 @@
         <!-- TAB: CTV Discounts -->
         <div class="promo-content active" id="promo-ctv">
           <div class="card" style="margin-bottom:24px; padding:20px;">
-            <h3 style="margin:0 0 12px">Tạo/ cập nhật mã (CTV01–CTV05)</h3>
-            <p class="muted" style="margin:0 0 14px; font-size:12px;">Mỗi mã gắn với một CTV. Mã đã tồn tại sẽ được cập
-              nhật thông tin.</p>
+            <h3 style="margin:0 0 12px">Tạo mã CTV</h3>
+            <p class="muted" style="margin:0 0 14px; font-size:12px;">Nhập mã CTV tùy ý (VD: HOMIE9X). Mã đã tồn tại sẽ
+              được cập nhật.</p>
             <div class="discount-form">
               <div class="form-field">
                 <label>Mã code</label>
-                <input type="text" id="newDiscountCode" class="form-input"
-                  placeholder="CTV01 / CTV02 / CTV03 / CTV04 / CTV05" maxlength="30">
+                <input type="text" id="newDiscountCode" class="form-input" placeholder="VD: CTVMINH9X, CTVLAN26"
+                  maxlength="30">
               </div>
               <div class="form-field">
                 <label>CTV</label>
@@ -3154,8 +3154,11 @@
                 <input type="text" id="newDiscountContact" class="form-input" placeholder="SĐT/Zalo">
               </div>
               <div class="form-field">
-                <label>Giảm (VND)</label>
-                <input type="number" id="newDiscountAmount" class="form-input" value="10000">
+                <label>% Giảm</label>
+                <select id="newDiscountPercent" class="form-input">
+                  <option value="15" selected>15% (Thường)</option>
+                  <option value="20">20% (Cao cấp)</option>
+                </select>
               </div>
               <div class="form-field">
                 <label>Mô tả</label>
@@ -3173,7 +3176,7 @@
                   <th>Mã code</th>
                   <th>CTV</th>
                   <th>Liên hệ</th>
-                  <th>Giảm</th>
+                  <th>% Giảm</th>
                   <th>Mô tả</th>
                   <th>Trạng thái</th>
                   <th>Đã dùng</th>
@@ -4473,7 +4476,7 @@
               '<td><span class="code-chip">' + escHtml(c.code) + '</span></td>' +
               '<td style="font-weight:600">' + escHtml(c.owner_name || '--') + '</td>' +
               '<td class="muted">' + escHtml(c.owner_contact || '--') + '</td>' +
-              '<td style="color:#ef4444;font-weight:600">-' + fmtVND(c.discount_amount) + '</td>' +
+              '<td style="color:#10b981;font-weight:600">' + (c.discount_percent || 15) + '%</td>' +
               '<td class="muted">' + escHtml(c.description || '--') + '</td>' +
               '<td>' + statusBadge + '</td>' +
               '<td style="font-weight:600">' + (c.usage_count || 0) + ' lần</td>' +
@@ -4495,7 +4498,7 @@
 
     async function createDiscount() {
       var code = document.getElementById('newDiscountCode').value.trim();
-      var amount = parseInt(document.getElementById('newDiscountAmount').value) || 10000;
+      var percent = parseInt(document.getElementById('newDiscountPercent').value) || 15;
       var desc = document.getElementById('newDiscountDesc').value.trim();
       var ownerName = document.getElementById('newDiscountOwner').value.trim();
       var ownerContact = document.getElementById('newDiscountContact').value.trim();
@@ -4504,11 +4507,11 @@
       try {
         var r = await fetch(BASE + '/admin-discounts', {
           method: 'POST', headers: authHeaders(),
-          body: JSON.stringify({ action: 'create', code: code, discountAmount: amount, description: desc, ownerName: ownerName, ownerContact: ownerContact })
+          body: JSON.stringify({ action: 'create', code: code, discountPercent: percent, description: desc, ownerName: ownerName, ownerContact: ownerContact })
         });
         var data = await r.json();
         if (data.success) {
-          showAdminToast('Đã tạo mã: ' + code.toUpperCase(), 'success');
+          showAdminToast('Đã tạo mã: ' + code.toUpperCase() + ' (' + percent + '%)', 'success');
           document.getElementById('newDiscountCode').value = '';
           document.getElementById('newDiscountDesc').value = '';
           document.getElementById('newDiscountOwner').value = '';
