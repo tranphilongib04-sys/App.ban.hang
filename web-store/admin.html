@@ -2221,6 +2221,420 @@
       animation: fadeSlideIn .25s ease;
     }
 
+    /* ═══ CTV Card UI ═══ */
+    .ctv-stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .ctv-stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .ctv-stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, .06);
+    }
+
+    .ctv-stat-icon {
+      font-size: 28px;
+    }
+
+    .ctv-stat-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ctv-stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .ctv-stat-label {
+      font-size: 12px;
+      color: var(--text2);
+      margin-top: 2px;
+    }
+
+    .ctv-create-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .ctv-create-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: background .15s;
+    }
+
+    .ctv-create-header:hover {
+      background: var(--surface2);
+    }
+
+    .ctv-create-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .ctv-chevron {
+      font-size: 12px;
+      color: var(--text2);
+      transition: transform .2s;
+    }
+
+    .ctv-chevron.open {
+      transform: rotate(180deg);
+    }
+
+    .ctv-create-body {
+      padding: 0 20px 20px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .ctv-form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      padding-top: 16px;
+    }
+
+    .ctv-form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .ctv-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+    }
+
+    .ctv-input-wrap {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      background: var(--surface);
+    }
+
+    .ctv-input-wrap:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, .12);
+    }
+
+    .ctv-input-prefix {
+      padding: 10px 12px;
+      background: var(--surface2);
+      font-weight: 700;
+      font-size: 14px;
+      color: var(--accent);
+      border-right: 1px solid var(--border);
+      user-select: none;
+    }
+
+    .ctv-text-input {
+      flex: 1;
+      border: none;
+      padding: 10px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: transparent;
+      outline: none;
+    }
+
+    .ctv-hint {
+      font-size: 11px;
+      color: var(--text3, #aaa);
+    }
+
+    .ctv-tier-selector {
+      display: flex;
+      gap: 10px;
+    }
+
+    .ctv-tier-option {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 14px 10px;
+      border: 2px solid var(--border-light);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all .15s;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text2);
+    }
+
+    .ctv-tier-option input[type="radio"] {
+      display: none;
+    }
+
+    .ctv-tier-option:hover {
+      border-color: var(--border);
+    }
+
+    .ctv-tier-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-dim);
+      color: var(--accent);
+    }
+
+    .ctv-tier-badge {
+      font-size: 18px;
+      font-weight: 800;
+      padding: 4px 14px;
+      border-radius: 8px;
+    }
+
+    .ctv-tier-badge.standard {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .ctv-tier-badge.premium {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .ctv-form-actions {
+      margin-top: 16px;
+    }
+
+    .ctv-submit-btn {
+      padding: 12px 28px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .1s, box-shadow .15s;
+    }
+
+    .ctv-submit-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(37, 99, 235, .3);
+    }
+
+    .ctv-submit-btn:active {
+      transform: scale(.98);
+    }
+
+    .ctv-info-banner {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: #fef3c7;
+      border: 1px solid #fcd34d;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #92400e;
+      margin-bottom: 20px;
+    }
+
+    .ctv-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 16px;
+    }
+
+    .ctv-card {
+      background: var(--surface);
+      border: 1px solid var(--border-light);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: transform .15s, box-shadow .15s;
+      position: relative;
+    }
+
+    .ctv-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, .06);
+    }
+
+    .ctv-card.inactive {
+      opacity: .55;
+    }
+
+    .ctv-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .ctv-card-code {
+      font-size: 18px;
+      font-weight: 800;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      letter-spacing: 1px;
+    }
+
+    .ctv-card-tier {
+      padding: 4px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .ctv-card-tier.t15 {
+      background: #dbeafe;
+      color: #2563eb;
+    }
+
+    .ctv-card-tier.t20 {
+      background: #fef3c7;
+      color: #d97706;
+    }
+
+    .ctv-card-owner {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .ctv-card-owner-name {
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    .ctv-card-owner-contact {
+      font-size: 12px;
+      color: var(--text2);
+    }
+
+    .ctv-card-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .ctv-card-stat {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .ctv-card-stat-value {
+      font-weight: 700;
+      font-size: 15px;
+    }
+
+    .ctv-card-stat-label {
+      font-size: 11px;
+      color: var(--text2);
+    }
+
+    .ctv-card-actions {
+      display: flex;
+      gap: 8px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border-light);
+    }
+
+    .ctv-card-actions button {
+      flex: 1;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s;
+    }
+
+    .ctv-card-actions button:hover {
+      background: var(--surface2);
+    }
+
+    .ctv-card-actions .btn-danger {
+      color: #ef4444;
+      border-color: #fecaca;
+    }
+
+    .ctv-card-actions .btn-danger:hover {
+      background: #fef2f2;
+    }
+
+    .ctv-card-actions .btn-warn {
+      color: #d97706;
+      border-color: #fde68a;
+    }
+
+    .ctv-card-actions .btn-warn:hover {
+      background: #fffbeb;
+    }
+
+    .ctv-card-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+    }
+
+    .ctv-card-status-dot.active {
+      background: #10b981;
+    }
+
+    .ctv-card-status-dot.inactive {
+      background: #9ca3af;
+    }
+
+    .ctv-loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--text2);
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .ctv-stats-row {
+        grid-template-columns: 1fr;
+      }
+
+      .ctv-form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .ctv-cards-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
     @keyframes fadeSlideIn {
       from {
         opacity: 0;
@@ -3135,62 +3549,94 @@
 
         <!-- TAB: CTV Discounts -->
         <div class="promo-content active" id="promo-ctv">
-          <div class="card" style="margin-bottom:24px; padding:20px;">
-            <h3 style="margin:0 0 12px">Tạo mã CTV</h3>
-            <p class="muted" style="margin:0 0 14px; font-size:12px;">Nhập mã CTV tùy ý (VD: HOMIE9X). Mã đã tồn tại sẽ
-              được cập nhật.</p>
-            <div class="discount-form">
-              <div class="form-field">
-                <label>Mã code</label>
-                <input type="text" id="newDiscountCode" class="form-input" placeholder="VD: CTVMINH9X, CTVLAN26"
-                  maxlength="30">
+
+          <!-- CTV Stats Summary -->
+          <div class="ctv-stats-row" id="ctvStatsRow">
+            <div class="ctv-stat-card">
+              <div class="ctv-stat-icon">👥</div>
+              <div class="ctv-stat-info">
+                <span class="ctv-stat-value" id="ctvTotalActive">--</span>
+                <span class="ctv-stat-label">CTV hoạt động</span>
               </div>
-              <div class="form-field">
-                <label>CTV</label>
-                <input type="text" id="newDiscountOwner" class="form-input" placeholder="Tên người nhận mã">
+            </div>
+            <div class="ctv-stat-card">
+              <div class="ctv-stat-icon">📦</div>
+              <div class="ctv-stat-info">
+                <span class="ctv-stat-value" id="ctvTotalOrders">--</span>
+                <span class="ctv-stat-label">Tổng đơn</span>
               </div>
-              <div class="form-field">
-                <label>Liên hệ</label>
-                <input type="text" id="newDiscountContact" class="form-input" placeholder="SĐT/Zalo">
-              </div>
-              <div class="form-field">
-                <label>% Giảm</label>
-                <select id="newDiscountPercent" class="form-input">
-                  <option value="15" selected>15% (Thường)</option>
-                  <option value="20">20% (Cao cấp)</option>
-                </select>
-              </div>
-              <div class="form-field">
-                <label>Mô tả</label>
-                <input type="text" id="newDiscountDesc" class="form-input" placeholder="VD: Mã CTV Minh">
-              </div>
-              <div class="form-field">
-                <button onclick="createDiscount()" class="btn-primary-sm">+ Tạo / cập nhật</button>
+            </div>
+            <div class="ctv-stat-card">
+              <div class="ctv-stat-icon">💰</div>
+              <div class="ctv-stat-info">
+                <span class="ctv-stat-value" id="ctvTotalDiscount">--</span>
+                <span class="ctv-stat-label">Tổng giảm giá</span>
               </div>
             </div>
           </div>
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Mã code</th>
-                  <th>CTV</th>
-                  <th>Liên hệ</th>
-                  <th>% Giảm</th>
-                  <th>Mô tả</th>
-                  <th>Trạng thái</th>
-                  <th>Đã dùng</th>
-                  <th>Lần cuối</th>
-                  <th>Tổng giảm</th>
-                  <th>Thao tác</th>
-                </tr>
-              </thead>
-              <tbody id="discountsBody">
-                <tr>
-                  <td colspan="10" class="loading">Đang tải...</td>
-                </tr>
-              </tbody>
-            </table>
+
+          <!-- Create CTV - Collapsible -->
+          <div class="ctv-create-card" id="ctvCreateCard">
+            <div class="ctv-create-header" onclick="toggleCtvForm()">
+              <div class="ctv-create-title">
+                <span>➕</span> <span>Tạo mã CTV mới</span>
+              </div>
+              <span class="ctv-chevron" id="ctvChevron">▼</span>
+            </div>
+            <div class="ctv-create-body" id="ctvCreateBody" style="display:none;">
+              <div class="ctv-form-grid">
+                <div class="ctv-form-group">
+                  <label class="ctv-label">Mã CTV <span style="color:#ef4444">*</span></label>
+                  <div class="ctv-input-wrap">
+                    <span class="ctv-input-prefix">CTV</span>
+                    <input type="text" id="newDiscountCode" class="ctv-text-input" placeholder="VD: MINH9X, LAN26"
+                      maxlength="30">
+                  </div>
+                  <span class="ctv-hint">Tự động thêm prefix CTV</span>
+                </div>
+                <div class="ctv-form-group">
+                  <label class="ctv-label">Hạng CTV</label>
+                  <div class="ctv-tier-selector">
+                    <label class="ctv-tier-option selected" id="tier15">
+                      <input type="radio" name="ctvTier" value="15" checked onchange="selectCtvTier(this)">
+                      <div class="ctv-tier-badge standard">15%</div>
+                      <span>Thường</span>
+                    </label>
+                    <label class="ctv-tier-option" id="tier20">
+                      <input type="radio" name="ctvTier" value="20" onchange="selectCtvTier(this)">
+                      <div class="ctv-tier-badge premium">20%</div>
+                      <span>Cao cấp</span>
+                    </label>
+                  </div>
+                </div>
+                <div class="ctv-form-group">
+                  <label class="ctv-label">Tên CTV</label>
+                  <input type="text" id="newDiscountOwner" class="form-input" placeholder="VD: Nguyễn Minh">
+                </div>
+                <div class="ctv-form-group">
+                  <label class="ctv-label">Liên hệ</label>
+                  <input type="text" id="newDiscountContact" class="form-input" placeholder="SĐT / Zalo">
+                </div>
+              </div>
+              <div class="ctv-form-group" style="margin-top:12px;">
+                <label class="ctv-label">Ghi chú</label>
+                <input type="text" id="newDiscountDesc" class="form-input" placeholder="VD: CTV Minh - khu vực HCM">
+              </div>
+              <div class="ctv-form-actions">
+                <button onclick="createDiscount()" class="ctv-submit-btn">✨ Tạo mã CTV</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Exclusion Banner -->
+          <div class="ctv-info-banner">
+            <span>ℹ️</span>
+            <span>Loại trừ: YouTube, Netflix, SP dưới 20k không áp dụng giảm giá CTV</span>
+          </div>
+
+          <!-- CTV Cards Grid -->
+          <div class="ctv-cards-grid" id="discountsBody">
+            <div class="ctv-loading">Đang tải...</div>
           </div>
         </div>
 
@@ -4459,50 +4905,96 @@
     }
 
     // ── DISCOUNTS ───────────────────────────────────────────────
+    // ═══ CTV UI Helper Functions ═══
+    function toggleCtvForm() {
+      var body = document.getElementById('ctvCreateBody');
+      var chevron = document.getElementById('ctvChevron');
+      if (body.style.display === 'none') {
+        body.style.display = 'block';
+        chevron.classList.add('open');
+      } else {
+        body.style.display = 'none';
+        chevron.classList.remove('open');
+      }
+    }
+
+    function selectCtvTier(radio) {
+      document.querySelectorAll('.ctv-tier-option').forEach(function (el) { el.classList.remove('selected'); });
+      radio.closest('.ctv-tier-option').classList.add('selected');
+    }
+
     async function loadDiscounts() {
       try {
         var r = await fetch(BASE + '/admin-discounts?action=list', { headers: authHeaders() });
         if (r.status === 401) return handleUnauth();
         var data = await r.json();
         var codes = data.codes || [];
-        document.getElementById('discountsBody').innerHTML = codes.length
+
+        // ── Update stats ──
+        var activeCodes = codes.filter(function (c) { return c.is_active; });
+        var totalOrders = codes.reduce(function (sum, c) { return sum + (c.usage_count || 0); }, 0);
+        var totalDiscount = codes.reduce(function (sum, c) { return sum + (c.total_discount_given || 0); }, 0);
+
+        var el1 = document.getElementById('ctvTotalActive');
+        var el2 = document.getElementById('ctvTotalOrders');
+        var el3 = document.getElementById('ctvTotalDiscount');
+        if (el1) el1.textContent = activeCodes.length;
+        if (el2) el2.textContent = totalOrders + ' đơn';
+        if (el3) el3.textContent = fmtVND(totalDiscount);
+
+        // ── Render cards ──
+        var grid = document.getElementById('discountsBody');
+        if (!grid) return;
+
+        grid.innerHTML = codes.length
           ? codes.map(function (c) {
-            var statusBadge = c.is_active
-              ? '<span class="pill active">Hoạt động</span>'
-              : '<span class="pill inactive">Tắt</span>';
+            var pct = c.discount_percent || 15;
+            var tierClass = pct >= 20 ? 't20' : 't15';
+            var tierLabel = pct >= 20 ? 'Cao cấp' : 'Thường';
+            var statusDot = c.is_active ? 'active' : 'inactive';
+            var statusText = c.is_active ? 'Hoạt động' : 'Tắt';
             var toggleLabel = c.is_active ? 'Tắt' : 'Bật';
-            var toggleColor = c.is_active ? '#f59e0b' : '#10b981';
-            return '<tr>' +
-              '<td><span class="code-chip">' + escHtml(c.code) + '</span></td>' +
-              '<td style="font-weight:600">' + escHtml(c.owner_name || '--') + '</td>' +
-              '<td class="muted">' + escHtml(c.owner_contact || '--') + '</td>' +
-              '<td style="color:#10b981;font-weight:600">' + (c.discount_percent || 15) + '%</td>' +
-              '<td class="muted">' + escHtml(c.description || '--') + '</td>' +
-              '<td>' + statusBadge + '</td>' +
-              '<td style="font-weight:600">' + (c.usage_count || 0) + ' lần</td>' +
-              '<td class="muted">' + (c.last_used_at ? fmtTime(c.last_used_at) : '--') + '</td>' +
-              '<td style="color:#ef4444">' + fmtVND(c.total_discount_given || 0) + '</td>' +
-              '<td>' +
-              "<button onclick=\"openCtvUsageModal('" + escAttr(c.code) + "')\" class=\"btn-ghost primary\" style=\"margin-right:4px\">Lịch sử</button>" +
-              "<button onclick=\"toggleDiscount('" + c.id + "')\" class=\"btn-ghost warn\" style=\"margin-right:4px\">" + toggleLabel + "</button>" +
-              "<button onclick=\"deleteDiscount('" + c.id + "','" + escHtml(c.code) + "')\" class=\"btn-ghost danger\">Xoá</button>" +
-              '</td></tr>';
+
+            return '<div class="ctv-card ' + (c.is_active ? '' : 'inactive') + '">' +
+              '<div class="ctv-card-header">' +
+              '<span class="ctv-card-code">' + escHtml(c.code) + '</span>' +
+              '<span class="ctv-card-tier ' + tierClass + '">' + pct + '% · ' + tierLabel + '</span>' +
+              '</div>' +
+              '<div class="ctv-card-owner">' +
+              '<span class="ctv-card-owner-name">' + escHtml(c.owner_name || 'Chưa gán') + '</span>' +
+              '<span class="ctv-card-owner-contact">' + escHtml(c.owner_contact || '--') + ' · <span class="ctv-card-status-dot ' + statusDot + '"></span>' + statusText + '</span>' +
+              '</div>' +
+              '<div class="ctv-card-stats">' +
+              '<div class="ctv-card-stat"><span class="ctv-card-stat-value">' + (c.usage_count || 0) + ' đơn</span><span class="ctv-card-stat-label">Đã dùng</span></div>' +
+              '<div class="ctv-card-stat"><span class="ctv-card-stat-value" style="color:#ef4444">' + fmtVND(c.total_discount_given || 0) + '</span><span class="ctv-card-stat-label">Tổng giảm</span></div>' +
+              '<div class="ctv-card-stat"><span class="ctv-card-stat-value">' + (c.last_used_at ? fmtTime(c.last_used_at) : '--') + '</span><span class="ctv-card-stat-label">Lần cuối</span></div>' +
+              '<div class="ctv-card-stat"><span class="ctv-card-stat-value">' + escHtml(c.description || '--') + '</span><span class="ctv-card-stat-label">Mô tả</span></div>' +
+              '</div>' +
+              '<div class="ctv-card-actions">' +
+              "<button onclick=\"openCtvUsageModal('" + escAttr(c.code) + "')\">📋 Lịch sử</button>" +
+              "<button class='btn-warn' onclick=\"toggleDiscount('" + c.id + "')\">" + (c.is_active ? '⏸ Tắt' : '▶ Bật') + "</button>" +
+              "<button class='btn-danger' onclick=\"deleteDiscount('" + c.id + "','" + escHtml(c.code) + "')\">🗑 Xoá</button>" +
+              '</div>' +
+              '</div>';
           }).join('')
-          : '<tr><td colspan="10" class="empty">Chưa có mã giảm giá nào</td></tr>';
+          : '<div class="ctv-loading">Chưa có mã CTV nào. Nhấn "Tạo mã CTV mới" ở trên.</div>';
+
         updateClock();
-        // Update promo tab count badge
         var ctvEl = document.getElementById('ctvCount');
         if (ctvEl) ctvEl.textContent = codes.length;
       } catch (e) { console.error('[admin] discounts', e); }
     }
 
     async function createDiscount() {
-      var code = document.getElementById('newDiscountCode').value.trim();
-      var percent = parseInt(document.getElementById('newDiscountPercent').value) || 15;
+      var rawCode = document.getElementById('newDiscountCode').value.trim().toUpperCase();
+      // Auto-add CTV prefix
+      var code = rawCode.startsWith('CTV') ? rawCode : 'CTV' + rawCode;
+      var tierRadio = document.querySelector('input[name="ctvTier"]:checked');
+      var percent = tierRadio ? parseInt(tierRadio.value) : 15;
       var desc = document.getElementById('newDiscountDesc').value.trim();
       var ownerName = document.getElementById('newDiscountOwner').value.trim();
       var ownerContact = document.getElementById('newDiscountContact').value.trim();
-      if (!code) return showAdminToast('Nhập mã code!', 'error');
+      if (!rawCode) return showAdminToast('Nhập mã CTV!', 'error');
 
       try {
         var r = await fetch(BASE + '/admin-discounts', {
@@ -4511,11 +5003,14 @@
         });
         var data = await r.json();
         if (data.success) {
-          showAdminToast('Đã tạo mã: ' + code.toUpperCase() + ' (' + percent + '%)', 'success');
+          showAdminToast('Đã tạo: ' + code + ' (' + percent + '%)', 'success');
           document.getElementById('newDiscountCode').value = '';
           document.getElementById('newDiscountDesc').value = '';
           document.getElementById('newDiscountOwner').value = '';
           document.getElementById('newDiscountContact').value = '';
+          // Collapse form after success
+          document.getElementById('ctvCreateBody').style.display = 'none';
+          document.getElementById('ctvChevron').classList.remove('open');
           loadDiscounts();
         } else {
           showAdminToast(data.error || 'Lỗi tạo mã', 'error');
