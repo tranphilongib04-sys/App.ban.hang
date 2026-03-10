@@ -76,7 +76,7 @@ const FRONTEND_PRICES = {
     'capcut_pro_1y': 280000,
 
     // Grok
-    'grok_7d': 15000,
+    'grok_7d': 35000,
     'super_grok_cap_san': 270000,
     'super_grok_chinh_chu': 350000,
 
