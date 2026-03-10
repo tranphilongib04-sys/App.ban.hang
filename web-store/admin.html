@@ -2761,6 +2761,14 @@
       font-style: italic;
     }
 
+    .sku-tag.more {
+      background: #f0fdf4;
+      border-color: #86efac;
+      color: #166534;
+      font-family: inherit;
+      cursor: help;
+    }
+
     .coupon-link-btn {
       padding: 4px 10px;
       border: 1px solid var(--accent);
@@ -5164,13 +5172,18 @@
 
             var skuHtml = '';
             if (c.sku_codes) {
-              var codes = c.sku_codes.split(',');
-              skuHtml = '<div class="sku-tags-wrap">' + codes.map(function (sc) {
-                var skuName = getSkuName(sc.trim());
-                return '<span class="sku-tag" title="' + escAttr(sc.trim()) + '">' + escHtml(skuName) + '</span>';
-              }).join('') + '</div>';
+              var codes = c.sku_codes.split(',').map(function (s) { return s.trim(); });
+              var allNames = codes.map(function (sc) { return getSkuName(sc); }).join(', ');
+              if (codes.length <= 2) {
+                skuHtml = codes.map(function (sc) {
+                  return '<span class="sku-tag">' + escHtml(getSkuName(sc)) + '</span>';
+                }).join('');
+              } else {
+                skuHtml = '<span class="sku-tag">' + escHtml(getSkuName(codes[0])) + '</span>' +
+                  '<span class="sku-tag more" title="' + escAttr(allNames) + '">+' + (codes.length - 1) + ' SP</span>';
+              }
             } else {
-              skuHtml = '<span class="sku-tag all">Tất cả sản phẩm</span>';
+              skuHtml = '<span class="sku-tag all">Tất cả SP</span>';
             }
 
             return '<tr>' +
