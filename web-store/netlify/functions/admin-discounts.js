@@ -119,6 +119,27 @@ exports.handler = async function (event) {
                 };
             }
 
+            if (action === 'update') {
+                const { id, discountPercent, ownerName, ownerContact, description } = body;
+                if (!id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing id' }) };
+
+                const updates = [];
+                const args = [];
+                if (discountPercent !== undefined) { updates.push('discount_percent = ?'); args.push(discountPercent); }
+                if (ownerName !== undefined) { updates.push('owner_name = ?'); args.push(ownerName); }
+                if (ownerContact !== undefined) { updates.push('owner_contact = ?'); args.push(ownerContact); }
+                if (description !== undefined) { updates.push('description = ?'); args.push(description); }
+                updates.push('updated_at = CURRENT_TIMESTAMP');
+                args.push(id);
+
+                await db.execute({
+                    sql: `UPDATE discount_codes SET ${updates.join(', ')} WHERE id = ?`,
+                    args
+                });
+
+                return { statusCode: 200, headers, body: JSON.stringify({ success: true, message: 'Updated' }) };
+            }
+
             if (action === 'toggle') {
                 const { id } = body;
                 if (!id) return { statusCode: 400, headers, body: JSON.stringify({ error: 'Missing id' }) };

@@ -4913,6 +4913,33 @@
     }
 
     // ── DISCOUNTS ───────────────────────────────────────────────
+
+    // ═══ Edit CTV Code ═══
+    function editCtvCode(id, code, pct, owner, contact, desc) {
+      var newPct = prompt('Phần trăm giảm cho ' + code + '\n(Nhập 15 hoặc 20):', pct);
+      if (newPct === null) return;
+      newPct = parseInt(newPct);
+      if (newPct !== 15 && newPct !== 20) return showAdminToast('Chỉ hỗ trợ 15% hoặc 20%', 'error');
+
+      var newOwner = prompt('Tên CTV:', owner);
+      if (newOwner === null) newOwner = owner;
+      var newContact = prompt('Liên hệ:', contact);
+      if (newContact === null) newContact = contact;
+
+      fetch(BASE + '/admin-discounts', {
+        method: 'POST', headers: authHeaders(),
+        body: JSON.stringify({ action: 'update', id: id, discountPercent: newPct, ownerName: newOwner, ownerContact: newContact })
+      }).then(function (r) { return r.json(); })
+        .then(function (data) {
+          if (data.success) {
+            showAdminToast('Đã cập nhật ' + code + ' → ' + newPct + '%', 'success');
+            loadDiscounts();
+          } else {
+            showAdminToast(data.error || 'Lỗi cập nhật', 'error');
+          }
+        }).catch(function (e) { showAdminToast('Lỗi: ' + e.message, 'error'); });
+    }
+
     // ═══ CTV UI Helper Functions ═══
     function toggleCtvForm() {
       var body = document.getElementById('ctvCreateBody');
@@ -4979,6 +5006,7 @@
               '<div class="ctv-card-stat"><span class="ctv-card-stat-value">' + escHtml(c.description || '--') + '</span><span class="ctv-card-stat-label">Mô tả</span></div>' +
               '</div>' +
               '<div class="ctv-card-actions">' +
+              "<button onclick=\"editCtvCode('" + c.id + "','" + escAttr(c.code) + "'," + (c.discount_percent || 15) + ",'" + escAttr(c.owner_name || '') + "','" + escAttr(c.owner_contact || '') + "')\">✏️ Sửa</button>" +
               "<button onclick=\"openCtvUsageModal('" + escAttr(c.code) + "')\">📋 Lịch sử</button>" +
               "<button class='btn-warn' onclick=\"toggleDiscount('" + c.id + "')\">" + (c.is_active ? '⏸ Tắt' : '▶ Bật') + "</button>" +
               "<button class='btn-danger' onclick=\"deleteDiscount('" + c.id + "','" + escHtml(c.code) + "')\">🗑 Xoá</button>" +
