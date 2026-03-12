@@ -1155,6 +1155,61 @@ const products = {
             `
         }
     },
+    scribd: {
+        id: 'scribd',
+        name: 'Scribd',
+        category: 'Học tập',
+        deliveryType: 'preorder',
+        description: 'Thư viện sách, audiobook, tạp chí và tài liệu không giới hạn',
+        image: 'images/scribd-logo.png',
+        featured: false,
+        rating: 4.6,
+        reviewCount: 18,
+        soldCount: 67,
+        variants: [
+            { name: 'Scribd Premium 1 Tháng (Acc Cấp)', price: 60000, duration: '1 tháng', note: 'Cấp acc mới, full Premium', productCode: 'scribd_1m', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Scribd</h3>
+                <p>Scribd là thư viện số lớn nhất thế giới với hàng triệu đầu sách, audiobook, tạp chí và tài liệu:</p>
+                <ul>
+                    <li>Truy cập không giới hạn sách điện tử (ebook)</li>
+                    <li>Hàng ngàn audiobook chất lượng cao</li>
+                    <li>Tạp chí nổi tiếng: Forbes, Time, Newsweek...</li>
+                    <li>Tài liệu học thuật, nghiên cứu đa lĩnh vực</li>
+                    <li>Đọc offline, đồng bộ nhiều thiết bị</li>
+                    <li>Giao diện thân thiện, trải nghiệm đọc tuyệt vời</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời gian sử dụng</li>
+                    <li>Hỗ trợ đổi tài khoản nếu gặp vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, nhắn Zalo: 0988428496 để nhận tài khoản</li>
+                    <li>Đăng nhập tại scribd.com hoặc app Scribd</li>
+                    <li>Tải app Scribd trên iOS/Android để đọc offline</li>
+                    <li>Bắt đầu khám phá thư viện sách khổng lồ</li>
+                </ul>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Scribd có những nội dung gì?</strong></p>
+                <p>A: Sách điện tử, audiobook, tạp chí, báo cáo nghiên cứu, sheet nhạc, và nhiều loại tài liệu khác.</p>
+                <p><strong>Q: Có thể đọc offline không?</strong></p>
+                <p>A: Có, bạn tải app Scribd và download sách để đọc offline.</p>
+                <p><strong>Q: Hỗ trợ bao nhiêu thiết bị?</strong></p>
+                <p>A: Scribd hỗ trợ đồng bộ trên nhiều thiết bị (điện thoại, tablet, máy tính).</p>
+            `
+        }
+    },
 };
 
 // V2: Cart Persistence
