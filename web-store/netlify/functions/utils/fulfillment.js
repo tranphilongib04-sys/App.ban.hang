@@ -77,6 +77,41 @@ async function sendTelegramNotification(message) {
     }
 }
 
+// ---------------------------------------------------------------------------
+// Bot 2: Customer-facing Telegram notification (fire-and-forget)
+// Sends payment confirmation + delivery info to a customer notification channel
+// ---------------------------------------------------------------------------
+async function sendBot2Notification(message) {
+    const botToken = process.env.TELEGRAM_BOT2_TOKEN;
+    const chatId = process.env.TELEGRAM_BOT2_CHAT_ID || process.env.TELEGRAM_CHAT_ID;
+    if (!botToken || !chatId) {
+        console.warn('[fulfillment] Bot 2 not configured (TELEGRAM_BOT2_TOKEN missing)');
+        return;
+    }
+
+    try {
+        // Telegram limits message to 4096 chars — split if needed
+        const chunks = [];
+        let remaining = message;
+        while (remaining.length > 0) {
+            chunks.push(remaining.substring(0, 4000));
+            remaining = remaining.substring(4000);
+        }
+
+        for (const chunk of chunks) {
+            const res = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: chatId, text: chunk, parse_mode: 'HTML', disable_web_page_preview: true })
+            });
+            if (!res.ok) console.error('[fulfillment] Bot 2 API error:', await res.text());
+        }
+        console.log('[fulfillment] Bot 2 notification sent successfully');
+    } catch (err) {
+        console.error('[fulfillment] Bot 2 send error:', err.message);
+    }
+}
+
 function formatVND(amount) {
     return Number(amount || 0).toLocaleString('vi-VN') + 'đ';
 }
@@ -311,6 +346,45 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         await sendTelegramNotification(telegramMsg);
     } catch (tgErr) {
         console.warn('[finalizeOrder] Telegram prep error (non-fatal):', tgErr.message);
+    }
+
+    // ── 11. Bot 2: Customer notification (fire-and-forget) ────────────
+    try {
+        const productLinesBot2 = await db.execute({
+            sql: `SELECT product_name, quantity FROM order_lines WHERE order_id = ?`,
+            args: [fresh.id]
+        });
+        const productNamesBot2 = productLinesBot2.rows
+            .map(r => `${r.product_name} x${r.quantity}`)
+            .join(', ');
+
+        let bot2Msg = `<b>📦 TBQ HOMIE — Đã xác nhận Thanh Toán</b>\n━━━━━━━━━━━━━━━━━━━━`;
+        bot2Msg += `\n\n👤 Khách hàng: ${fresh.customer_name || 'N/A'}`;
+        if (fresh.customer_phone) bot2Msg += `\n📱 SĐT: ${fresh.customer_phone}`;
+        bot2Msg += `\n\n🛒 Sản phẩm: ${productNamesBot2 || 'N/A'}`;
+
+        // Include credentials for auto-delivery orders
+        if (credentials.length > 0) {
+            bot2Msg += `\n`;
+            for (let i = 0; i < credentials.length; i++) {
+                const c = credentials[i];
+                bot2Msg += `\n📧 Tài khoản${credentials.length > 1 ? ' ' + (i + 1) : ''}:\n${c.username}`;
+                bot2Msg += `\n🔑 Mật khẩu: ${c.password}`;
+                if (c.extraInfo) bot2Msg += `\n📝 Ghi chú: ${c.extraInfo}`;
+            }
+        } else {
+            bot2Msg += `\n\n⏳ Đơn hàng giao sau (5-10 phút) — Gửi bill qua Zalo để nhận tài khoản.`;
+        }
+
+        bot2Msg += `\n\n━━━━━━━━━━━━━━━━━━━━`;
+        bot2Msg += `\n⚠️ Không chia sẻ thông tin này cho người khác`;
+        bot2Msg += `\n💬 Hỗ trợ: zalo.me/0988428496`;
+        bot2Msg += `\n🌐 Web: tiembanquyen.com`;
+        bot2Msg += `\n👥 Cộng đồng Zalo: https://zalo.me/g/ctspqs163`;
+
+        await sendBot2Notification(bot2Msg);
+    } catch (bot2Err) {
+        console.warn('[finalizeOrder] Bot 2 notification error (non-fatal):', bot2Err.message);
     }
 
     return { alreadyFulfilled: false, deliveryToken, invoiceNumber: finalInvoiceNumber, credentials };

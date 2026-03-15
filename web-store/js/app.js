@@ -1210,6 +1210,62 @@ const products = {
             `
         }
     },
+    windows_key: {
+        id: 'windows_key',
+        name: 'Key Windows Vĩnh Viễn',
+        category: 'Công cụ',
+        deliveryType: 'preorder',
+        description: 'Key bản quyền Windows vĩnh viễn, kích hoạt trực tiếp trên máy',
+        image: 'images/windows-logo.png',
+        featured: false,
+        rating: 4.7,
+        reviewCount: 15,
+        soldCount: 68,
+        variants: [
+            { name: 'Key Windows Vĩnh Viễn', price: 200000, duration: 'Vĩnh viễn', note: 'Gửi key nhập trực tiếp vào máy', productCode: 'windows_key_vinh_vien', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Key Windows Vĩnh Viễn</h3>
+                <p>Key bản quyền Windows chính hãng, kích hoạt vĩnh viễn trên máy tính:</p>
+                <ul>
+                    <li>Key bản quyền Windows chính hãng</li>
+                    <li>Kích hoạt vĩnh viễn, không cần gia hạn</li>
+                    <li>Nhập key trực tiếp vào máy, đơn giản và nhanh chóng</li>
+                    <li>Nhận đầy đủ bản cập nhật từ Microsoft</li>
+                    <li>Hỗ trợ Windows 10/11</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li><strong>Lưu ý quan trọng:</strong> Gửi key nhập trực tiếp vào máy</li>
+                    <li><strong>Không bảo hành</strong> với trường hợp đổi máy hoặc cài lại Windows</li>
+                    <li>Key chỉ dùng được trên 1 máy duy nhất</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <ul>
+                    <li>Sau khi thanh toán, nhắn Zalo: 0988428496 để nhận key</li>
+                    <li>Mở Settings → Update & Security → Activation</li>
+                    <li>Chọn "Change product key" và nhập key được cung cấp</li>
+                    <li>Khởi động lại máy để hoàn tất kích hoạt</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Key chỉ sử dụng được trên 1 máy. Không bảo hành khi đổi máy hoặc cài lại Windows.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Key dùng được vĩnh viễn thật không?</strong></p>
+                <p>A: Có, key kích hoạt vĩnh viễn trên máy tính, không cần gia hạn.</p>
+                <p><strong>Q: Nếu cài lại Windows có dùng lại key được không?</strong></p>
+                <p>A: Không bảo hành với trường hợp đổi máy hoặc cài lại Windows.</p>
+                <p><strong>Q: Hỗ trợ Windows mấy?</strong></p>
+                <p>A: Hỗ trợ Windows 10 và Windows 11.</p>
+            `
+        }
+    },
 };
 
 // V2: Cart Persistence
@@ -3058,7 +3114,7 @@ function copyText(text) {
 
 function copyAllCreds() {
     if (!window._credentials) return;
-    const header = '🔐 TBQ HOMIE — Thông tin đăng nhập\n━━━━━━━━━━━━━━━━━━━━';
+    const header = '📦 TBQ HOMIE — Đã xác nhận Thanh Toán\n━━━━━━━━━━━━━━━━━━━━';
     const customerInfo = (window._customerName || window._customerPhone)
         ? `\n👤 Khách hàng: ${window._customerName || ''}${window._customerPhone ? '\n📱 SĐT: ' + window._customerPhone : ''}\n`
         : '';
@@ -3078,7 +3134,7 @@ function copyAllCreds() {
         if (c.isLink) return `🔗 Code/Link ${i + 1}:\n   Link kích hoạt: ${c.username}${c.extraInfo ? '\n   📝 Lưu ý: ' + c.extraInfo : ''}`;
         return `📧 Tài khoản${window._credentials.length > 1 ? ' ' + (i + 1) : ''}: ${c.username}\n🔑 Mật khẩu: ${c.password}${c.extraInfo ? '\n📝 Ghi chú: ' + c.extraInfo : ''}`;
     }).join('\n\n');
-    const footer = '━━━━━━━━━━━━━━━━━━━━\n⚠️ Không chia sẻ thông tin này cho người khác\n💬 Hỗ trợ: zalo.me/0988428496';
+    const footer = '━━━━━━━━━━━━━━━━━━━━\n⚠️ Không chia sẻ thông tin này cho người khác\n💬 Hỗ trợ: zalo.me/0988428496\n🌐 Web: tiembanquyen.com\n👥 Cộng đồng Zalo: https://zalo.me/g/ctspqs163';
     const text = `${header}${customerInfo}${productLine}\n${body}\n\n${footer}`;
     navigator.clipboard.writeText(text).then(() => {
         showToast('Đã sao chép toàn bộ thông tin!', 'success');
