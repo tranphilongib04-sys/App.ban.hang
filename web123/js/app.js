@@ -577,9 +577,9 @@ const products = {
         reviewCount: 12,
         soldCount: 38,
         variants: [
-            { name: 'Grok 7 Ngày', price: 35000, duration: '7 ngày', note: 'Cấp TK/MK', productCode: 'grok_7d' },
-            { name: 'Super Grok - Cấp Sẵn', price: 270000, duration: '1 tháng', note: 'Cấp TK/MK sẵn', productCode: 'super_grok_cap_san', deliveryType: 'preorder' },
-            { name: 'Super Grok - Nâng Chính Chủ', price: 350000, duration: '1 tháng', note: 'Khách gửi TK qua Zalo', productCode: 'super_grok_chinh_chu', deliveryType: 'preorder' }
+            { name: 'Grok Acc Cấp 1 Tuần', price: 35000, duration: '7 ngày', note: 'Acc cấp sẵn, đăng nhập là dùng', productCode: 'grok_7d' },
+            { name: 'Grok Acc Cấp 1 Tháng', price: 190000, duration: '1 tháng', note: 'Acc riêng, ổn định', productCode: 'super_grok_cap_san', deliveryType: 'preorder' },
+            { name: 'Nâng Grok Chính Chủ', price: 270000, duration: '1 tháng', note: 'Nâng trực tiếp trên TK của khách', productCode: 'super_grok_chinh_chu', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
