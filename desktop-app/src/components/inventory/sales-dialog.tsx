@@ -145,7 +145,10 @@ export function SalesDialog({
 🔐 Tài khoản:
 ${result.secretPayload}
 --------------------------------
-Cảm ơn bạn đã ủng hộ!`;
+Cảm ơn bạn đã ủng hộ!
+
+🌐 Web: tiembanquyen.com
+👥 Cộng đồng Zalo: https://zalo.me/g/ctspqs163`;
 
                 setSoldSecret(message);
                 router.refresh();

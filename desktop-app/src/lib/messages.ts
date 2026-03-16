@@ -11,7 +11,10 @@ export const messages = {
     // Delivery message with credentials
     delivery: (name: string, service: string, credentials: string): string => {
         return `Mình gửi bạn account ${service}: ${credentials}
-Bạn thử login nhée`;
+Bạn thử login nhée
+
+🌐 Web: tiembanquyen.com
+👥 Cộng đồng Zalo: https://zalo.me/g/ctspqs163`;
     },
 
     // Warranty replacement message

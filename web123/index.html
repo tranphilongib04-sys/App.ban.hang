@@ -1,0 +1,947 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TBQ Homie - Dịch vụ Premium</title>
+    <!-- Google Fonts - Be Vietnam Pro for proper Vietnamese support -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Favicon -->
+    <link rel="icon" href="images/logo_v2.png" type="image/png">
+    <!-- Invoice Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+</head>
+
+<body>
+    <!-- Background Noise Texture Overlay -->
+    <div id="bgNoiseOverlay"></div>
+
+    <!-- WELCOME POPUP / DISCLAIMER -->
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <div class="welcome-popup">
+            <div class="welcome-popup-glow"></div>
+            <div class="welcome-popup-content">
+                <div class="welcome-popup-logo">
+                    <img src="images/logo_v2.png" alt="TBQ Homie" class="welcome-logo-img">
+                </div>
+                <h2 class="welcome-popup-title">Chào mừng đến với<br><span class="welcome-brand">Tiệm Bản Quyền</span>
+                </h2>
+                <p class="welcome-popup-subtitle">Dịch vụ số Premium — Uy tín · Nhanh chóng · Tận tâm</p>
+
+                <div class="welcome-popup-notice">
+                    <div class="welcome-notice-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                        </svg>
+                        <span>Lời nhắn nhỏ từ TBQ</span>
+                    </div>
+                    <div class="welcome-notice-body">
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">1</span>
+                            <span>Tất cả sản phẩm tại <strong>TBQ Homie</strong> đều là <strong>hàng chính hãng,
+                                    mua sỉ với số lượng lớn</strong> để mang đến cho bạn mức giá tốt nhất có thể.
+                                Bạn cứ yên tâm mua sắm nhé! 😊</span>
+                        </div>
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">2</span>
+                            <span>Sau khi nhận hàng, <strong>bạn hoàn toàn tự do sử dụng</strong> theo nhu cầu cá nhân.
+                                Chỉ mong bạn <strong>dùng đúng mục đích</strong> để trải nghiệm thật trọn vẹn nha!
+                                💛</span>
+                        </div>
+                        <div class="welcome-term">
+                            <span class="welcome-term-num">3</span>
+                            <span>Nếu gặp bất kỳ vấn đề gì, <strong>cứ nhắn cho mình</strong> — đội ngũ TBQ Homie
+                                luôn sẵn sàng hỗ trợ bạn hết mình! 🤝</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="welcome-popup-actions">
+                    <button class="welcome-popup-btn" id="welcomeCloseBtn" onclick="closeWelcomePopup()">
+                        <span>Đã hiểu, vào cửa hàng</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="5" y1="12" x2="19" y2="12" />
+                            <polyline points="12 5 19 12 12 19" />
+                        </svg>
+                    </button>
+                    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="welcome-zalo-btn">
+                        <svg viewBox="0 0 48 48" width="18" height="18" xmlns="http://www.w3.org/2000/svg">
+                            <rect width="48" height="48" rx="12" fill="#0068FF" />
+                            <path
+                                d="M35.8 30.4c.6-1.5.9-3.2.9-5 0-7.5-6.5-13.6-14.5-13.6S7.7 17.9 7.7 25.4c0 7.5 6.5 13.6 14.5 13.6 1.7 0 3.4-.3 4.9-.7l5.1 1.4-1.4-4.3c1.9-1.4 3.5-3.2 4.4-5.2l.6.2Z"
+                                fill="#fff" opacity=".95" />
+                            <text x="17" y="30" font-family="Arial,sans-serif" font-weight="800" font-size="16"
+                                fill="#0068FF">Z</text>
+                        </svg>
+                        <span>Liên hệ Zalo tư vấn</span>
+                    </a>
+                </div>
+
+                <p class="welcome-popup-note">🎵 Nhạc nền sẽ được phát khi bạn vào cửa hàng</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header>
+        <nav>
+            <a href="#home" class="logo">
+                <img src="images/logo_v2.png" alt="Tiệm Bản Quyền" class="logo-img">
+                <span class="logo-text">TBQ Homie</span>
+            </a>
+            <ul class="nav-links">
+                <li><a href="#home">Trang chủ</a></li>
+                <li><a href="#products">Sản phẩm</a></li>
+                <li><a href="#lookup">Tra cứu đơn</a></li>
+                <li><a href="#contact">Liên hệ</a></li>
+            </ul>
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" class="search-input" placeholder="Tìm kiếm sản phẩm..." id="searchInput"
+                    oninput="handleSearch(this.value)">
+                <div class="search-results" id="searchResults"></div>
+            </div>
+            <button class="cart-icon" onclick="toggleCart()" aria-label="Giỏ hàng" aria-haspopup="dialog">
+                🛒
+                <span class="cart-count" style="display: none;" aria-live="polite">0</span>
+            </button>
+        </nav>
+    </header>
+
+    <!-- CART SIDEBAR -->
+    <div class="cart-overlay" onclick="toggleCart()" aria-hidden="true"></div>
+    <div class="cart-sidebar" role="dialog" aria-label="Giỏ hàng" aria-modal="true">
+        <div class="cart-header">
+            <h2>Giỏ hàng</h2>
+            <button class="close-cart" onclick="toggleCart()" aria-label="Đóng giỏ hàng">×</button>
+        </div>
+        <div class="cart-items" id="cartItems">
+            <div class="cart-empty">
+                <p>Giỏ hàng trống</p>
+            </div>
+        </div>
+        <div class="cart-footer" id="cartFooter" style="display: none;">
+            <div class="cart-total">
+                <span>Tổng cộng:</span>
+                <span id="cartTotal">0₫</span>
+            </div>
+            <a href="#checkout" class="checkout-btn"
+                style="display: block; text-align: center; text-decoration: none; line-height: normal;">Thanh toán</a>
+        </div>
+    </div>
+
+    <!-- HOME PAGE -->
+    <div id="homePage" class="page active">
+        <!-- HERO BANNER SLIDER -->
+        <section class="hero-banner">
+            <div class="hero-slider">
+                <!-- Slide 1: Welcome -->
+                <div class="hero-slide active" data-theme="warm">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge badge-gold">✨ CHÀO MỪNG</span>
+                        <h2 class="hero-slide-title">Dịch vụ số <br><span class="text-gold">Premium chính hãng</span>
+                        </h2>
+                        <p class="hero-slide-desc"><strong>ALO LÀ CÓ LIỀN</strong>, chỉ có thể là TIỆM BẢN QUYỀN</p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Khám phá ngay</a>
+                            <a href="https://zalo.me/0988428496" target="_blank" class="hero-slide-btn-outline">Chat
+                                Zalo</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <img src="images/logo_v2.png" alt="TBQ Homie">
+                    </div>
+                </div>
+                <!-- Slide 2: Best Price -->
+                <div class="hero-slide" data-theme="navy">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge badge-deal">🔥 GIÁ SỐC</span>
+                        <h2 class="hero-slide-title">Giá tốt nhất<br><span class="text-gold">cho mọi dịch vụ</span></h2>
+                        <p class="hero-slide-desc">ChatGPT · Giao sau · Adobe · YouTube Premium · Canva và
+                            nhiều hơn nữa</p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Xem sản phẩm</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <div class="hero-float-icons">
+                            <span class="float-icon" style="--delay:0s;--x:0;--y:0">🤖</span>
+                            <span class="float-icon" style="--delay:0.5s;--x:60px;--y:-20px">🎬</span>
+                            <span class="float-icon" style="--delay:1s;--x:10px;--y:70px">🎵</span>
+                            <span class="float-icon" style="--delay:1.5s;--x:70px;--y:60px">🎨</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 3: Instant Delivery -->
+                <div class="hero-slide" data-theme="gold">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge badge-instant">⚡ GIAO LIỀN</span>
+                        <h2 class="hero-slide-title">Nhận ngay<br><span class="text-gold">sau thanh toán</span></h2>
+                        <p class="hero-slide-desc">Hệ thống tự động giao hàng tức thì · Không chờ đợi · Trải nghiệm ngay
+                            lập tức</p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Mua ngay</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <div class="hero-float-icons">
+                            <span class="float-icon big" style="--delay:0s;--x:20px;--y:10px">⚡</span>
+                            <span class="float-icon" style="--delay:0.8s;--x:70px;--y:50px">📦</span>
+                            <span class="float-icon" style="--delay:1.2s;--x:0;--y:60px">✅</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 4: Support -->
+                <div class="hero-slide" data-theme="warm">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge badge-gold">💬 HỖ TRỢ</span>
+                        <h2 class="hero-slide-title">Hỗ trợ tận tâm<br><span class="text-gold">mọi lúc, mọi nơi</span>
+                        </h2>
+                        <p class="hero-slide-desc">Chat Zalo trực tiếp · Phản hồi nhanh chóng · Bảo hành & đổi trả dễ
+                            dàng</p>
+                        <div class="hero-slide-actions">
+                            <a href="https://zalo.me/0988428496" target="_blank" class="hero-slide-btn">Chat ngay</a>
+                            <a href="#lookup" class="hero-slide-btn-outline">Tra cứu đơn</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <div class="hero-float-icons">
+                            <span class="float-icon big" style="--delay:0s;--x:20px;--y:10px">💬</span>
+                            <span class="float-icon" style="--delay:0.6s;--x:70px;--y:0">🛡️</span>
+                            <span class="float-icon" style="--delay:1.2s;--x:60px;--y:60px">❤️</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Slide 5: New Products -->
+                <div class="hero-slide" data-theme="navy">
+                    <div class="hero-slide-content">
+                        <span class="hero-slide-badge badge-new">🆕 MỚI</span>
+                        <h2 class="hero-slide-title">Cập nhật liên tục<br><span class="text-gold">sản phẩm mới</span>
+                        </h2>
+                        <p class="hero-slide-desc">Luôn bổ sung các dịch vụ mới nhất · Theo dõi để không bỏ lỡ ưu đãi
+                        </p>
+                        <div class="hero-slide-actions">
+                            <a href="#products" class="hero-slide-btn">Xem ngay</a>
+                        </div>
+                    </div>
+                    <div class="hero-slide-visual">
+                        <div class="hero-float-icons">
+                            <span class="float-icon" style="--delay:0s;--x:0;--y:0">🚀</span>
+                            <span class="float-icon big" style="--delay:0.7s;--x:50px;--y:20px">🎁</span>
+                            <span class="float-icon" style="--delay:1.4s;--x:10px;--y:60px">⭐</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="hero-slider-dots">
+                <button class="hero-dot active" onclick="goToSlide(0)"></button>
+                <button class="hero-dot" onclick="goToSlide(1)"></button>
+                <button class="hero-dot" onclick="goToSlide(2)"></button>
+                <button class="hero-dot" onclick="goToSlide(3)"></button>
+                <button class="hero-dot" onclick="goToSlide(4)"></button>
+            </div>
+            <button class="hero-slider-arrow hero-arrow-prev" onclick="prevSlide()" aria-label="Slide trước">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    aria-hidden="true">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+            </button>
+            <button class="hero-slider-arrow hero-arrow-next" onclick="nextSlide()" aria-label="Slide tiếp theo">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    aria-hidden="true">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </button>
+        </section>
+
+        <!-- CATEGORY BANNERS -->
+        <section class="category-banners">
+            <div class="category-banner-grid" id="categoryBanners"></div>
+        </section>
+
+        <!-- FEATURED PRODUCTS -->
+        <section>
+            <h2 class="section-title">Sản phẩm nổi bật</h2>
+            <div class="product-grid" id="featuredProducts"></div>
+        </section>
+
+        <!-- WHY CHOOSE US -->
+        <section>
+            <h2 class="section-title">Tại sao chọn TBQ Homie?</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🛡️</div>
+                    <h3 class="feature-title">Bảo hành chu đáo</h3>
+                    <p class="feature-desc">Hỗ trợ bảo hành tận tình, giải quyết mọi vấn đề nhanh chóng</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💰</div>
+                    <h3 class="feature-title">Giá cả cạnh tranh</h3>
+                    <p class="feature-desc">Cam kết giá tốt nhất thị trường, nhiều ưu đãi hấp dẫn</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3 class="feature-title">Giao hàng tức thì</h3>
+                    <p class="feature-desc">Nhận tài khoản ngay sau khi thanh toán thành công</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">💬</div>
+                    <h3 class="feature-title">Hỗ trợ 24/7</h3>
+                    <p class="feature-desc">Đội ngũ tư vấn sẵn sàng hỗ trợ bạn mọi lúc mọi nơi</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- TESTIMONIALS: Unified Modern Design -->
+        <section class="testimonials-section">
+            <h2 class="section-title">Khách hàng nói gì về chúng tôi</h2>
+            <p class="section-desc">Hàng trăm khách hàng đã tin tưởng sử dụng dịch vụ của TBQ Homie</p>
+
+            <!-- Review Cards Carousel -->
+            <div class="testi-carousel">
+                <div class="testi-track">
+                    <!-- Card 1 -->
+                    <div class="testi-card">
+                        <div class="testi-card-header">
+                            <div class="testi-avatar" style="background: #3b82f6;">M</div>
+                            <div class="testi-info">
+                                <span class="testi-name">Minh Anh</span>
+                                <span class="testi-service">Giao sau</span>
+                            </div>
+                            <div class="testi-rating">
+                                <span class="testi-stars">★★★★★</span>
+                            </div>
+                        </div>
+                        <p class="testi-text">"Dịch vụ rất tốt, giao hàng nhanh, bảo hành chu đáo. Dùng Giao sau ở đây
+                            được 6 tháng rồi, rất hài lòng!"</p>
+                        <div class="testi-footer">
+                            <span class="testi-date">Khách hàng thân thiết</span>
+                            <span class="testi-badge">Đã xác thực</span>
+                        </div>
+                    </div>
+                    <!-- Card 2 -->
+                    <div class="testi-card">
+                        <div class="testi-card-header">
+                            <div class="testi-avatar" style="background: #8b5cf6;">T</div>
+                            <div class="testi-info">
+                                <span class="testi-name">Thanh Huyền</span>
+                                <span class="testi-service">ChatGPT Plus</span>
+                            </div>
+                            <div class="testi-rating">
+                                <span class="testi-stars">★★★★★</span>
+                            </div>
+                        </div>
+                        <p class="testi-text">"Giá cả hợp lý, ChatGPT Plus chạy mượt mà. Admin hỗ trợ rất nhiệt tình,
+                            recommend cho mọi người!"</p>
+                        <div class="testi-footer">
+                            <span class="testi-date">Khách hàng thân thiết</span>
+                            <span class="testi-badge">Đã xác thực</span>
+                        </div>
+                    </div>
+                    <!-- Card 3 -->
+                    <div class="testi-card">
+                        <div class="testi-card-header">
+                            <div class="testi-avatar" style="background: #10b981;">H</div>
+                            <div class="testi-info">
+                                <span class="testi-name">Hoàng Nam</span>
+                                <span class="testi-service">Giao sau & Adobe</span>
+                            </div>
+                            <div class="testi-rating">
+                                <span class="testi-stars">★★★★★</span>
+                            </div>
+                        </div>
+                        <p class="testi-text">"Mình đã mua nhiều dịch vụ ở đây, từ Giao sau đến Adobe, đều rất ổn định.
+                            Sẽ tiếp tục ủng hộ!"</p>
+                        <div class="testi-footer">
+                            <span class="testi-date">Khách hàng thân thiết</span>
+                            <span class="testi-badge">Đã xác thực</span>
+                        </div>
+                    </div>
+                    <!-- Card 4 -->
+                    <div class="testi-card">
+                        <div class="testi-card-header">
+                            <div class="testi-avatar" style="background: #f59e0b;">L</div>
+                            <div class="testi-info">
+                                <span class="testi-name">Linh Chi</span>
+                                <span class="testi-service">Gói chính chủ</span>
+                            </div>
+                            <div class="testi-rating">
+                                <span class="testi-stars">★★★★★</span>
+                            </div>
+                        </div>
+                        <p class="testi-text">"Gói chính chủ, ít bị out. Giao diện nhìn xịn hơn chỗ khác, hỗ trợ nhanh.
+                            Rất đáng dùng!"</p>
+                        <div class="testi-footer">
+                            <span class="testi-date">Khách hàng thân thiết</span>
+                            <span class="testi-badge">Đã xác thực</span>
+                        </div>
+                    </div>
+                    <!-- Card 5 -->
+                    <div class="testi-card">
+                        <div class="testi-card-header">
+                            <div class="testi-avatar" style="background: #ef4444;">D</div>
+                            <div class="testi-info">
+                                <span class="testi-name">Đức Anh</span>
+                                <span class="testi-service">Nhiều dịch vụ</span>
+                            </div>
+                            <div class="testi-rating">
+                                <span class="testi-stars">★★★★★</span>
+                            </div>
+                        </div>
+                        <p class="testi-text">"Nhanh thật, tạo gói xong gửi liền. Cảm ơn shop, lần sau cần sẽ ủng hộ
+                            tiếp nha!"</p>
+                        <div class="testi-footer">
+                            <span class="testi-date">Khách hàng thân thiết</span>
+                            <span class="testi-badge">Đã xác thực</span>
+                        </div>
+                    </div>
+                </div>
+                <!-- Carousel Dots -->
+                <div class="testi-dots"></div>
+            </div>
+
+            <!-- Real Screenshots Gallery -->
+            <div class="testi-proof">
+                <h3 class="testi-proof-title">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Phản hồi thực tế từ Zalo
+                </h3>
+                <div class="testi-proof-scroll-wrap">
+                    <div class="testi-proof-scroll">
+                        <div class="testi-proof-item" onclick="openLightbox(this)">
+                            <img src="images/feedback-1.jpg" alt="Phản hồi khách hàng 1" loading="lazy">
+                            <div class="testi-proof-overlay">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="testi-proof-item" onclick="openLightbox(this)">
+                            <img src="images/feedback-2.jpg" alt="Phản hồi khách hàng 2" loading="lazy">
+                            <div class="testi-proof-overlay">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="testi-proof-item" onclick="openLightbox(this)">
+                            <img src="images/feedback-3.jpg" alt="Phản hồi khách hàng 3" loading="lazy">
+                            <div class="testi-proof-overlay">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="testi-proof-item" onclick="openLightbox(this)">
+                            <img src="images/feedback-4.jpg" alt="Phản hồi khách hàng 4" loading="lazy">
+                            <div class="testi-proof-overlay">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                        </div>
+                        <div class="testi-proof-item" onclick="openLightbox(this)">
+                            <img src="images/feedback-5.jpg" alt="Phản hồi khách hàng 5" loading="lazy">
+                            <div class="testi-proof-overlay">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                    <line x1="11" y1="8" x2="11" y2="14"></line>
+                                    <line x1="8" y1="11" x2="14" y2="11"></line>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Lightbox -->
+        <div class="testi-lightbox" id="testiLightbox" onclick="closeLightbox(event)" role="dialog"
+            aria-label="Xem ảnh phản hồi" aria-modal="true">
+            <button class="testi-lightbox-close" onclick="closeLightbox(event)" aria-label="Đóng ảnh">&times;</button>
+            <img src="" alt="Phản hồi khách hàng" id="lightboxImg">
+        </div>
+
+        <!-- CTA -->
+        <section>
+            <div class="cta-section">
+                <h2>Sẵn sàng trải nghiệm?</h2>
+                <p>Hàng ngàn khách hàng đã tin tưởng và sử dụng dịch vụ của chúng tôi</p>
+                <a href="#products" class="cta-button">Mua ngay</a>
+            </div>
+        </section>
+    </div>
+
+    <!-- PRODUCTS PAGE -->
+    <div id="productsPage" class="page">
+        <div class="products-container products-container-v2">
+            <div class="products-header-v2">
+                <h2 class="section-title">Tất cả sản phẩm</h2>
+                <div class="filter-chips-wrap">
+                    <ul class="filter-list filter-chips" id="filterList">
+                        <li class="active" onclick="filterProducts(this, 'all')">Tất cả</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="product-grid" id="allProducts"></div>
+        </div>
+    </div>
+
+    <!-- PRODUCT DETAIL PAGE -->
+    <div id="productDetailPage" class="page">
+        <div class="product-detail" id="productDetailContent"></div>
+    </div>
+
+    <!-- CHECKOUT PAGE -->
+    <div id="checkoutPage" class="page">
+        <div class="checkout-container">
+            <h2 class="section-title">Thanh toán</h2>
+            <div class="checkout-grid">
+                <div class="checkout-form">
+                    <div class="form-section">
+                        <h3>Thông tin liên hệ</h3>
+                        <div class="form-group">
+                            <label>Họ và tên *</label>
+                            <input type="text" id="customerName" required onblur="validateInput(this)">
+                            <div class="error-feedback"></div>
+                        </div>
+                        <div class="form-group">
+                            <label>Số điện thoại *</label>
+                            <input type="tel" id="customerPhone" required onblur="validateInput(this)">
+                            <div class="error-feedback"></div>
+                            <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📱 Dùng SĐT
+                                này để tra cứu đơn hàng sau khi mua</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Email (Tùy chọn)</label>
+                            <input type="email" id="customerEmail" placeholder="example@gmail.com">
+                            <div class="form-hint" style="font-size: 12px; color: #6b7280; margin-top: 4px;">📧 Nhận
+                                thông tin đơn hàng và nhắc hạn qua email</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Ghi chú (Tùy chọn)</label>
+                            <textarea id="customerNote" rows="3"
+                                placeholder="VD: Gửi tài khoản/mật khẩu qua Zalo cho gói gia hạn"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3>Phương thức thanh toán</h3>
+                        <div class="variant-options">
+                            <label class="variant-option selected" style="align-items: center;">
+                                <span class="variant-select-circle">
+                                    <input type="radio" name="payment" value="bank" checked>
+                                </span>
+                                <div class="variant-info">
+                                    <div class="variant-name">💳 Chuyển khoản ngân hàng</div>
+                                    <div class="variant-note">Thanh toán qua Sepay</div>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="order-summary">
+                    <h3>Đơn hàng của bạn</h3>
+                    <div id="checkoutSummary"></div>
+
+                    <!-- Discount Code -->
+                    <div class="discount-section" id="discountSection">
+                        <div class="discount-input-group">
+                            <input type="text" id="discountCodeInput" placeholder="Nhập mã CTV / mã giảm giá"
+                                maxlength="30" autocomplete="off">
+                            <button type="button" class="discount-apply-btn" id="discountApplyBtn"
+                                onclick="applyDiscountCode()">Áp dụng</button>
+                        </div>
+                        <div id="discountFeedback" class="discount-feedback"></div>
+                    </div>
+
+                    <div class="summary-discount" id="discountLine" style="display: none;">
+                        <span>Giảm giá (<span id="discountCodeDisplay"></span>)</span>
+                        <span class="discount-amount-display">-<span id="discountAmountDisplay">0₫</span></span>
+                    </div>
+
+                    <div class="summary-total">
+                        <span>Tổng cộng</span>
+                        <span id="checkoutTotal">0₫</span>
+                    </div>
+                    <button class="place-order-btn" onclick="placeOrder()">Xác nhận đặt hàng</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CONFIRMATION PAGE - SaaS Professional Design -->
+    <div id="confirmationPage" class="page confirmation-page-standalone">
+        <div class="confirmation-wrapper">
+            <!-- Pending Payment State -->
+            <div id="pendingPaymentState" class="confirmation-card conf-compact">
+                <div class="conf-pending-header conf-header-compact">
+                    <h1 class="conf-title">✅ Đặt hàng thành công!</h1>
+                    <p class="conf-order-code">Mã đơn hàng: <strong id="orderCode"></strong></p>
+                </div>
+                <span id="transferContent" style="display:none;"></span>
+                <span id="transferAmount" style="display:none;"></span>
+
+                <div style="text-align: center; padding: 24px 16px;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+                    <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px;">Liên hệ Zalo để thanh toán</h2>
+                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                        Gửi <strong>mã đơn hàng</strong> qua Zalo để nhận hướng dẫn thanh toán.<br>
+                        Đơn hàng sẽ được xử lý trong vài phút sau khi thanh toán.
+                    </p>
+                    <a href="https://zalo.me/0988428496" target="_blank" 
+                       style="display: inline-flex; align-items: center; gap: 8px; background: #0068FF; color: #fff; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 15px; transition: transform 0.2s;">
+                        💬 Chat Zalo: 0988 428 496
+                    </a>
+                </div>
+
+                <div class="conf-countdown" id="paymentCountdown" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Đơn hàng hết hạn sau: <strong id="countdownTimer">10:00</strong></span>
+                </div>
+
+                <!-- Customer Info -->
+                <div class="conf-customer-info" id="confCustomerInfo" style="display: none;">
+                    <p class="conf-customer-title">Thông tin khách hàng</p>
+                    <div class="conf-customer-grid">
+                        <div class="conf-customer-item">
+                            <span class="conf-customer-label">👤 Họ tên</span>
+                            <span class="conf-customer-value" id="confCustomerName">—</span>
+                        </div>
+                        <div class="conf-customer-item">
+                            <span class="conf-customer-label">📱 SĐT</span>
+                            <span class="conf-customer-value" id="confCustomerPhone">—</span>
+                        </div>
+                        <div class="conf-customer-item" id="confEmailWrap" style="display:none;">
+                            <span class="conf-customer-label">📧 Email</span>
+                            <span class="conf-customer-value" id="confCustomerEmail">—</span>
+                        </div>
+                        <div class="conf-customer-item" id="confNoteWrap" style="display:none;">
+                            <span class="conf-customer-label">📝 Ghi chú</span>
+                            <span class="conf-customer-value" id="confCustomerNote">—</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="conf-support-footer">
+                    <span>Cần hỗ trợ?</span>
+                    <a href="https://zalo.me/0988428496" target="_blank" class="conf-support-link">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Zalo: 0988428496
+                    </a>
+                </div>
+            </div>
+
+            <!-- Success State (will be populated by JS) -->
+            <div id="successPaymentState" class="confirmation-card" style="display: none;"></div>
+        </div>
+    </div>
+
+    <!-- ORDER LOOKUP PAGE -->
+    <div id="orderLookupPage" class="page">
+        <!-- Hero Section -->
+        <div class="lookup-hero">
+            <div class="lookup-hero-bg"></div>
+            <div class="lookup-hero-content">
+                <div class="lookup-hero-badge">🔍 Tra cứu đơn hàng</div>
+                <h1 class="lookup-hero-title">Tìm đơn hàng <span class="lookup-gradient-text">của bạn</span></h1>
+                <p class="lookup-hero-desc">Nhập số điện thoại đã đặt hàng để xem lịch sử và lấy lại thông tin
+                    đăng nhập
+                </p>
+
+                <!-- Search Box -->
+                <div class="lookup-search-box">
+                    <div class="lookup-input-group">
+                        <div class="lookup-input-wrap">
+                            <svg class="lookup-search-svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path
+                                    d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z" />
+                            </svg>
+                            <input type="tel" id="lookupPhoneInput" class="lookup-input"
+                                placeholder="Số điện thoại (VD: 0988428496)" maxlength="15">
+                        </div>
+                        <div class="lookup-input-wrap">
+                            <svg class="lookup-search-svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2">
+                                <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                                <polyline points="22,6 12,13 2,6" />
+                            </svg>
+                            <input type="email" id="lookupEmailInput" class="lookup-input"
+                                placeholder="Email đã đặt hàng (để xem thông tin đăng nhập)">
+                        </div>
+                        <button id="lookupBtn" class="lookup-submit-btn" onclick="lookupOrders()">
+                            <span class="lookup-btn-text">Tra cứu</span>
+                            <svg class="lookup-btn-arrow" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5">
+                                <line x1="5" y1="12" x2="19" y2="12" />
+                                <polyline points="12 5 19 12 12 19" />
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Trust badges -->
+                <div class="lookup-trust">
+                    <div class="lookup-trust-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                        <span>Bảo mật tuyệt đối</span>
+                    </div>
+                    <div class="lookup-trust-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                        <span>Tra cứu miễn phí</span>
+                    </div>
+                    <div class="lookup-trust-item">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <circle cx="12" cy="12" r="10" />
+                            <polyline points="12 6 12 12 16 14" />
+                        </svg>
+                        <span>Kết quả tức thì</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div class="lookup-results-section">
+            <div id="lookupResult" class="lookup-result"></div>
+
+            <!-- How it works (shown by default, hidden on results) -->
+            <div id="lookupGuide" class="lookup-guide">
+                <h3 class="lookup-guide-title">Hướng dẫn sử dụng</h3>
+                <div class="lookup-steps">
+                    <div class="lookup-step">
+                        <div class="lookup-step-num">1</div>
+                        <div class="lookup-step-info">
+                            <h4>Nhập số điện thoại</h4>
+                            <p>Dùng SĐT đã đặt hàng để tìm kiếm</p>
+                        </div>
+                    </div>
+                    <div class="lookup-step">
+                        <div class="lookup-step-num">2</div>
+                        <div class="lookup-step-info">
+                            <h4>Xem lịch sử đơn</h4>
+                            <p>Tất cả đơn hàng sẽ hiện ra theo thời gian</p>
+                        </div>
+                    </div>
+                    <div class="lookup-step">
+                        <div class="lookup-step-num">3</div>
+                        <div class="lookup-step-info">
+                            <h4>Lấy thông tin đăng nhập</h4>
+                            <p>Bấm vào đơn đã giao để xem tài khoản/mật khẩu</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="lookup-guide-cta">
+                    <p>Cần hỗ trợ? Liên hệ ngay</p>
+                    <a href="https://zalo.me/0988428496" target="_blank" class="lookup-zalo-btn">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                        </svg>
+                        Chat Zalo: 0988 428 496
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer id="contact">
+        <div class="footer-links">
+            <a href="#home">Trang chủ</a>
+            <a href="#products">Sản phẩm</a>
+            <a href="#lookup">Tra cứu đơn hàng</a>
+            <a href="javascript:void(0)" onclick="showPolicyModal('warranty')">Chính sách bảo hành</a>
+            <a href="javascript:void(0)" onclick="showPolicyModal('terms')">Điều khoản dịch vụ</a>
+        </div>
+        <div class="footer-contact">
+            Liên hệ:
+            <a href="https://zalo.me/0988428496" target="_blank">📱 Zalo: 0988428496</a> |
+            <a href="https://www.facebook.com/tranphilongib04/" target="_blank">📘 Facebook</a> |
+            <a href="mailto:tranphilongib04@gmail.com">📧 Email: tranphilongib04@gmail.com</a>
+        </div>
+        <p class="footer-copyright">© 2026 TBQ Homie. All rights reserved.</p>
+    </footer>
+
+    <!-- TOAST CONTAINER -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+    <!-- BACK TO TOP -->
+    <button class="back-to-top" id="backToTop" aria-label="Lên đầu trang"
+        onclick="window.scrollTo({top:0,behavior:'smooth'})">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="18 15 12 9 6 15" />
+        </svg>
+    </button>
+
+    <!-- POLICY MODAL -->
+    <div class="policy-modal-overlay" id="policyModalOverlay" onclick="closePolicyModal(event)">
+        <div class="policy-modal" onclick="event.stopPropagation()" role="dialog" aria-modal="true">
+            <div class="policy-modal-header">
+                <h2 id="policyModalTitle"></h2>
+                <button class="policy-modal-close" onclick="closePolicyModal()" aria-label="Đóng">×</button>
+            </div>
+            <div class="policy-modal-body" id="policyModalBody"></div>
+        </div>
+    </div>
+
+    <!-- FLOATING CONTACT - Zalo icon FAB -->
+    <a href="https://zalo.me/0988428496" target="_blank" rel="noopener" class="contact-fab" title="Chat Zalo"
+        aria-label="Liên hệ qua Zalo">
+        <svg viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+            <rect width="48" height="48" rx="12" fill="#0068FF" />
+            <path
+                d="M35.8 30.4c.6-1.5.9-3.2.9-5 0-7.5-6.5-13.6-14.5-13.6S7.7 17.9 7.7 25.4c0 7.5 6.5 13.6 14.5 13.6 1.7 0 3.4-.3 4.9-.7l5.1 1.4-1.4-4.3c1.9-1.4 3.5-3.2 4.4-5.2l.6.2Z"
+                fill="#fff" opacity=".95" />
+            <text x="17" y="30" font-family="Arial,sans-serif" font-weight="800" font-size="16" fill="#0068FF">Z</text>
+        </svg>
+    </a>
+
+    <!-- MOBILE BOTTOM NAVIGATION -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav">
+        <div class="mobile-bottom-nav-inner">
+            <a href="#home" class="mobile-nav-item active" data-page="home">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                    <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+                <span>Trang chủ</span>
+            </a>
+            <a href="#products" class="mobile-nav-item" data-page="products">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                    <path d="M16 3l-4 4-4-4" />
+                </svg>
+                <span>Sản phẩm</span>
+            </a>
+            <a href="#lookup" class="mobile-nav-item" data-page="lookup">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                </svg>
+                <span>Tra cứu</span>
+            </a>
+        </div>
+    </nav>
+
+    <!-- FLOATING MUSIC PLAYER -->
+    <button class="music-player-fab" id="musicPlayerFab" onclick="toggleMusicPlayer()" title="Nghe nhạc"
+        aria-label="Mở nhạc nền" aria-expanded="false">
+        <div class="music-fab-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                stroke-linejoin="round" aria-hidden="true">
+                <path d="M9 18V5l12-2v13" />
+                <circle cx="6" cy="18" r="3" />
+                <circle cx="18" cy="16" r="3" />
+            </svg>
+        </div>
+        <div class="music-fab-bars" id="musicFabBars" aria-hidden="true">
+            <span></span><span></span><span></span><span></span>
+        </div>
+    </button>
+
+    <div class="music-player-panel" id="musicPlayerPanel">
+        <div class="music-player-header">
+            <div class="music-player-title">🎵 Nhạc nền</div>
+            <button class="music-player-close" onclick="toggleMusicPlayer()" title="Đóng"
+                aria-label="Đóng trình phát nhạc">×</button>
+        </div>
+        <div class="music-track-info">
+            <div class="music-track-name" id="musicTrackName">Chọn bài để nghe</div>
+        </div>
+        <div class="music-controls">
+            <button class="music-ctrl-btn" onclick="musicPrev()" title="Bài trước">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M6 6h2v12H6zm3.5 6l8.5 6V6z" />
+                </svg>
+            </button>
+            <button class="music-ctrl-btn music-play-btn" id="musicPlayBtn" onclick="musicTogglePlay()"
+                title="Phát / Tạm dừng">
+                <svg viewBox="0 0 24 24" fill="currentColor" id="musicPlayIcon">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+            </button>
+            <button class="music-ctrl-btn" onclick="musicNext()" title="Bài tiếp">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M16 18h2V6h-2zM6 18l8.5-6L6 6z" />
+                </svg>
+            </button>
+        </div>
+        <div class="music-progress-wrap">
+            <span class="music-time" id="musicCurrentTime">0:00</span>
+            <input type="range" class="music-progress" id="musicProgress" value="0" min="0" max="100" step="0.1"
+                oninput="musicSeek(this.value)">
+            <span class="music-time" id="musicDuration">0:00</span>
+        </div>
+        <div class="music-volume-wrap">
+            <svg class="music-vol-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                onclick="musicToggleMute()">
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07" id="musicVolWaves" />
+            </svg>
+            <input type="range" class="music-volume" id="musicVolume" value="70" min="0" max="100"
+                oninput="musicSetVolume(this.value)">
+        </div>
+        <div class="music-playlist-toggle" onclick="toggleMusicPlaylist()">
+            <span>📋 Danh sách phát</span>
+            <svg class="music-playlist-arrow" id="musicPlaylistArrow" viewBox="0 0 24 24" fill="none"
+                stroke="currentColor" stroke-width="2.5">
+                <polyline points="6 9 12 15 18 9" />
+            </svg>
+        </div>
+        <div class="music-playlist" id="musicPlaylist"></div>
+    </div>
+
+    <!-- JS -->
+    <script src="js/app.js"></script>
+</body>
+
+</html>

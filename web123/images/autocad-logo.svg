@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
+  <defs>
+    <linearGradient id="acg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E8363A"/>
+      <stop offset="100%" stop-color="#C41230"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="400" rx="48" fill="url(#acg)"/>
+  <g transform="translate(200,185)">
+    <path d="M0-105 L70,105 L45,105 L30,55 L-30,55 L-45,105 L-70,105 Z M0-45 L-18,35 L18,35 Z" fill="white"/>
+  </g>
+  <text x="200" y="345" text-anchor="middle" font-family="-apple-system,Helvetica,Arial,sans-serif" font-size="42" font-weight="700" fill="rgba(255,255,255,0.95)" letter-spacing="4">AutoCAD</text>
+</svg>

@@ -609,23 +609,25 @@
             <!-- Pending Payment State -->
             <div id="pendingPaymentState" class="confirmation-card conf-compact">
                 <div class="conf-pending-header conf-header-compact">
-                    <h1 class="conf-title">Quét mã để thanh toán</h1>
+                    <h1 class="conf-title">✅ Đặt hàng thành công!</h1>
                     <p class="conf-order-code">Mã đơn hàng: <strong id="orderCode"></strong></p>
                 </div>
                 <span id="transferContent" style="display:none;"></span>
+                <span id="transferAmount" style="display:none;"></span>
 
-                <div class="conf-qr-card conf-qr-compact">
-                    <div id="qrCodeContainer" class="conf-qr-wrapper"></div>
-                    <div class="conf-amount-display">
-                        <span class="conf-amount-label">Số tiền thanh toán</span>
-                        <span class="conf-amount-value" id="transferAmount">0₫</span>
-                    </div>
+                <div style="text-align: center; padding: 24px 16px;">
+                    <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
+                    <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px;">Liên hệ Zalo để thanh toán</h2>
+                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
+                        Gửi <strong>mã đơn hàng</strong> qua Zalo để nhận hướng dẫn thanh toán.<br>
+                        Đơn hàng sẽ được xử lý trong vài phút sau khi thanh toán.
+                    </p>
+                    <a href="https://zalo.me/0988428496" target="_blank" 
+                       style="display: inline-flex; align-items: center; gap: 8px; background: #0068FF; color: #fff; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 15px; transition: transform 0.2s;">
+                        💬 Chat Zalo: 0988 428 496
+                    </a>
                 </div>
 
-                <div class="conf-status-indicator">
-                    <div class="conf-spinner"></div>
-                    <span>Đang chờ thanh toán...</span>
-                </div>
                 <div class="conf-countdown" id="paymentCountdown" style="display: none;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
