@@ -1210,6 +1210,65 @@ const products = {
             `
         }
     },
+    sora: {
+        id: 'sora',
+        name: 'Sora 2',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'Công cụ tạo video bằng AI từ OpenAI, biến ý tưởng thành video chất lượng cao',
+        image: 'images/sora-logo.png',
+        featured: true,
+        rating: 4.7,
+        reviewCount: 8,
+        soldCount: 24,
+        variants: [
+            { name: 'Sora 2 Acc Cấp 1 Tháng', price: 70000, duration: '1 tháng', note: 'Cấp acc mới, giao sau', productCode: 'sora2_acc_cap_1m', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Sora 2</h3>
+                <p>Sora 2 là mô hình AI tạo video đột phá từ OpenAI, cho phép bạn:</p>
+                <ul>
+                    <li>Tạo video chất lượng cao từ mô tả văn bản</li>
+                    <li>Chỉnh sửa và mở rộng video có sẵn bằng AI</li>
+                    <li>Tạo hiệu ứng chuyển động mượt mà, chân thực</li>
+                    <li>Xuất video lên đến 1080p</li>
+                    <li>Hỗ trợ nhiều phong cách: cinematic, anime, 3D...</li>
+                </ul>
+                <p><strong>💡 Mua nhiều đơn:</strong> Bạn có thể tăng số lượng để mua nhiều tài khoản cùng lúc, tiện cho việc chia sẻ hoặc bán lại.</p>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời gian sử dụng (1 tháng)</li>
+                    <li>Hỗ trợ đổi tài khoản nếu gặp vấn đề đăng nhập</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <p><strong>Sau khi thanh toán:</strong></p>
+                <ul>
+                    <li>Nhắn Zalo: 0988428496 để nhận tài khoản</li>
+                    <li>Nhận TK/MK trong 5-30 phút</li>
+                    <li>Đăng nhập tại sora.com và bắt đầu tạo video</li>
+                    <li>Không đổi mật khẩu hoặc email để tránh mất quyền</li>
+                </ul>
+                <p><strong>💡 Mẹo:</strong> Mua nhiều acc cùng lúc bằng cách tăng số lượng trước khi thanh toán.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Sora 2 khác gì Sora 1?</strong></p>
+                <p>A: Sora 2 có chất lượng video tốt hơn, thời gian tạo nhanh hơn và nhiều tính năng hơn.</p>
+                <p><strong>Q: Có thể mua nhiều tài khoản cùng lúc không?</strong></p>
+                <p>A: Có, bạn chỉ cần tăng số lượng trước khi thanh toán. Mỗi đơn vị = 1 tài khoản riêng.</p>
+                <p><strong>Q: Giao tài khoản mất bao lâu?</strong></p>
+                <p>A: Thường trong 5-30 phút qua Zalo sau khi thanh toán.</p>
+                <p><strong>Q: Tạo được bao nhiêu video?</strong></p>
+                <p>A: Phụ thuộc vào gói credit của tài khoản, thường đủ dùng cho cá nhân trong 1 tháng.</p>
+            `
+        }
+    },
     windows_key: {
         id: 'windows_key',
         name: 'Key Windows Vĩnh Viễn',
