@@ -1325,6 +1325,63 @@ const products = {
             `
         }
     },
+    perplexity: {
+        id: 'perplexity',
+        name: 'Perplexity Pro',
+        category: 'AI',
+        deliveryType: 'preorder',
+        description: 'Công cụ tìm kiếm AI thông minh, trả lời chính xác với nguồn trích dẫn rõ ràng',
+        image: 'images/perplexity-logo.png',
+        featured: false,
+        rating: 4.7,
+        reviewCount: 6,
+        soldCount: 15,
+        variants: [
+            { name: 'Perplexity Pro 1 Năm (Acc Cấp)', price: 370000, duration: '1 năm', note: 'Cấp acc mới, giao sau', productCode: 'perplexity_pro_1y', deliveryType: 'preorder' }
+        ],
+        tabs: {
+            description: `
+                <h3>Về Perplexity Pro</h3>
+                <p>Perplexity là công cụ tìm kiếm AI hàng đầu, kết hợp sức mạnh AI với khả năng truy cập internet real-time:</p>
+                <ul>
+                    <li>Tìm kiếm và trả lời câu hỏi với nguồn trích dẫn rõ ràng</li>
+                    <li>Sử dụng nhiều mô hình AI cao cấp (GPT-4, Claude, Sonar...)</li>
+                    <li>Phân tích tài liệu, hình ảnh và file upload</li>
+                    <li>Tạo báo cáo nghiên cứu chuyên sâu</li>
+                    <li>Truy cập thông tin real-time, cập nhật liên tục</li>
+                    <li>Không giới hạn số lượng tìm kiếm Pro</li>
+                </ul>
+            `,
+            warranty: `
+                <h3>Chính sách bảo hành</h3>
+                <ul>
+                    <li>Bảo hành trong suốt thời gian sử dụng (1 năm)</li>
+                    <li>Hỗ trợ đổi tài khoản nếu gặp vấn đề</li>
+                    <li>Liên hệ Zalo: 0988428496 khi cần hỗ trợ</li>
+                </ul>
+            `,
+            guide: `
+                <h3>Hướng dẫn sử dụng</h3>
+                <p><strong>Sau khi thanh toán:</strong></p>
+                <ul>
+                    <li>Nhắn Zalo: 0988428496 để nhận tài khoản</li>
+                    <li>Nhận TK/MK trong thời gian sớm nhất</li>
+                    <li>Đăng nhập tại perplexity.ai và bắt đầu sử dụng</li>
+                    <li>Không đổi mật khẩu hoặc email để tránh mất quyền</li>
+                </ul>
+                <p><strong>Lưu ý:</strong> Giữ liên lạc qua Zalo để được hỗ trợ nhanh nhất.</p>
+            `,
+            faq: `
+                <h3>Câu hỏi thường gặp</h3>
+                <p><strong>Q: Perplexity Pro khác gì phiên bản miễn phí?</strong></p>
+                <p>A: Pro cho phép sử dụng không giới hạn tìm kiếm nâng cao, truy cập nhiều mô hình AI cao cấp và phân tích file/hình ảnh.</p>
+                <p><strong>Q: Có thể dùng trên điện thoại không?</strong></p>
+                <p>A: Có, Perplexity có app trên iOS và Android, hoặc dùng trực tiếp trên web perplexity.ai.</p>
+                <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
+                <p>A: Sau khi thanh toán, nhắn Zalo để admin xử lý và giao hàng.</p>
+            `
+        }
+    },
 };
 
 // V2: Cart Persistence
