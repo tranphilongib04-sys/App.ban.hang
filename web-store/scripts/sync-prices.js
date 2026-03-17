@@ -118,6 +118,15 @@ const FRONTEND_PRICES = {
 
     // Cursor
     'cursor_pro_1m': 380000,
+
+    // Sora 2
+    'sora2_acc_cap_1m': 70000,
+
+    // Scribd
+    'scribd_1m': 60000,
+
+    // Perplexity
+    'perplexity_pro_1y': 370000,
 };
 
 async function syncPrices() {
@@ -162,11 +171,11 @@ async function syncPrices() {
 
     // Auto-insert missing SKUs into DB
     const CATEGORY_MAP = {
-        chatgpt: 'AI', claude: 'AI', cursor: 'AI', grok: 'AI', gemini: 'AI', super_grok: 'AI',
+        chatgpt: 'AI', claude: 'AI', cursor: 'AI', grok: 'AI', gemini: 'AI', super_grok: 'AI', perplexity: 'AI', sora2: 'AI',
         netflix: 'Giải trí', spotify: 'Giải trí', youtube: 'Giải trí',
         adobe: 'Thiết kế', canva: 'Thiết kế', capcut: 'Thiết kế', figma: 'Thiết kế', meitu: 'Thiết kế', gamma: 'Thiết kế', sketchup: 'Thiết kế',
         autocad: 'Kỹ thuật', autodesk: 'Kỹ thuật',
-        ms365: 'Công cụ', duolingo: 'Học tập', quizlet: 'Học tập',
+        ms365: 'Công cụ', duolingo: 'Học tập', quizlet: 'Học tập', scribd: 'Học tập',
         linkedin: 'Công cụ',
     };
 
