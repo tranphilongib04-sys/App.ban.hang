@@ -1638,12 +1638,21 @@ window.onload = function () {
     window.addEventListener('hashchange', handleRoute);
 };
 // HANDLE ROUTING (Consolidated Logic + page-transition)
+// Scroll position memory: remember where user was on products/home page
+let _savedScrollPositions = {};
+let _previousPage = null;
+
 function handleRoute() {
     closeCart();
 
     const hash = window.location.hash.slice(1) || 'home';
     const parts = hash.split('/');
     const page = parts[0];
+
+    // Save scroll position of previous page before navigating away
+    if (_previousPage && (_previousPage === 'products' || _previousPage === 'home')) {
+        _savedScrollPositions[_previousPage] = window.pageYOffset || document.documentElement.scrollTop;
+    }
 
     function showPage(el) {
         document.querySelectorAll('.page').forEach(p => {
@@ -1658,7 +1667,20 @@ function handleRoute() {
     doRoute(page, parts, showPage);
     updateActiveNavLink(page);
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // Restore scroll position if returning to products/home page, otherwise scroll to top
+    const savedScroll = _savedScrollPositions[page];
+    if (savedScroll !== undefined && (page === 'products' || page === 'home')) {
+        // Use requestAnimationFrame to ensure DOM is rendered before scrolling
+        requestAnimationFrame(() => {
+            window.scrollTo({ top: savedScroll, behavior: 'instant' });
+        });
+        // Clear after restoring so refreshing the page starts from top
+        delete _savedScrollPositions[page];
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    _previousPage = page;
 }
 
 // Update active nav link (desktop + mobile)
