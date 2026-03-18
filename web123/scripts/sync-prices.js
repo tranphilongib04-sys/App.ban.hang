@@ -77,8 +77,8 @@ const FRONTEND_PRICES = {
 
     // Grok
     'grok_7d': 35000,
-    'super_grok_cap_san': 270000,
-    'super_grok_chinh_chu': 350000,
+    'super_grok_cap_san': 190000,
+    'super_grok_chinh_chu': 250000,
 
     // AutoCAD
     'autocad_1y': 170000,
