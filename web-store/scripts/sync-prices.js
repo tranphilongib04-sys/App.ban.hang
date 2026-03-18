@@ -196,7 +196,7 @@ async function syncPrices() {
             const name = code.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
             const category = getCategory(code);
             await db.execute({
-                sql: `INSERT INTO skus (sku_code, name, price, category, is_active) VALUES (?, ?, ?, ?, 1)`,
+                sql: `INSERT INTO skus (sku_code, name, price, category, is_active) VALUES (?, ?, ?, ?, 1) ON CONFLICT(sku_code) DO UPDATE SET price = excluded.price, is_active = 1`,
                 args: [code, name, price, category]
             });
             console.log(`  ✅ Inserted: ${code} (${category}) = ${price.toLocaleString()}₫`);
