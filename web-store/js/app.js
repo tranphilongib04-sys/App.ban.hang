@@ -2402,7 +2402,9 @@ async function submitBuyNow(productId) {
 
         const qrCodeUrl = generateTPBankQR(orderCode, total);
         const qrContainer = document.getElementById('qrCodeContainer');
-        qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;
+        if (qrContainer) {
+            qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;  
+        }
 
         // Populate customer info on confirmation page
         populateConfCustomerInfo(name, phone, email, note);
@@ -2989,11 +2991,13 @@ async function placeOrder() {
         // Generate and display QR Code
         const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
         const qrContainer = document.getElementById('qrCodeContainer');
-        qrContainer.innerHTML = `
-            <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
-                 style="max-width: 220px; border-radius: 8px;"
-                 onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
-        `;
+        if (qrContainer) {
+            qrContainer.innerHTML = `
+                <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
+                     style="max-width: 220px; border-radius: 8px;"
+                     onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
+            `;
+        }
 
         // Navigate to confirmation page
         window.location.hash = 'confirmation/' + orderCode;
