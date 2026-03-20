@@ -182,20 +182,19 @@
                         </div>
                     </div>
                 </div>
-                <!-- Slide 3: Instant Delivery -->
+                <!-- Slide 3: Fast Delivery via Zalo -->
                 <div class="hero-slide" data-theme="gold">
                     <div class="hero-slide-content">
-                        <span class="hero-slide-badge badge-instant">⚡ GIAO LIỀN</span>
-                        <h2 class="hero-slide-title">Nhận ngay<br><span class="text-gold">sau thanh toán</span></h2>
-                        <p class="hero-slide-desc">Hệ thống tự động giao hàng tức thì · Không chờ đợi · Trải nghiệm ngay
-                            lập tức</p>
+                        <span class="hero-slide-badge badge-deal">🕐 GIAO NHANH</span>
+                        <h2 class="hero-slide-title">Nhận hàng nhanh<br><span class="text-gold">qua Zalo</span></h2>
+                        <p class="hero-slide-desc">Thanh toán xong nhắn Zalo · Nhận tài khoản trong 5-10 phút · Hỗ trợ tận tâm</p>
                         <div class="hero-slide-actions">
                             <a href="#products" class="hero-slide-btn">Mua ngay</a>
                         </div>
                     </div>
                     <div class="hero-slide-visual">
                         <div class="hero-float-icons">
-                            <span class="float-icon big" style="--delay:0s;--x:20px;--y:10px">⚡</span>
+                            <span class="float-icon big" style="--delay:0s;--x:20px;--y:10px">💬</span>
                             <span class="float-icon" style="--delay:0.8s;--x:70px;--y:50px">📦</span>
                             <span class="float-icon" style="--delay:1.2s;--x:0;--y:60px">✅</span>
                         </div>
@@ -290,9 +289,9 @@
                     <p class="feature-desc">Cam kết giá tốt nhất thị trường, nhiều ưu đãi hấp dẫn</p>
                 </div>
                 <div class="feature-card">
-                    <div class="feature-icon">⚡</div>
-                    <h3 class="feature-title">Giao hàng tức thì</h3>
-                    <p class="feature-desc">Nhận tài khoản ngay sau khi thanh toán thành công</p>
+                    <div class="feature-icon">🕐</div>
+                    <h3 class="feature-title">Giao hàng nhanh chóng</h3>
+                    <p class="feature-desc">Nhận tài khoản qua Zalo trong 5-10 phút sau thanh toán</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">💬</div>
@@ -614,28 +613,8 @@
                 </div>
                 <span id="transferContent" style="display:none;"></span>
                 <span id="transferAmount" style="display:none;"></span>
-
-                <div style="text-align: center; padding: 24px 16px;">
-                    <div style="font-size: 48px; margin-bottom: 12px;">💬</div>
-                    <h2 style="font-size: 18px; font-weight: 700; color: #1a1a2e; margin-bottom: 8px;">Liên hệ Zalo để thanh toán</h2>
-                    <p style="color: #6b7280; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">
-                        Gửi <strong>mã đơn hàng</strong> qua Zalo để nhận hướng dẫn thanh toán.<br>
-                        Đơn hàng sẽ được xử lý trong vài phút sau khi thanh toán.
-                    </p>
-                    <a href="https://zalo.me/0988428496" target="_blank" 
-                       style="display: inline-flex; align-items: center; gap: 8px; background: #0068FF; color: #fff; padding: 12px 28px; border-radius: 12px; text-decoration: none; font-weight: 600; font-size: 15px; transition: transform 0.2s;">
-                        💬 Chat Zalo: 0988 428 496
-                    </a>
-                </div>
-
-                <div class="conf-countdown" id="paymentCountdown" style="display: none;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <polyline points="12 6 12 12 16 14"></polyline>
-                    </svg>
-                    <span>Đơn hàng hết hạn sau: <strong id="countdownTimer">10:00</strong></span>
-                </div>
+                <span id="confTransferAmount" style="display:none;"></span>
+                <span id="confTransferContent" style="display:none;"></span>
 
                 <!-- Customer Info -->
                 <div class="conf-customer-info" id="confCustomerInfo" style="display: none;">
@@ -658,6 +637,27 @@
                             <span class="conf-customer-value" id="confCustomerNote">—</span>
                         </div>
                     </div>
+                </div>
+
+                <!-- Zalo Payment Instructions -->
+                <div style="text-align: center; padding: 24px 16px;">
+                    <p style="color: #374151; font-size: 15px; line-height: 1.7; margin-bottom: 20px;">
+                        Liên hệ Zalo để được hướng dẫn thanh toán<br>
+                        và nhận tài khoản nhanh nhất.
+                    </p>
+                    <a href="https://zalo.me/0988428496" target="_blank" 
+                       style="display: inline-flex; align-items: center; gap: 10px; background: #0068FF; color: #fff; padding: 14px 28px; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; box-shadow: 0 4px 14px rgba(0,104,255,0.3); transition: transform 0.2s, box-shadow 0.2s;">
+                        💬 Chat Zalo: 0988 428 496
+                    </a>
+                </div>
+
+                <div class="conf-countdown" id="paymentCountdown" style="display: none;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
+                    </svg>
+                    <span>Đơn hàng hết hạn sau: <strong id="countdownTimer">10:00</strong></span>
                 </div>
 
                 <div class="conf-support-footer">

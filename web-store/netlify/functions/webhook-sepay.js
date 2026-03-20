@@ -199,6 +199,12 @@ exports.handler = async function (event, context) {
         await tx.commit();   // explicitly commit
         console.log('[Webhook] Order', orderCode, 'fulfilled OK');
 
+        // Notify admin via Telegram Bot 1
+        try {
+            const { notifyPaymentConfirmed } = require('./utils/telegram');
+            await notifyPaymentConfirmed(db, order, 'webhook');
+        } catch (e) { console.warn('[Webhook] Telegram notification error:', e.message); }
+
         return { statusCode: 200, body: JSON.stringify({ success: true }) };
 
     } catch (err) {

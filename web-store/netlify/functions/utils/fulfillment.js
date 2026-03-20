@@ -266,7 +266,13 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
         for (const line of linesForExpiry.rows) {
             const durationDays = line.duration_days || 30; // default 30 days
             const expiresAt = new Date();
-            expiresAt.setDate(expiresAt.getDate() + durationDays);
+            // Use month-based calculation so end date keeps the same day-of-month
+            const durationMonths = Math.round(durationDays / 30);
+            if (durationMonths >= 1) {
+                expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
+            } else {
+                expiresAt.setDate(expiresAt.getDate() + durationDays);
+            }
             const expiresAtStr = expiresAt.toISOString().split('T')[0]; // YYYY-MM-DD
 
             await db.execute({
@@ -329,8 +335,8 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
             args: [fresh.id]
         });
         const productNames = productLines.rows
-            .map(r => `${r.product_name} x${r.quantity}`)
-            .join(', ');
+            .map((r, i) => `${i + 1}. ${r.product_name} x${r.quantity}`)
+            .join('\n');
 
         const telegramMsg = `<b>✅ ĐƠN HÀNG MỚI: ${productNames || 'N/A'}</b>
 
@@ -351,17 +357,44 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
     // ── 11. Bot 2: Customer notification (fire-and-forget) ────────────
     try {
         const productLinesBot2 = await db.execute({
-            sql: `SELECT product_name, quantity FROM order_lines WHERE order_id = ?`,
+            sql: `SELECT ol.product_name, ol.quantity, ol.expires_at, ol.fulfillment_type
+                  FROM order_lines ol WHERE ol.order_id = ?`,
             args: [fresh.id]
         });
+
+        // Helper to format date as DD/MM/YYYY
+        function fmtDate(d) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            return `${day}/${month}/${d.getFullYear()}`;
+        }
+
+        const today = new Date();
+        const startDateStr = fmtDate(today);
+
         const productNamesBot2 = productLinesBot2.rows
-            .map(r => `${r.product_name} x${r.quantity}`)
-            .join(', ');
+            .map((r, i) => {
+                let line = `  ${i + 1}. ${r.product_name} x${r.quantity}`;
+
+                // Add start/end dates
+                line += `\n     📅 Bắt đầu: ${startDateStr}`;
+                if (r.expires_at) {
+                    const endDate = new Date(r.expires_at);
+                    line += `\n     📅 Kết thúc: ${fmtDate(endDate)}`;
+                }
+
+                // Account placeholder for manual input (separate lines for Zalo readability)
+                line += `\n     🔑 Tài khoản:`;
+                line += `\n     (đang cập nhật)`;
+
+                return line;
+            })
+            .join('\n');
 
         let bot2Msg = `<b>📦 TBQ HOMIE — Đã xác nhận Thanh Toán</b>\n━━━━━━━━━━━━━━━━━━━━`;
         bot2Msg += `\n\n👤 Khách hàng: ${fresh.customer_name || 'N/A'}`;
         if (fresh.customer_phone) bot2Msg += `\n📱 SĐT: ${fresh.customer_phone}`;
-        bot2Msg += `\n\n🛒 Sản phẩm: ${productNamesBot2 || 'N/A'}`;
+        bot2Msg += `\n\n🛒 <b>Sản phẩm:</b>\n${productNamesBot2 || 'N/A'}`;
 
         // Include credentials for auto-delivery orders
         if (credentials.length > 0) {
@@ -372,8 +405,6 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
                 bot2Msg += `\n🔑 Mật khẩu: ${c.password}`;
                 if (c.extraInfo) bot2Msg += `\n📝 Ghi chú: ${c.extraInfo}`;
             }
-        } else {
-            bot2Msg += `\n\n⏳ Đơn hàng giao sau (5-10 phút) — Gửi bill qua Zalo để nhận tài khoản.`;
         }
 
         bot2Msg += `\n\n━━━━━━━━━━━━━━━━━━━━`;

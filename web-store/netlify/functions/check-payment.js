@@ -308,6 +308,12 @@ exports.handler = async function (event, context) {
                 const result = await finalizeOrder(tx, order, paidTransaction, 'check-payment');
                 await tx.commit();
 
+                // Notify admin via Telegram Bot 1
+                try {
+                    const { notifyPaymentConfirmed } = require('./utils/telegram');
+                    await notifyPaymentConfirmed(db, order, 'check-payment');
+                } catch (e) { console.warn('[CheckPayment] Telegram notification error:', e.message); }
+
                 if (allPreorder) {
                     return {
                         statusCode: 200,

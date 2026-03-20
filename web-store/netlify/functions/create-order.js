@@ -113,7 +113,9 @@ exports.handler = async function (event, context) {
 
     try {
         const body = JSON.parse(event.body);
-        let { customerName, customerEmail, customerPhone, customerNote, items, discountCode } = body;
+        let { customerName, customerEmail = null, customerPhone, customerNote = null, items, discountCode = null } = body;
+        customerEmail = customerEmail || null;
+        customerNote = customerNote || null;
         const codeUpper = (discountCode || '').trim().toUpperCase();
 
         // Backward compatibility
@@ -414,6 +416,24 @@ exports.handler = async function (event, context) {
             }
         }
 
+        // ── TELEGRAM BOT 1: Send QR payment notification to admin ──
+        if (totalAmount > 0) {
+            try {
+                await sendTelegramQRNotification(db, {
+                    orderCode,
+                    orderId,
+                    customerName,
+                    customerPhone,
+                    totalAmount,
+                    items: finalItems,
+                    expiresAt
+                });
+            } catch (tgErr) {
+                console.error('[Telegram] QR notification error:', tgErr.message);
+                // Non-blocking: order still created even if Telegram fails
+            }
+        }
+
         return {
             statusCode: 200,
             headers,
@@ -456,4 +476,76 @@ async function cleanupExpired(db, now) {
             args: []
         });
     } catch (e) { console.error('Cleanup error', e); }
+}
+
+// ── TELEGRAM BOT 1: Send QR payment photo to admin chat ──
+async function sendTelegramQRNotification(db, orderInfo) {
+    const botToken = process.env.TELEGRAM_BOT1_TOKEN || process.env.TELEGRAM_BOT_TOKEN;
+    const chatId = process.env.TELEGRAM_CHAT_ID;
+
+    console.log(`[Telegram] Attempting QR notification: botToken=${botToken ? 'SET' : 'MISSING'}, chatId=${chatId ? 'SET' : 'MISSING'}`);
+
+    if (!botToken || !chatId) {
+        console.log('[Telegram] Skipped: TELEGRAM_BOT1_TOKEN or TELEGRAM_CHAT_ID not configured');
+        return;
+    }
+
+    const { orderCode, orderId, customerName, customerPhone, totalAmount, items, expiresAt } = orderInfo;
+
+    // Generate VietQR URL (TP Bank)
+    const qrUrl = `https://img.vietqr.io/image/970423-00000828511-compact2.jpg?amount=${totalAmount}&addInfo=${encodeURIComponent(orderCode)}&accountName=${encodeURIComponent('TRAN PHI LONG')}`;
+
+    // Build product list
+    const productLines = (items || []).map(item => {
+        const type = item.deliveryType === 'auto' ? '⚡' : '🕐';
+        const name = item.skuName || item.productCode || 'N/A';
+        return `${type} ${name} x${item.quantity} — ${Number(item.subtotal || 0).toLocaleString('vi-VN')}đ`;
+    }).join('\n');
+
+    // Build caption
+    const caption = `🆕 <b>ĐƠN HÀNG MỚI</b> — #${orderCode}\n\n` +
+        `👤 <b>Khách:</b> ${customerName || 'N/A'}\n` +
+        `📱 <b>SĐT:</b> ${customerPhone || 'N/A'}\n\n` +
+        `📦 <b>Sản phẩm:</b>\n${productLines}\n\n` +
+        `💰 <b>Tổng:</b> ${Number(totalAmount).toLocaleString('vi-VN')}đ\n` +
+        `📝 <b>Nội dung CK:</b> <code>${orderCode}</code>\n\n` +
+        `/xacnhan ${orderCode}`;
+
+    console.log(`[Telegram] Sending QR photo for ${orderCode} to chat ${chatId}`);
+
+    // Send photo with caption via Telegram API
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendPhoto`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: chatId,
+            photo: qrUrl,
+            caption: caption,
+            parse_mode: 'HTML'
+        })
+    });
+
+    const result = await response.json();
+    console.log(`[Telegram] sendPhoto response: ok=${result.ok}, msg_id=${result.result?.message_id || 'N/A'}`);
+
+    if (result.ok && result.result?.message_id) {
+        // Save the message ID so /xacnhan can delete it later
+        try {
+            const freshDb = require('@libsql/client/web').createClient({
+                url: process.env.TURSO_DATABASE_URL,
+                authToken: process.env.TURSO_AUTH_TOKEN
+            });
+            // Ensure column exists (safe to repeat)
+            try { await freshDb.execute(`ALTER TABLE orders ADD COLUMN telegram_qr_msg_id TEXT`); } catch { /* exists */ }
+            await freshDb.execute({
+                sql: `UPDATE orders SET telegram_qr_msg_id = ? WHERE id = ?`,
+                args: [String(result.result.message_id), orderId]
+            });
+            console.log(`[Telegram] Saved msg_id=${result.result.message_id} for ${orderCode}`);
+        } catch (e) {
+            console.warn('[Telegram] Could not save msg_id:', e.message);
+        }
+    } else {
+        console.error('[Telegram] sendPhoto FAILED:', JSON.stringify(result));
+    }
 }

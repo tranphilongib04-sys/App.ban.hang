@@ -4,7 +4,7 @@ const products = {
         id: 'chatgpt',
         name: 'ChatGPT',
         category: 'AI',
-        deliveryType: 'instant',
+        deliveryType: 'preorder',
         description: 'Trợ lý AI thông minh nhất hiện nay, hỗ trợ viết lách, code, và nhiều tác vụ khác',
         image: 'https://upload.wikimedia.org/wikipedia/commons/0/04/ChatGPT_logo.svg',
         featured: true,
@@ -44,7 +44,7 @@ const products = {
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
-                <p><strong>Đối với gói KBH (cấp TK mới – giao liền):</strong></p>
+                <p><strong>Đối với gói KBH (cấp TK mới):</strong></p>
                 <ul>
                     <li>Sau khi thanh toán, bạn sẽ nhận được tài khoản/mật khẩu qua Zalo</li>
                     <li>Đăng nhập tại chat.openai.com</li>
@@ -508,7 +508,7 @@ const products = {
         id: 'capcut',
         name: 'CapCut Pro',
         category: 'Thiết kế',
-        deliveryType: 'instant',
+        deliveryType: 'preorder',
         description: 'Công cụ chỉnh sửa video chuyên nghiệp, tạo trend TikTok dễ dàng',
         image: 'images/capcut-logo.png',
         featured: true,
@@ -517,9 +517,9 @@ const products = {
         soldCount: 112,
         variants: [
             { name: 'CapCut 7 Ngày', price: 7000, duration: '7 ngày', note: 'Giao trong 5-10 phút', productCode: 'capcut_7d', deliveryType: 'preorder' },
-            { name: 'CapCut Pro 1 Tháng', price: 30000, duration: '1 tháng', note: 'Giao liền', productCode: 'capcut_1m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 6 Tháng', price: 160000, duration: '6 tháng', note: 'Giao liền', productCode: 'capcut_6m', deliveryType: 'instant' },
-            { name: 'CapCut Pro 1 Năm', price: 280000, duration: '1 năm', note: 'Giao liền', productCode: 'capcut_pro_1y', deliveryType: 'instant' }
+            { name: 'CapCut Pro 1 Tháng', price: 30000, duration: '1 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'capcut_1m', deliveryType: 'preorder' },
+            { name: 'CapCut Pro 6 Tháng', price: 160000, duration: '6 tháng', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'capcut_6m', deliveryType: 'preorder' },
+            { name: 'CapCut Pro 1 Năm', price: 280000, duration: '1 năm', note: 'Giao sau, IB Zalo để nhận hàng', productCode: 'capcut_pro_1y', deliveryType: 'preorder' }
         ],
         tabs: {
             description: `
@@ -543,15 +543,11 @@ const products = {
             `,
             guide: `
                 <h3>Hướng dẫn sử dụng</h3>
-                <p><strong>⚡ Gói Giao liền (14 ngày, 1 tháng, 6 tháng, 1 năm):</strong></p>
-                <ul>
-                    <li>Sau khi thanh toán, bạn nhận ngay TK/MK trên màn hình</li>
-                    <li>Đăng nhập app CapCut và sử dụng ngay</li>
-                </ul>
-                <p><strong>🕐 Gói Giao sau (7 ngày):</strong></p>
+                <p><strong>🕐 Tất cả các gói đều giao sau:</strong></p>
                 <ul>
                     <li>Sau khi thanh toán, nhắn Zalo: 0988428496</li>
                     <li>Nhận tài khoản trong 5-10 phút</li>
+                    <li>Đăng nhập app CapCut và sử dụng ngay</li>
                 </ul>
             `,
             faq: `
@@ -604,7 +600,7 @@ const products = {
                 <h3>Hướng dẫn sử dụng</h3>
                 <p><strong>Sau khi thanh toán:</strong></p>
                 <ul>
-                    <li>Bạn sẽ nhận ngay <strong>Tài khoản / Mật khẩu</strong> trên màn hình (giao liền)</li>
+                    <li>Nhắn Zalo: 0988428496 để nhận <strong>Tài khoản / Mật khẩu</strong></li>
                     <li>Đăng nhập trên app X (Twitter) hoặc x.ai</li>
                     <li>Vào mục Grok để trò chuyện với AI</li>
                     <li>Không đổi mật khẩu hoặc email để tránh mất quyền truy cập</li>
@@ -618,7 +614,7 @@ const products = {
                 <p><strong>Q: Dùng được trên điện thoại không?</strong></p>
                 <p>A: Có, đăng nhập app X (Twitter) và vào mục Grok.</p>
                 <p><strong>Q: Thanh toán xong nhận tài khoản khi nào?</strong></p>
-                <p>A: Giao liền – bạn xem ngay TK/MK trên trang sau khi thanh toán thành công.</p>
+                <p>A: Giao sau – nhắn Zalo sau khi thanh toán, nhận TK/MK trong 5-10 phút.</p>
             `
         }
     },
@@ -1974,12 +1970,8 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
             <div class="product-details">
                 <h1>${product.name}</h1>
                 <p class="product-description">${product.description}</p>
-                <div class="delivery-info-box ${product.id === 'capcut' ? 'delivery-mixed' : (product.deliveryType || 'instant') === 'instant' ? 'delivery-instant' : 'delivery-preorder'}">
-                    ${product.id === 'capcut'
-            ? '<div class="delivery-simple"><span class="delivery-line instant">⚡ <strong>GIAO LIỀN</strong> = Nhận ngay sau thanh toán</span><span class="delivery-line preorder">🕐 <strong>GIAO SAU</strong> = Nhận qua Zalo sau thanh toán</span></div>'
-            : (product.deliveryType || 'instant') === 'instant'
-                ? '<span class="delivery-line instant">⚡ <strong>GIAO LIỀN</strong> — Nhận ngay sau thanh toán</span>'
-                : '<span class="delivery-line preorder">🕐 <strong>GIAO SAU</strong> — Nhận qua Zalo sau thanh toán</span>'}
+                <div class="delivery-info-box delivery-preorder">
+                    <span class="delivery-line preorder">🕐 <strong>GIAO SAU</strong> — Nhận qua Zalo sau thanh toán</span>
                 </div>
                 <div class="variant-selector">
                     <div class="variant-label">Chọn gói dịch vụ:</div>
@@ -2399,12 +2391,12 @@ async function submitBuyNow(productId) {
         document.getElementById('orderCode').textContent = orderCode;
         document.getElementById('transferContent').textContent = orderCode;
         document.getElementById('transferAmount').textContent = formatPrice(total);
+        // Also populate visible bank info fields
+        const cta = document.getElementById('confTransferAmount');
+        const ctc = document.getElementById('confTransferContent');
+        if (cta) cta.textContent = formatPrice(total);
+        if (ctc) ctc.textContent = orderCode;
 
-        const qrCodeUrl = generateTPBankQR(orderCode, total);
-        const qrContainer = document.getElementById('qrCodeContainer');
-        if (qrContainer) {
-            qrContainer.innerHTML = `<img src="${qrCodeUrl}" alt="Mã QR thanh toán" style="max-width: 220px; border-radius: 8px;" onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR.</p>');">`;  
-        }
 
         // Populate customer info on confirmation page
         populateConfCustomerInfo(name, phone, email, note);
@@ -2984,20 +2976,16 @@ async function placeOrder() {
         document.getElementById('orderCode').textContent = orderCode;
         document.getElementById('transferContent').textContent = orderCode;
         document.getElementById('transferAmount').textContent = formatPrice(data.amount || total);
+        // Also populate the visible bank info fields
+        const confTransAmt = document.getElementById('confTransferAmount');
+        const confTransCnt = document.getElementById('confTransferContent');
+        if (confTransAmt) confTransAmt.textContent = formatPrice(data.amount || total);
+        if (confTransCnt) confTransCnt.textContent = orderCode;
 
         // Populate customer info on confirmation page
         populateConfCustomerInfo(name, phone, email, note);
 
-        // Generate and display QR Code
-        const qrCodeUrl = generateTPBankQR(orderCode, data.amount || total);
-        const qrContainer = document.getElementById('qrCodeContainer');
-        if (qrContainer) {
-            qrContainer.innerHTML = `
-                <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
-                     style="max-width: 220px; border-radius: 8px;"
-                     onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\\'color:#ef4444; margin-top:10px; font-weight:500\\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
-            `;
-        }
+
 
         // Navigate to confirmation page
         window.location.hash = 'confirmation/' + orderCode;
@@ -3447,17 +3435,13 @@ function restorePendingOrder(pending) {
     if (transferAmount) transferAmount.textContent = formatPrice(amount);
     if (pendingState) pendingState.style.display = 'block';
     if (successState) { successState.style.display = 'none'; successState.innerHTML = ''; }
+    // Also populate visible bank info fields
+    const confTransAmt2 = document.getElementById('confTransferAmount');
+    const confTransCnt2 = document.getElementById('confTransferContent');
+    if (confTransAmt2) confTransAmt2.textContent = formatPrice(amount);
+    if (confTransCnt2) confTransCnt2.textContent = orderCode;
 
-    // Regenerate QR code
-    const qrCodeUrl = generateTPBankQR(orderCode, amount);
-    const qrContainer = document.getElementById('qrCodeContainer');
-    if (qrContainer) {
-        qrContainer.innerHTML = `
-            <img src="${qrCodeUrl}" alt="Mã QR thanh toán"
-                 style="max-width: 220px; border-radius: 8px;"
-                 onerror="this.style.display='none'; this.insertAdjacentHTML('afterend', '<p style=\'color:#ef4444; margin-top:10px; font-weight:500\'>⚠️ Không thể tạo mã QR. Vui lòng chuyển khoản thủ công theo thông tin bên dưới.</p>');">
-        `;
-    }
+
 
     // Restart countdown with server expiry time
     // Restore customer info on confirmation page
