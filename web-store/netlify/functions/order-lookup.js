@@ -25,20 +25,42 @@ const headers = {
     'Content-Type': 'application/json'
 };
 
-// Simple in-memory rate-limit: max 5 req per IP per 60s
-const _rateMap = new Map();
-function rateLimited(ip) {
-    const now = Date.now();
+// DB-based rate limiting (survives cold starts unlike in-memory Map)
+async function rateLimited(db, ip) {
+    if (!db) return false;
     const key = ip || 'unknown';
-    const entry = _rateMap.get(key) || { count: 0, reset: now + 60000 };
-    if (now > entry.reset) { entry.count = 0; entry.reset = now + 60000; }
-    entry.count++;
-    _rateMap.set(key, entry);
-    // Clean old entries periodically
-    if (_rateMap.size > 500) {
-        for (const [k, v] of _rateMap) { if (now > v.reset) _rateMap.delete(k); }
+    const now = new Date();
+    const windowMs = 60000; // 1 minute
+    const maxRequests = 5;
+    try {
+        const result = await db.execute({
+            sql: 'SELECT count, reset_at FROM rate_limits WHERE ip = ?',
+            args: [key]
+        });
+        let count = 0;
+        let resetAt = new Date(now.getTime() + windowMs);
+        if (result.rows.length > 0) {
+            const row = result.rows[0];
+            const rowResetAt = new Date(row.reset_at);
+            if (now > rowResetAt) {
+                count = 1;
+            } else {
+                count = row.count + 1;
+                resetAt = rowResetAt;
+            }
+        } else {
+            count = 1;
+        }
+        await db.execute({
+            sql: `INSERT INTO rate_limits (ip, count, reset_at) VALUES (?, ?, ?)
+                  ON CONFLICT(ip) DO UPDATE SET count = ?, reset_at = ?`,
+            args: [key, count, resetAt.toISOString(), count, resetAt.toISOString()]
+        });
+        return count > maxRequests;
+    } catch (e) {
+        // Table might not exist — allow request through
+        return false;
     }
-    return entry.count > 5;
 }
 
 function normalizePhone(raw) {
@@ -74,9 +96,17 @@ exports.handler = async function (event) {
         return { statusCode: 405, headers, body: JSON.stringify({ error: 'Method not allowed' }) };
     }
 
-    // Rate limit
+    // Rate limit (DB-based)
     const ip = (event.headers['x-forwarded-for'] || event.headers['client-ip'] || '').split(',')[0].trim();
-    if (rateLimited(ip)) {
+    let db;
+    try {
+        db = getDbClient();
+    } catch (e) {
+        console.error('[order-lookup] DB init error:', e.message);
+        return { statusCode: 500, headers, body: JSON.stringify({ error: 'Lỗi hệ thống' }) };
+    }
+
+    if (await rateLimited(db, ip)) {
         return { statusCode: 429, headers, body: JSON.stringify({ error: 'Quá nhiều yêu cầu. Vui lòng thử lại sau 1 phút.' }) };
     }
 
@@ -94,7 +124,7 @@ exports.handler = async function (event) {
     }
 
     try {
-        const db = getDbClient();
+        // db already initialized above for rate limiting
 
         // Get orders for this phone
         const ordersResult = await db.execute({

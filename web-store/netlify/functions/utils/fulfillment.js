@@ -391,7 +391,7 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
             })
             .join('\n');
 
-        let bot2Msg = `<b>📦 TBQ HOMIE — Đã xác nhận Thanh Toán</b>\n━━━━━━━━━━━━━━━━━━━━`;
+        let bot2Msg = `<b>📦 TBQ HOMIE — THANH TOÁN THÀNH CÔNG</b>\n━━━━━━━━━━━━━━━━━━━━`;
         bot2Msg += `\n\n👤 Khách hàng: ${fresh.customer_name || 'N/A'}`;
         if (fresh.customer_phone) bot2Msg += `\n📱 SĐT: ${fresh.customer_phone}`;
         bot2Msg += `\n\n🛒 <b>Sản phẩm:</b>\n${productNamesBot2 || 'N/A'}`;

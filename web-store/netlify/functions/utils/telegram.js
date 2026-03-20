@@ -49,10 +49,22 @@ async function notifyPaymentConfirmed(db, order, source) {
     const orderCode = order.order_code;
     const amount = order.amount_total;
 
+    // Re-read telegram_qr_msg_id from DB (may have been saved async after order creation)
+    let qrMsgId = order.telegram_qr_msg_id;
+    if (!qrMsgId && db) {
+        try {
+            const freshRow = await db.execute({
+                sql: 'SELECT telegram_qr_msg_id FROM orders WHERE id = ?',
+                args: [order.id]
+            });
+            qrMsgId = freshRow.rows[0]?.telegram_qr_msg_id || null;
+        } catch (e) { /* column might not exist yet */ }
+    }
+
     // Delete QR message if exists
-    if (order.telegram_qr_msg_id) {
-        await deleteTelegramMessage(order.telegram_qr_msg_id);
-        console.log(`[Telegram] Deleted QR message ${order.telegram_qr_msg_id} for ${orderCode}`);
+    if (qrMsgId) {
+        await deleteTelegramMessage(qrMsgId);
+        console.log(`[Telegram] Deleted QR message ${qrMsgId} for ${orderCode}`);
     }
 
     // Send confirmation message

@@ -348,7 +348,7 @@ const products = {
         category: 'Công cụ',
         deliveryType: 'preorder',
         description: 'Bộ công cụ văn phòng Microsoft Office với Word, Excel, PowerPoint...',
-        image: 'images/microsoft365-logo.jpg',
+        image: 'images/microsoft365-logo.png',
         featured: false,
         rating: 4.8,
         reviewCount: 21,
@@ -1533,7 +1533,22 @@ function getProductEmoji(productId) {
         ms365: '📊',
         quizlet: '📚',
         canva: '✨',
-        capcut: '🎬'
+        capcut: '🎬',
+        grok: '🧠',
+        cursor: '💻',
+        claude: '🤖',
+        figma: '🎨',
+        meitu: '📸',
+        gemini: '✨',
+        autodesk: '🏗️',
+        sketchup: '📐',
+        autocad: '📐',
+        linkedin: '💼',
+        gamma: '📊',
+        scribd: '📖',
+        sora: '🎥',
+        windows_key: '🪟',
+        perplexity: '🔍'
     };
     return emojis[productId] || '📦';
 }
@@ -2277,7 +2292,7 @@ async function submitBuyNow(productId) {
     }
 
     // Validate phone
-    const phoneRegex = /(84|0[35789])([0-9]{8})\b/;
+    const phoneRegex = /(84|0[2-9])([0-9]{8})\b/;
     if (!phoneRegex.test(phone)) {
         showToast('Số điện thoại không hợp lệ!', 'error');
         return;
@@ -2438,6 +2453,7 @@ function addToCart(productId) {
 
     const selectedVariantIndex = selectedOptions.value;
     const variant = product.variants[selectedVariantIndex];
+    const qtyToAdd = detailQuantity || 1;
 
     // Check if item already in cart
     const existingIndex = cart.findIndex(item =>
@@ -2445,8 +2461,8 @@ function addToCart(productId) {
     );
 
     if (existingIndex >= 0) {
-        // Increase quantity
-        cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + 1;
+        // Increase quantity by the amount selected on detail page
+        cart[existingIndex].quantity = (cart[existingIndex].quantity || 1) + qtyToAdd;
         const unitPrice = cart[existingIndex].unitPrice || variant.price;
         if (cart[existingIndex].publicPrice === undefined) {
             cart[existingIndex].publicPrice = getVariantPrice(variant, 'public');
@@ -2456,7 +2472,7 @@ function addToCart(productId) {
         }
         cart[existingIndex].price = unitPrice * cart[existingIndex].quantity;
     } else {
-        // Add new item
+        // Add new item with selected quantity
         const publicPrice = getVariantPrice(variant, 'public');
         const ctvPrice = getVariantPrice(variant, 'ctv');
         const unitPrice = ctvMode ? ctvPrice : publicPrice;
@@ -2466,11 +2482,11 @@ function addToCart(productId) {
             variantName: variant.name,
             productCode: variant.productCode,
             variantIndex: selectedVariantIndex,
-            price: unitPrice,
+            price: unitPrice * qtyToAdd,
             unitPrice: unitPrice,
             publicPrice: publicPrice,
             ctvPrice: ctvPrice,
-            quantity: 1,
+            quantity: qtyToAdd,
             image: product.image,
             deliveryType: (variant.deliveryType || product.deliveryType || 'instant')
         };
@@ -2569,6 +2585,7 @@ function updateCartQuantity(index, delta) {
     item.price = unitPrice * newQty;
 
     updateCartUI();
+    saveCart();
 }
 
 // REMOVE FROM CART
@@ -2935,6 +2952,7 @@ async function placeOrder() {
         // Clear cart & discount
         cart = [];
         appliedDiscount = null;
+        saveCart();
         updateCartUI();
 
         // ── FREE ORDER: skip payment, show credentials directly ──
@@ -3228,7 +3246,7 @@ function escapeHtml(str) {
 
 function escapeAttr(str) {
     if (!str) return '';
-    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+    return String(str).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;');
 }
 
 function togglePassword(idx) {
@@ -3244,7 +3262,7 @@ function copyText(text) {
 
 function copyAllCreds() {
     if (!window._credentials) return;
-    const header = '📦 TBQ HOMIE — Đã xác nhận Thanh Toán\n━━━━━━━━━━━━━━━━━━━━';
+    const header = '📦 TBQ HOMIE — THANH TOÁN THÀNH CÔNG\n━━━━━━━━━━━━━━━━━━━━';
     const customerInfo = (window._customerName || window._customerPhone)
         ? `\n👤 Khách hàng: ${window._customerName || ''}${window._customerPhone ? '\n📱 SĐT: ' + window._customerPhone : ''}\n`
         : '';
@@ -3598,7 +3616,7 @@ function validateInput(input) {
             errorMsg = 'Email không hợp lệ';
         }
     } else if (input.type === 'tel' && value) {
-        const phoneRegex = /(84|0[35789])([0-9]{8})\b/;
+        const phoneRegex = /(84|0[2-9])([0-9]{8})\b/;
         if (!phoneRegex.test(value)) {
             isValid = false;
             errorMsg = 'Số điện thoại không hợp lệ';
@@ -4131,8 +4149,8 @@ function lookupCopy(text, btnEl) {
     }).catch(function () { });
 }
 
-function escHtml(s) { return String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
-function escAttr(s) { return escHtml(s); }
+function escHtml(s) { return escapeHtml(s); }
+function escAttr(s) { return escapeAttr(s); }
 
 // =============================================
 // 🎵 FLOATING MUSIC PLAYER

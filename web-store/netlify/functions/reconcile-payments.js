@@ -14,7 +14,7 @@ const { finalizeOrder, ensurePaymentSchema } = require('./utils/fulfillment');
 const SEPAY_ENDPOINT = 'https://my.sepay.vn/userapi/transactions/list';
 const SEPAY_LIST_LIMIT = 200;
 const LOOKBACK_MINUTES = 180; // 3 hours lookback (handles delayed webhook / bank posting)
-const AMOUNT_TOLERANCE = 0.95;
+const AMOUNT_TOLERANCE = 0.99; // SECURITY: strict match (aligned with webhook-sepay.js)
 
 function getDbClient() {
     const url = process.env.TURSO_DATABASE_URL;
@@ -26,7 +26,7 @@ function getDbClient() {
 exports.handler = async function (event, context) {
     // Only run on schedule or explicit trigger
     const isScheduled = event.headers['x-netlify-scheduled'] === 'true';
-    // if (!isScheduled) return { statusCode: 403, body: 'Not Authorized' }; 
+    if (!isScheduled) return { statusCode: 403, body: 'Not Authorized' };
     // Allow manual trigger for now for testing
 
     console.log('[Reconcile] Starting reconciliation job...');

@@ -44,6 +44,33 @@ function escapeAttr(s) {
         .replace(/>/g, '&gt;');
 }
 
+// Reusable preorder HTML (BE-4: extracted from duplicate blocks)
+function renderPreorderHtml(orderCode) {
+    return `<!DOCTYPE html>
+<html lang="vi">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nhận hàng - TBQ Homie</title>
+<style>body{font-family:-apple-system,sans-serif;background:#f5f5f7;color:#1d1d1f;padding:20px;text-align:center;}
+.container{max-width:500px;margin:0 auto;background:white;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
+.success-icon{font-size:48px;margin-bottom:16px;} h1{font-size:24px;margin-bottom:8px;}
+.order-code{color:#6e6e73;margin-bottom:24px;} .steps{text-align:left;margin:24px 0;}
+.step{margin:12px 0;display:flex;align-items:center;gap:12px;}
+.zalo-btn{display:inline-block;background:#0068FF;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:16px;}
+.zalo-btn:hover{background:#0052cc;}</style></head>
+<body><div class="container">
+<div class="success-icon">&#128337;</div>
+<h1>Đơn hàng đặt trước</h1>
+<p class="order-code">Mã đơn: <strong>${orderCode}</strong></p>
+<p>Đơn hàng của bạn sẽ được giao qua Zalo trong 5-10 phút.</p>
+<div class="steps">
+<div class="step"><span>1.</span> Chụp màn hình hóa đơn / xác nhận thanh toán</div>
+<div class="step"><span>2.</span> Gửi qua Zalo để nhận tài khoản</div>
+<div class="step"><span>3.</span> Nhận tài khoản trong 5-10 phút</div>
+</div>
+<a href="https://zalo.me/0988428496" target="_blank" class="zalo-btn">Chat Zalo - 0988 428 496</a>
+</div></body></html>`;
+}
+
 exports.handler = async function (event, context) {
     const { token, order, format } = event.queryStringParameters || {};
     const wantsJson = format === 'json';
@@ -168,29 +195,7 @@ exports.handler = async function (event, context) {
             lineCheckResult.rows.every(r => (r.fulfillment_type || 'auto') === 'owner_upgrade');
 
         if (allPreorder) {
-            const zaloHtml = `<!DOCTYPE html>
-<html lang="vi">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nhận hàng - TBQ Homie</title>
-<style>body{font-family:-apple-system,sans-serif;background:#f5f5f7;color:#1d1d1f;padding:20px;text-align:center;}
-.container{max-width:500px;margin:0 auto;background:white;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
-.success-icon{font-size:48px;margin-bottom:16px;} h1{font-size:24px;margin-bottom:8px;}
-.order-code{color:#6e6e73;margin-bottom:24px;} .steps{text-align:left;margin:24px 0;}
-.step{margin:12px 0;display:flex;align-items:center;gap:12px;}
-.zalo-btn{display:inline-block;background:#0068FF;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:16px;}
-.zalo-btn:hover{background:#0052cc;}</style></head>
-<body><div class="container">
-<div class="success-icon">&#128337;</div>
-<h1>Đơn hàng đặt trước</h1>
-<p class="order-code">Mã đơn: <strong>${order}</strong></p>
-<p>Đơn hàng của bạn sẽ được giao qua Zalo trong 5-10 phút.</p>
-<div class="steps">
-<div class="step"><span>1.</span> Chụp màn hình hóa đơn / xác nhận thanh toán</div>
-<div class="step"><span>2.</span> Gửi qua Zalo để nhận tài khoản</div>
-<div class="step"><span>3.</span> Nhận tài khoản trong 5-10 phút</div>
-</div>
-<a href="https://zalo.me/0988428496" target="_blank" class="zalo-btn">Chat Zalo - 0988 428 496</a>
-</div></body></html>`;
+            const zaloHtml = renderPreorderHtml(order);
             if (wantsJson) {
                 return {
                     statusCode: 200,
@@ -259,29 +264,7 @@ exports.handler = async function (event, context) {
             });
             const ft = lineCheck.rows[0]?.fulfillment_type;
             if (ft === 'owner_upgrade') {
-                const zaloHtml = `<!DOCTYPE html>
-<html lang="vi">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nhận hàng - TBQ Homie</title>
-<style>body{font-family:-apple-system,sans-serif;background:#f5f5f7;color:#1d1d1f;padding:20px;text-align:center;}
-.container{max-width:500px;margin:0 auto;background:white;border-radius:16px;padding:40px;box-shadow:0 4px 20px rgba(0,0,0,0.1);}
-.success-icon{font-size:48px;margin-bottom:16px;} h1{font-size:24px;margin-bottom:8px;}
-.order-code{color:#6e6e73;margin-bottom:24px;} .steps{text-align:left;margin:24px 0;}
-.step{margin:12px 0;display:flex;align-items:center;gap:12px;}
-.zalo-btn{display:inline-block;background:#0068FF;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:600;margin-top:16px;}
-.zalo-btn:hover{background:#0052cc;}</style></head>
-<body><div class="container">
-<div class="success-icon">&#128337;</div>
-<h1>Đơn hàng đặt trước</h1>
-<p class="order-code">Mã đơn: <strong>${order}</strong></p>
-<p>Đơn hàng của bạn sẽ được giao qua Zalo trong 5-10 phút.</p>
-<div class="steps">
-<div class="step"><span>1.</span> Chụp màn hình hóa đơn / xác nhận thanh toán</div>
-<div class="step"><span>2.</span> Gửi qua Zalo để nhận tài khoản</div>
-<div class="step"><span>3.</span> Nhận tài khoản trong 5-10 phút</div>
-</div>
-<a href="https://zalo.me/0988428496" target="_blank" class="zalo-btn">Chat Zalo - 0988 428 496</a>
-</div></body></html>`;
+                const zaloHtml = renderPreorderHtml(order);
                 if (wantsJson) {
                     return {
                         statusCode: 200,
@@ -640,7 +623,7 @@ exports.handler = async function (event, context) {
         function copyAllCredentials() {
             const allText = ${JSON.stringify(credentials.map((c, i) =>
             `Tài khoản ${i + 1}:\\nUsername: ${c.username}\\nPassword: ${c.password}${c.extraInfo ? '\\n' + c.extraInfo : ''}`
-        ).join('\\n\\n---\\n\\n'))};
+        ).join('\\n\\n---\\n\\n')).replace(/<\//g, '<\\/')};
             copyToClipboard(allText);
         }
 

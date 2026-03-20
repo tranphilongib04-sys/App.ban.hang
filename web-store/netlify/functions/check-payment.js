@@ -32,7 +32,7 @@ const headers = {
 // Keep in sync with reconcile-payments.js for better reliability.
 const SEPAY_LIST_LIMIT = 200;
 const LOOKBACK_MINUTES = 10080; // 7 days (allow delayed posting or late checks)
-const AMOUNT_TOLERANCE = 0.95;
+const AMOUNT_TOLERANCE = 0.99; // SECURITY: strict match (aligned with webhook-sepay.js)
 
 // Decrypt password (simple base64 decode for now - you should use proper AES-GCM)
 function decryptPassword(encrypted, iv) {
@@ -57,14 +57,8 @@ const RATE_LIMIT_CHECK_WINDOW_MS = 60 * 1000; // 1 minute
 const RATE_LIMIT_CHECK_MAX_REQUESTS = 60; // 60/min supports 2s polling with headroom
 
 async function checkRateLimit(db, ip) {
-    // Ensure table exists (quick check)
-    await db.execute(`
-        CREATE TABLE IF NOT EXISTS rate_limits (
-            ip TEXT PRIMARY KEY,
-            count INTEGER DEFAULT 0,
-            reset_at DATETIME
-        )
-    `);
+    // Table created by create-order.js; skip per-request DDL for performance
+    try {
 
     const now = new Date();
     const result = await db.execute({
@@ -100,6 +94,12 @@ async function checkRateLimit(db, ip) {
     });
 
     return count <= RATE_LIMIT_CHECK_MAX_REQUESTS;
+    } catch (e) {
+        // Table might not exist yet — allow request through
+        if (e.message && e.message.includes('no such table')) return true;
+        console.error('Rate limit error:', e.message);
+        return true;
+    }
 }
 
 exports.handler = async function (event, context) {
