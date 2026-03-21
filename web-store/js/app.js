@@ -1899,6 +1899,34 @@ function getDurationClass(duration) {
     return 'duration-other';
 }
 
+// Check if a variant is a monthly (1-month) subscription → enable month multiplier
+function isMonthlyVariant(variant) {
+    if (!variant || !variant.duration) return false;
+    const d = String(variant.duration).toLowerCase().trim();
+    return d === '1 tháng' || d === '1 thang';
+}
+
+// Get currently selected variant for a product
+function getSelectedVariant(productId) {
+    const product = products[productId];
+    if (!product) return null;
+    const selected = document.querySelector('input[name="variant"]:checked');
+    if (!selected) return product.variants[0];
+    return product.variants[selected.value];
+}
+
+// Update quantity label + max based on selected variant
+function updateQuantityLabel(productId) {
+    const variant = getSelectedVariant(productId);
+    const labelEl = document.getElementById('detailQtyLabel');
+    if (!labelEl) return;
+    if (isMonthlyVariant(variant)) {
+        labelEl.textContent = 'Số tháng';
+    } else {
+        labelEl.textContent = 'Số lượng';
+    }
+}
+
 // SHOW PRODUCT DETAIL (Rendering only)
 function showProductDetail(productId, { preserveDiscount = false } = {}) {
     const product = products[productId];
@@ -1928,9 +1956,9 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
 
                 <!-- ORDER INFO SECTION (sticky with image) -->
                 <div class="order-info-section" id="orderInfoSection">
-                    <!-- Quantity -->
+                    <!-- Quantity / Month multiplier -->
                     <div class="order-info-row">
-                        <span class="order-info-label">Số lượng</span>
+                        <span class="order-info-label" id="detailQtyLabel">Số lượng</span>
                         <div class="qty-controls">
                             <button class="qty-btn" onclick="updateDetailQuantity(-1)">−</button>
                             <span class="qty-value" id="detailQty">1</span>
@@ -2031,6 +2059,7 @@ function showProductDetail(productId, { preserveDiscount = false } = {}) {
     // Initialize price summary after DOM is ready
     setTimeout(() => {
         updateDetailPriceSummary(productId);
+        updateQuantityLabel(productId);
         // Restore discount UI if detailDiscount was preserved (e.g. after setCtvMode re-render)
         if (detailDiscount) {
             const input = document.getElementById('detailDiscountInput');
@@ -2067,6 +2096,11 @@ function selectVariant(index) {
     if (currentProductId) {
         detailDiscount = null;
         clearDetailDiscount();
+        // Reset quantity and update label for month/quantity mode
+        detailQuantity = 1;
+        const qtyEl = document.getElementById('detailQty');
+        if (qtyEl) qtyEl.textContent = 1;
+        updateQuantityLabel(currentProductId);
         updateDetailPriceSummary(currentProductId);
     }
 }
@@ -2076,9 +2110,11 @@ function selectVariant(index) {
 function updateDetailQuantity(delta) {
     const qtyEl = document.getElementById('detailQty');
     if (!qtyEl) return;
-    detailQuantity = Math.max(1, detailQuantity + delta);
-    qtyEl.textContent = detailQuantity;
     const currentProductId = window.location.hash.replace('#product/', '');
+    const variant = getSelectedVariant(currentProductId);
+    const maxQty = isMonthlyVariant(variant) ? 12 : 99;
+    detailQuantity = Math.min(maxQty, Math.max(1, detailQuantity + delta));
+    qtyEl.textContent = detailQuantity;
     updateDetailPriceSummary(currentProductId);
 }
 
@@ -2257,7 +2293,7 @@ function buyNow(productId) {
                 <textarea id="buyNowNote" rows="2" placeholder="VD: Gửi tài khoản qua Zalo cho gói gia hạn" style="width:100%;resize:vertical;font-family:inherit;font-size:14px;padding:10px 14px;border:1px solid var(--border);border-radius:8px;background:var(--bg-white);"></textarea>
             </div>
             <div class="buy-now-modal-summary">
-                <span>${variant.name} × ${detailQuantity}</span>
+                <span>${variant.name}${isMonthlyVariant(variant) && detailQuantity > 1 ? ' × ' + detailQuantity + ' tháng' : (detailQuantity > 1 ? ' × ' + detailQuantity : '')}</span>
                 <span class="buy-now-modal-total">${document.getElementById('detailTotal')?.textContent || '0₫'}</span>
             </div>
             <button class="buy-now-modal-submit" id="buyNowSubmitBtn" onclick="submitBuyNow('${productId}')">

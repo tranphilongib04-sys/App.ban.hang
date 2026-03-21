@@ -253,9 +253,10 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
 
     // ── 6b. Calculate expiration dates ────────────────────────────────
     //    For each order line, set expires_at = NOW + duration_days from SKU
+    //    Monthly products: quantity acts as month multiplier (e.g., qty 3 × 30d = 3 months)
     try {
         const linesForExpiry = await db.execute({
-            sql: `SELECT ol.id as line_id, ol.sku_id, s.duration_days
+            sql: `SELECT ol.id as line_id, ol.sku_id, ol.quantity, s.duration_days
                   FROM order_lines ol
                   LEFT JOIN skus s ON ol.sku_id = s.id
                   WHERE ol.order_id = ?`,
@@ -264,14 +265,18 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
 
         let maxExpiresAt = null;
         for (const line of linesForExpiry.rows) {
-            const durationDays = line.duration_days || 30; // default 30 days
+            const baseDuration = line.duration_days || 30; // default 30 days
+            const qty = line.quantity || 1;
+            // For monthly SKUs (≤30 days duration), quantity = month multiplier
+            // e.g., 30 days × 3 qty = 3 months; 7 days × 2 qty = 14 days
+            const totalDurationDays = baseDuration * qty;
             const expiresAt = new Date();
             // Use month-based calculation so end date keeps the same day-of-month
-            const durationMonths = Math.round(durationDays / 30);
+            const durationMonths = Math.round(totalDurationDays / 30);
             if (durationMonths >= 1) {
                 expiresAt.setMonth(expiresAt.getMonth() + durationMonths);
             } else {
-                expiresAt.setDate(expiresAt.getDate() + durationDays);
+                expiresAt.setDate(expiresAt.getDate() + totalDurationDays);
             }
             const expiresAtStr = expiresAt.toISOString().split('T')[0]; // YYYY-MM-DD
 
@@ -374,7 +379,10 @@ async function finalizeOrder(db, order, transaction, source = 'unknown') {
 
         const productNamesBot2 = productLinesBot2.rows
             .map((r, i) => {
-                let line = `  ${i + 1}. ${r.product_name} x${r.quantity}`;
+                const qty = r.quantity || 1;
+                // Show quantity as month count for better readability
+                const qtyLabel = qty > 1 ? ` ${qty}m` : ` x${qty}`;
+                let line = `  ${i + 1}. ${r.product_name}${qtyLabel}`;
 
                 // Add start/end dates
                 line += `\n     📅 Bắt đầu: ${startDateStr}`;
